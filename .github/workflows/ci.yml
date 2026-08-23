@@ -95,20 +95,25 @@ jobs:
         run: |
           chmod +x .scripts/retry.sh
           composer require \
+            "symfony/cache:^${{ matrix.symfony }}" \
             "symfony/config:^${{ matrix.symfony }}" \
             "symfony/dependency-injection:^${{ matrix.symfony }}" \
             "symfony/http-foundation:^${{ matrix.symfony }}" \
             "symfony/http-kernel:^${{ matrix.symfony }}" \
             "symfony/framework-bundle:^${{ matrix.symfony }}" \
+            "symfony/messenger:^${{ matrix.symfony }}" \
+            "symfony/routing:^${{ matrix.symfony }}" \
             "symfony/security-bundle:^${{ matrix.symfony }}" \
+            "symfony/serializer:^${{ matrix.symfony }}" \
             "symfony/rate-limiter:^${{ matrix.symfony }}" \
             "symfony/uid:^${{ matrix.symfony }}" \
+            "symfony/validator:^${{ matrix.symfony }}" \
             "symfony/yaml:^${{ matrix.symfony }}" \
             --no-interaction --no-update
           if [[ "${{ matrix.symfony }}" == 8.* ]]; then
             composer require "doctrine/doctrine-bundle:^3.0" "doctrine/orm:^3.0" --no-interaction --no-update
           fi
-          ./.scripts/retry.sh -- composer update "symfony/*" --with-all-dependencies --no-interaction --prefer-dist --no-progress
+          ./.scripts/retry.sh -- composer update --with-all-dependencies --no-interaction --prefer-dist --no-progress
       - name: Composer audit (Critical/High)
         run: composer audit --locked
 
@@ -142,7 +147,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.4'
           tools: composer:v2, cs2pr
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -154,23 +159,15 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-php-8.2-symfony-7.4-composer-${{ hashFiles('**/composer.json') }}
+          key: ${{ runner.os }}-php-8.4-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
-            ${{ runner.os }}-php-8.2-symfony-7.4-composer-
-            ${{ runner.os }}-php-8.2-composer-
+            ${{ runner.os }}-php-8.4-composer-
 
-      - name: Install dependencies (Symfony 7.4)
-        run: |
-          chmod +x .scripts/retry.sh
-          composer require "symfony/config:^7.4" "symfony/dependency-injection:^7.4" "symfony/http-foundation:^7.4" "symfony/http-kernel:^7.4" "symfony/framework-bundle:^7.4" "symfony/yaml:^7.4" --no-interaction --no-update
-          ./.scripts/retry.sh -- composer update "symfony/*" --with-all-dependencies --no-interaction --prefer-dist --no-progress
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
 
       - name: Fix code style
         run: composer cs-fix
-
-      - name: Discard composer.json / lock mutations from the Symfony 7.4 pin step
-        run: |
-          git checkout -- composer.json composer.lock || true
 
       - name: Check for changes
         id: verify-changed-files
@@ -202,7 +199,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.4'
           tools: composer:v2, cs2pr
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -214,16 +211,12 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-php-8.2-symfony-7.4-composer-${{ hashFiles('**/composer.json') }}
+          key: ${{ runner.os }}-php-8.4-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
-            ${{ runner.os }}-php-8.2-symfony-7.4-composer-
-            ${{ runner.os }}-php-8.2-composer-
+            ${{ runner.os }}-php-8.4-composer-
 
-      - name: Install dependencies (Symfony 7.4)
-        run: |
-          chmod +x .scripts/retry.sh
-          composer require "symfony/config:^7.4" "symfony/dependency-injection:^7.4" "symfony/http-foundation:^7.4" "symfony/http-kernel:^7.4" "symfony/framework-bundle:^7.4" "symfony/yaml:^7.4" --no-interaction --no-update
-          ./.scripts/retry.sh -- composer update "symfony/*" --with-all-dependencies --no-interaction --prefer-dist --no-progress
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
 
       - name: Check code style
         run: composer cs-check
@@ -241,7 +234,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.4'
           extensions: json
           coverage: pcov
           tools: composer:v2
@@ -255,16 +248,12 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-php-8.2-symfony-7.4-composer-${{ hashFiles('**/composer.json') }}
+          key: ${{ runner.os }}-php-8.4-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
-            ${{ runner.os }}-php-8.2-symfony-7.4-composer-
-            ${{ runner.os }}-php-8.2-composer-
+            ${{ runner.os }}-php-8.4-composer-
 
-      - name: Install dependencies (Symfony 7.4)
-        run: |
-          chmod +x .scripts/retry.sh
-          composer require "symfony/config:^7.4" "symfony/dependency-injection:^7.4" "symfony/http-foundation:^7.4" "symfony/http-kernel:^7.4" "symfony/framework-bundle:^7.4" "symfony/yaml:^7.4" --no-interaction --no-update
-          ./.scripts/retry.sh -- composer update "symfony/*" --with-all-dependencies --no-interaction --prefer-dist --no-progress
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
 
       - name: Run tests with coverage
         run: composer test-coverage
