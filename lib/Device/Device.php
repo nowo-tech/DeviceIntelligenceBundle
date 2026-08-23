@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Device;
 
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\Matching\CandidateIndexKey;
 use Nowo\DeviceIntelligence\Matching\Confidence;
 use Nowo\DeviceIntelligence\Observation\DeviceObservation;
@@ -18,8 +17,8 @@ final readonly class Device
      */
     public function __construct(
         public DeviceId $id,
-        public DateTimeImmutable $firstSeenAt,
-        public DateTimeImmutable $lastSeenAt,
+        public \DateTimeImmutable $firstSeenAt,
+        public \DateTimeImmutable $lastSeenAt,
         public int $observationCount,
         public Confidence $confidence,
         public Stability $stability,
@@ -37,7 +36,7 @@ final readonly class Device
     }
 
     public function withObservation(
-        DateTimeImmutable $seenAt,
+        \DateTimeImmutable $seenAt,
         Confidence $confidence,
         Stability $stability,
         CandidateIndexKey $indexKey,
@@ -53,7 +52,7 @@ final readonly class Device
             $stability,
             $this->status,
             $this->mergeIndexKey($indexKey),
-            $label !== '' ? $label : $this->label,
+            '' !== $label ? $label : $this->label,
             $this->metadata,
             $signals,
         );
@@ -61,16 +60,16 @@ final readonly class Device
 
     public function compare(DeviceObservation $observation): MutationReport
     {
-        $changed     = [];
-        $stable      = [];
-        $mass        = 0.0;
+        $changed = [];
+        $stable = [];
+        $mass = 0.0;
         $changedMass = 0.0;
         foreach ($observation->signals as $signal) {
             $previous = $this->lastSignals->get($signal->name);
-            if ($previous === null) {
+            if (null === $previous) {
                 continue;
             }
-            $same   = json_encode($previous->normalizedValue) === json_encode($signal->normalizedValue);
+            $same = json_encode($previous->normalizedValue) === json_encode($signal->normalizedValue);
             $weight = $signal->name->expectedStability();
             $mass += $weight;
             if ($same) {
@@ -89,18 +88,18 @@ final readonly class Device
     private function mergeIndexKey(CandidateIndexKey $incoming): CandidateIndexKey
     {
         return new CandidateIndexKey(
-            $incoming->osFamily !== 'other' ? $incoming->osFamily : $this->indexKey->osFamily,
-            $incoming->browserFamily !== 'other' ? $incoming->browserFamily : $this->indexKey->browserFamily,
-            $incoming->gpuFamily !== 'other' ? $incoming->gpuFamily : $this->indexKey->gpuFamily,
-            $incoming->screenClass !== 'other' ? $incoming->screenClass : $this->indexKey->screenClass,
-            $incoming->timezone !== '' && $incoming->timezone !== 'UTC' ? $incoming->timezone : $this->indexKey->timezone,
-            $incoming->blockingKey !== '' ? $incoming->blockingKey : $this->indexKey->blockingKey,
+            'other' !== $incoming->osFamily ? $incoming->osFamily : $this->indexKey->osFamily,
+            'other' !== $incoming->browserFamily ? $incoming->browserFamily : $this->indexKey->browserFamily,
+            'other' !== $incoming->gpuFamily ? $incoming->gpuFamily : $this->indexKey->gpuFamily,
+            'other' !== $incoming->screenClass ? $incoming->screenClass : $this->indexKey->screenClass,
+            '' !== $incoming->timezone && 'UTC' !== $incoming->timezone ? $incoming->timezone : $this->indexKey->timezone,
+            '' !== $incoming->blockingKey ? $incoming->blockingKey : $this->indexKey->blockingKey,
         );
     }
 
     public static function fromNew(
         DeviceId $id,
-        DateTimeImmutable $now,
+        \DateTimeImmutable $now,
         CandidateIndexKey $key,
         SignalBag $signals,
         string $label,

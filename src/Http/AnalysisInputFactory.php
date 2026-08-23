@@ -13,11 +13,6 @@ use Nowo\DeviceIntelligenceBundle\Config\DeviceIntelligenceConfig;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Throwable;
-
-use function is_array;
-use function is_object;
-use function is_string;
 
 /**
  * Maps an HTTP Request + collect payload to the core AnalysisInput DTO.
@@ -45,7 +40,7 @@ final class AnalysisInputFactory
         $now = $this->clock->now();
 
         $signals = [];
-        if (isset($payload['signals']) && is_array($payload['signals'])) {
+        if (isset($payload['signals']) && \is_array($payload['signals'])) {
             $signals = $payload['signals'];
         }
 
@@ -54,21 +49,21 @@ final class AnalysisInputFactory
             $headers[strtolower((string) $name)] = implode(', ', $values);
         }
 
-        $user      = $this->resolveUser();
+        $user = $this->resolveUser();
         $sessionId = null;
         if ($request->hasSession()) {
             $sessionId = $request->getSession()->getId();
         }
 
         $consent = $this->privacy->highEntropyConsent;
-        if (isset($payload['consent']) && is_array($payload['consent'])) {
+        if (isset($payload['consent']) && \is_array($payload['consent'])) {
             $consent = (bool) ($payload['consent']['highEntropy'] ?? $consent);
         } elseif (isset($payload['highEntropyConsent'])) {
             $consent = (bool) $payload['highEntropyConsent'];
         }
         $salt = $this->config->ipSalt();
-        if ($salt === '') {
-            $salt = $this->kernelSecret !== '' ? $this->kernelSecret : 'device-intelligence';
+        if ('' === $salt) {
+            $salt = '' !== $this->kernelSecret ? $this->kernelSecret : 'device-intelligence';
         }
 
         $privacy = new PrivacyContext(
@@ -89,10 +84,10 @@ final class AnalysisInputFactory
             $headers,
             $sessionId,
             $user,
-            isset($payload['sdkVersion']) && is_string($payload['sdkVersion']) ? $payload['sdkVersion'] : null,
+            isset($payload['sdkVersion']) && \is_string($payload['sdkVersion']) ? $payload['sdkVersion'] : null,
             isset($payload['v']) ? (int) $payload['v'] : (isset($payload['schemaVersion']) ? (int) $payload['schemaVersion'] : 1),
             (bool) $consent,
-            isset($payload['nonce']) && is_string($payload['nonce']) ? $payload['nonce'] : null,
+            isset($payload['nonce']) && \is_string($payload['nonce']) ? $payload['nonce'] : null,
             $privacy,
             $salt,
         );
@@ -101,14 +96,14 @@ final class AnalysisInputFactory
     private function resolveUser(): ?UserIdentifier
     {
         $token = $this->tokens?->getToken();
-        $user  = $token?->getUser();
-        if (!is_object($user) || $this->users === null) {
+        $user = $token?->getUser();
+        if (!\is_object($user) || null === $this->users) {
             return null;
         }
 
         try {
             return $this->users->resolve($user);
-        } catch (Throwable) {
+        } catch (\Throwable) {
             return null;
         }
     }

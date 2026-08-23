@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Doctrine;
 
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\Device\Device;
 use Nowo\DeviceIntelligence\Device\DeviceId;
 use Nowo\DeviceIntelligence\Device\DeviceStatus;
@@ -27,11 +26,6 @@ use Nowo\DeviceIntelligenceBundle\Entity\DeviceEntity;
 use Nowo\DeviceIntelligenceBundle\Entity\DeviceObservationEntity;
 use Nowo\DeviceIntelligenceBundle\Entity\DeviceTrustEntity;
 use Nowo\DeviceIntelligenceBundle\Entity\DeviceUserEntity;
-
-use function is_array;
-use function is_string;
-
-use const DATE_ATOM;
 
 /**
  * Maps core value objects to Doctrine entities and back. Pure, no EntityManager.
@@ -113,11 +107,11 @@ final class DeviceMapper
     public function toObservation(DeviceObservationEntity $entity): DeviceObservation
     {
         $ipHash = null;
-        if ($entity->getIpHash() !== null && $entity->getIpHash() !== '') {
+        if (null !== $entity->getIpHash() && '' !== $entity->getIpHash()) {
             $ipHash = new IpHash($entity->getIpHash());
         }
         $user = null;
-        if ($entity->getUserIdentifier() !== null && $entity->getUserIdentifier() !== '') {
+        if (null !== $entity->getUserIdentifier() && '' !== $entity->getUserIdentifier()) {
             $user = new UserIdentifier($entity->getUserIdentifier());
         }
 
@@ -197,31 +191,31 @@ final class DeviceMapper
     {
         $bag = SignalBag::empty();
         foreach ($data as $name => $row) {
-            if (!is_string($name) || !is_array($row)) {
+            if (!\is_string($name) || !\is_array($row)) {
                 continue;
             }
             $enum = SignalName::tryFrom($name);
-            if ($enum === null) {
+            if (null === $enum) {
                 continue;
             }
-            $collectedAt = new DateTimeImmutable();
-            if (isset($row['collectedAt']) && is_string($row['collectedAt'])) {
-                $parsed = DateTimeImmutable::createFromFormat(DATE_ATOM, $row['collectedAt']);
-                if ($parsed instanceof DateTimeImmutable) {
+            $collectedAt = new \DateTimeImmutable();
+            if (isset($row['collectedAt']) && \is_string($row['collectedAt'])) {
+                $parsed = \DateTimeImmutable::createFromFormat(\DATE_ATOM, $row['collectedAt']);
+                if ($parsed instanceof \DateTimeImmutable) {
                     $collectedAt = $parsed;
                 }
             }
             $entropy = $enum->entropyCategory();
-            if (isset($row['entropyCategory']) && is_string($row['entropyCategory'])) {
+            if (isset($row['entropyCategory']) && \is_string($row['entropyCategory'])) {
                 $entropy = EntropyCategory::tryFrom($row['entropyCategory']) ?? $entropy;
             }
             $source = SignalSource::Client;
-            if (isset($row['source']) && is_string($row['source'])) {
+            if (isset($row['source']) && \is_string($row['source'])) {
                 $source = SignalSource::tryFrom($row['source']) ?? $source;
             }
-            $quality   = isset($row['quality']) ? (float) $row['quality'] : 1.0;
+            $quality = isset($row['quality']) ? (float) $row['quality'] : 1.0;
             $stability = isset($row['stability']) ? (float) $row['stability'] : $enum->expectedStability();
-            $bag       = $bag->with(new Signal(
+            $bag = $bag->with(new Signal(
                 $enum,
                 $row['value'] ?? null,
                 $row['normalizedValue'] ?? $row['value'] ?? null,

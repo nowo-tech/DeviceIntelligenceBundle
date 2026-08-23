@@ -8,7 +8,7 @@ final class IpHasher
 {
     public static function hash(?string $ip, string $salt, bool $enabled): ?IpHash
     {
-        if ($ip === null || $ip === '' || !$enabled) {
+        if (null === $ip || '' === $ip || !$enabled) {
             return null;
         }
 

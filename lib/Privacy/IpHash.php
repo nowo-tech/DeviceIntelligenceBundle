@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace Nowo\DeviceIntelligence\Privacy;
 
 use Nowo\DeviceIntelligence\Exception\InvalidValueException;
-use Stringable;
 
-final readonly class IpHash implements Stringable
+final readonly class IpHash implements \Stringable
 {
     public function __construct(public string $value)
     {
-        if (preg_match('/^[a-f0-9]{16,64}$/', $value) !== 1) {
+        if (1 !== preg_match('/^[a-f0-9]{16,64}$/', $value)) {
             throw new InvalidValueException('IP hash must be 16..64 hex characters.');
         }
     }

@@ -11,14 +11,12 @@ use Nowo\DeviceIntelligence\Signal\Signal;
 use Nowo\DeviceIntelligence\Signal\SignalName;
 use Nowo\DeviceIntelligence\Signal\SignalSource;
 
-use function is_string;
-
 final class DefaultServerSignalProvider implements ServerSignalProviderInterface
 {
     public function collect(AnalysisInput $input): iterable
     {
         $now = $input->now;
-        if ($input->userAgent !== null && $input->userAgent !== '') {
+        if (null !== $input->userAgent && '' !== $input->userAgent) {
             yield new Signal(
                 SignalName::UserAgent,
                 $input->userAgent,
@@ -31,7 +29,7 @@ final class DefaultServerSignalProvider implements ServerSignalProviderInterface
             );
         }
         $accept = $input->headers['accept-language'] ?? $input->headers['accept'] ?? null;
-        if (is_string($accept) && $accept !== '') {
+        if (\is_string($accept) && '' !== $accept) {
             yield new Signal(
                 SignalName::AcceptHeaders,
                 $accept,
@@ -43,7 +41,7 @@ final class DefaultServerSignalProvider implements ServerSignalProviderInterface
                 SignalSource::Server,
             );
         }
-        if ($input->sessionId !== null && $input->sessionId !== '') {
+        if (null !== $input->sessionId && '' !== $input->sessionId) {
             $hash = hash('sha256', $input->sessionId);
             yield new Signal(
                 SignalName::Session,
@@ -62,7 +60,7 @@ final class DefaultServerSignalProvider implements ServerSignalProviderInterface
                 $hints[$h] = $input->headers[$h];
             }
         }
-        if ($hints !== []) {
+        if ([] !== $hints) {
             yield new Signal(
                 SignalName::ClientHints,
                 $hints,

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\Doctrine;
 
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\Device\Device;
 use Nowo\DeviceIntelligence\Device\DeviceId;
 use Nowo\DeviceIntelligence\Device\DeviceStatus;
@@ -34,8 +33,8 @@ final class DeviceMapperTest extends TestCase
 {
     public function testDeviceRoundtrip(): void
     {
-        $now = new DateTimeImmutable('2026-01-02T03:04:05+00:00');
-        $id  = DeviceId::generate($now);
+        $now = new \DateTimeImmutable('2026-01-02T03:04:05+00:00');
+        $id = DeviceId::generate($now);
         $bag = SignalBag::empty()->with(new Signal(
             SignalName::Timezone,
             'Europe/Madrid',
@@ -62,7 +61,7 @@ final class DeviceMapperTest extends TestCase
 
         $mapper = new DeviceMapper();
         $entity = $mapper->toDeviceEntity($device);
-        $back   = $mapper->toDevice($entity);
+        $back = $mapper->toDevice($entity);
 
         self::assertSame($device->id->value, $back->id->value);
         self::assertSame($device->observationCount, $back->observationCount);
@@ -77,11 +76,11 @@ final class DeviceMapperTest extends TestCase
 
     public function testObservationAndRelationsRoundtrip(): void
     {
-        $now      = new DateTimeImmutable('2026-03-04T05:06:07+00:00');
+        $now = new \DateTimeImmutable('2026-03-04T05:06:07+00:00');
         $deviceId = DeviceId::generate($now);
-        $obsId    = ObservationId::generate($now);
-        $user     = new UserIdentifier('alice@example.test');
-        $mapper   = new DeviceMapper();
+        $obsId = ObservationId::generate($now);
+        $user = new UserIdentifier('alice@example.test');
+        $mapper = new DeviceMapper();
 
         $observation = new DeviceObservation(
             $obsId,
@@ -106,11 +105,11 @@ final class DeviceMapperTest extends TestCase
         self::assertSame(22, $back->riskScore);
         self::assertSame('alice@example.test', $back->userIdentifier?->value);
 
-        $rel     = new DeviceUserRelation($deviceId, $user, $now, $now, 4);
+        $rel = new DeviceUserRelation($deviceId, $user, $now, $now, 4);
         $relBack = $mapper->toUserRelation($mapper->toUserEntity($rel));
         self::assertSame(4, $relBack->loginCount);
 
-        $trust     = new TrustedDevice($deviceId, $user, $now, null, null, 'laptop', 'user');
+        $trust = new TrustedDevice($deviceId, $user, $now, null, null, 'laptop', 'user');
         $trustBack = $mapper->toTrustedDevice($mapper->toTrustEntity($trust));
         self::assertSame('laptop', $trustBack->label);
         self::assertTrue($trustBack->isActive($now));

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Entity;
 
-use DateTimeImmutable;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -32,13 +31,13 @@ final class DeviceTrustEntity
     private string $userIdentifier = '';
 
     #[ORM\Column(name: 'trusted_at', type: Types::DATETIME_IMMUTABLE)]
-    private DateTimeImmutable $trustedAt;
+    private \DateTimeImmutable $trustedAt;
 
     #[ORM\Column(name: 'expires_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
-    private ?DateTimeImmutable $expiresAt = null;
+    private ?\DateTimeImmutable $expiresAt = null;
 
     #[ORM\Column(name: 'revoked_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
-    private ?DateTimeImmutable $revokedAt = null;
+    private ?\DateTimeImmutable $revokedAt = null;
 
     #[ORM\Column(name: 'label', type: Types::STRING, length: 191)]
     private string $label = '';
@@ -48,7 +47,7 @@ final class DeviceTrustEntity
 
     public function __construct()
     {
-        $this->trustedAt = new DateTimeImmutable();
+        $this->trustedAt = new \DateTimeImmutable();
     }
 
     public function getId(): ?int
@@ -81,32 +80,32 @@ final class DeviceTrustEntity
         $this->userIdentifier = $userIdentifier;
     }
 
-    public function getTrustedAt(): DateTimeImmutable
+    public function getTrustedAt(): \DateTimeImmutable
     {
         return $this->trustedAt;
     }
 
-    public function setTrustedAt(DateTimeImmutable $trustedAt): void
+    public function setTrustedAt(\DateTimeImmutable $trustedAt): void
     {
         $this->trustedAt = $trustedAt;
     }
 
-    public function getExpiresAt(): ?DateTimeImmutable
+    public function getExpiresAt(): ?\DateTimeImmutable
     {
         return $this->expiresAt;
     }
 
-    public function setExpiresAt(?DateTimeImmutable $expiresAt): void
+    public function setExpiresAt(?\DateTimeImmutable $expiresAt): void
     {
         $this->expiresAt = $expiresAt;
     }
 
-    public function getRevokedAt(): ?DateTimeImmutable
+    public function getRevokedAt(): ?\DateTimeImmutable
     {
         return $this->revokedAt;
     }
 
-    public function setRevokedAt(?DateTimeImmutable $revokedAt): void
+    public function setRevokedAt(?\DateTimeImmutable $revokedAt): void
     {
         $this->revokedAt = $revokedAt;
     }

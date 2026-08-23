@@ -20,7 +20,7 @@ use Nowo\DeviceIntelligence\Risk\Rule\TrustedDeviceRule;
 final class RiskEngine implements RiskEngineInterface
 {
     /**
-     * @param list<RiskRuleInterface> $rules
+     * @param list<RiskRuleInterface>                                $rules
      * @param array<string, array{enabled: bool, weight?: int|null}> $config
      */
     public function __construct(
@@ -50,7 +50,7 @@ final class RiskEngine implements RiskEngineInterface
 
     public function assess(RiskContext $context): RiskAssessment
     {
-        $sum     = 0;
+        $sum = 0;
         $reasons = [];
         foreach ($this->rules as $rule) {
             $cfg = $this->config[$rule->name()] ?? ['enabled' => true, 'weight' => null];
@@ -58,13 +58,13 @@ final class RiskEngine implements RiskEngineInterface
                 continue;
             }
             $result = $rule->evaluate($context);
-            if ($result->skipped || $result->scoreContribution === 0) {
+            if ($result->skipped || 0 === $result->scoreContribution) {
                 continue;
             }
-            $weight       = $cfg['weight'] ?? $result->scoreContribution;
+            $weight = $cfg['weight'] ?? $result->scoreContribution;
             $contribution = $result->scoreContribution;
             if (null !== ($cfg['weight'] ?? null)) {
-                $sign         = $result->scoreContribution < 0 ? -1 : 1;
+                $sign = $result->scoreContribution < 0 ? -1 : 1;
                 $contribution = $sign * abs((int) $weight);
             }
             $sum += $contribution;

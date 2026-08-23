@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Doctrine;
 
-use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Nowo\DeviceIntelligence\Device\DeviceId;
 use Nowo\DeviceIntelligence\Port\TrustedDeviceRepositoryInterface;
@@ -29,12 +28,12 @@ final class DoctrineTrustedDeviceRepository implements TrustedDeviceRepositoryIn
     public function save(TrustedDevice $trust): void
     {
         $existing = $this->findEntity($trust->deviceId, $trust->userIdentifier);
-        $entity   = $this->mapper->toTrustEntity($trust, $existing);
+        $entity = $this->mapper->toTrustEntity($trust, $existing);
         $this->em->persist($entity);
         $this->em->flush();
     }
 
-    public function findActive(DeviceId $deviceId, UserIdentifier $user, DateTimeImmutable $now): ?TrustedDevice
+    public function findActive(DeviceId $deviceId, UserIdentifier $user, \DateTimeImmutable $now): ?TrustedDevice
     {
         $entity = $this->findEntity($deviceId, $user);
         if (!$entity instanceof DeviceTrustEntity) {
@@ -48,7 +47,7 @@ final class DoctrineTrustedDeviceRepository implements TrustedDeviceRepositoryIn
         return $trust;
     }
 
-    public function forUser(UserIdentifier $user, DateTimeImmutable $now): array
+    public function forUser(UserIdentifier $user, \DateTimeImmutable $now): array
     {
         $rows = $this->em->createQueryBuilder()
             ->select('t')

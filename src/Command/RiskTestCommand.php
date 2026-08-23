@@ -4,21 +4,18 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Command;
 
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\AnalysisInput;
 use Nowo\DeviceIntelligence\Signal\SignalFactory;
 use Nowo\DeviceIntelligenceBundle\Event\AnalyzeService;
+
+use const STDIN;
+
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-
-use function is_array;
-use function is_string;
-
-use const STDIN;
 
 /**
  * Runs analyze() against a JSON signals payload (file or stdin).
@@ -41,20 +38,20 @@ final class RiskTestCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $io   = new SymfonyStyle($input, $output);
+        $io = new SymfonyStyle($input, $output);
         $file = $input->getOption('file');
-        $raw  = is_string($file) && $file !== '' ? file_get_contents($file) : stream_get_contents(STDIN);
-        if (!is_string($raw) || $raw === '') {
+        $raw = \is_string($file) && '' !== $file ? file_get_contents($file) : stream_get_contents(\STDIN);
+        if (!\is_string($raw) || '' === $raw) {
             $raw = '{"signals":{}}';
         }
         $decoded = json_decode($raw, true);
-        if (!is_array($decoded)) {
+        if (!\is_array($decoded)) {
             $io->error('Invalid JSON.');
 
             return Command::FAILURE;
         }
-        $signals  = isset($decoded['signals']) && is_array($decoded['signals']) ? $decoded['signals'] : $decoded;
-        $now      = new DateTimeImmutable();
+        $signals = isset($decoded['signals']) && \is_array($decoded['signals']) ? $decoded['signals'] : $decoded;
+        $now = new \DateTimeImmutable();
         $analysis = $this->analyze->analyze(new AnalysisInput(
             $now,
             SignalFactory::bagFromClient($signals, $now),

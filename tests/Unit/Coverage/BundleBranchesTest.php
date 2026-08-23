@@ -70,7 +70,6 @@ use Nowo\DeviceIntelligenceBundle\User\SecurityUserIdentifierResolver;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Psr\SimpleCache\CacheInterface;
-use ReflectionClass;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\Cache\Psr16Cache;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
@@ -91,8 +90,6 @@ use Symfony\Component\Security\Core\User\InMemoryUser;
 use Symfony\Component\Security\Http\Event\InteractiveLoginEvent;
 use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
 
-use const JSON_THROW_ON_ERROR;
-
 /**
  * Remaining bundle branches for ≥99% line coverage.
  *
@@ -103,25 +100,25 @@ final class BundleBranchesTest extends TestCase
 {
     public function testCommandsSuccessPathsAndStatsDoctrine(): void
     {
-        $now     = Scenario::now();
+        $now = Scenario::now();
         $devices = new InMemoryDeviceRepository();
-        $obs     = new InMemoryObservationRepository();
-        $users   = new InMemoryDeviceUserRepository();
-        $trusts  = new InMemoryTrustedDeviceRepository();
-        $engine  = DeviceIntelligence::create($devices, $obs, $users, $trusts);
+        $obs = new InMemoryObservationRepository();
+        $users = new InMemoryDeviceUserRepository();
+        $trusts = new InMemoryTrustedDeviceRepository();
+        $engine = DeviceIntelligence::create($devices, $obs, $users, $trusts);
         $signals = SignalFactory::bagFromClient([
-            'platform'             => ['value' => 'MacIntel', 'quality' => 1],
-            'canvas'               => ['value' => 'aabbccddeeff0011', 'quality' => 0.95],
-            'webgl'                => ['value' => ['vendor' => 'Apple', 'renderer' => 'Apple GPU'], 'quality' => 0.9],
-            'screen'               => ['value' => ['width' => 1440, 'height' => 900], 'quality' => 1],
-            'timezone'             => ['value' => 'Europe/Madrid', 'quality' => 1],
-            'client_hints'         => ['value' => ['brands' => [['brand' => 'Google Chrome', 'version' => '143']], 'platform' => 'macOS'], 'quality' => 0.9],
+            'platform' => ['value' => 'MacIntel', 'quality' => 1],
+            'canvas' => ['value' => 'aabbccddeeff0011', 'quality' => 0.95],
+            'webgl' => ['value' => ['vendor' => 'Apple', 'renderer' => 'Apple GPU'], 'quality' => 0.9],
+            'screen' => ['value' => ['width' => 1440, 'height' => 900], 'quality' => 1],
+            'timezone' => ['value' => 'Europe/Madrid', 'quality' => 1],
+            'client_hints' => ['value' => ['brands' => [['brand' => 'Google Chrome', 'version' => '143']], 'platform' => 'macOS'], 'quality' => 0.9],
             'hardware_concurrency' => ['value' => 8, 'quality' => 1],
             'browser_capabilities' => ['value' => ['webp' => true], 'quality' => 1],
-            'audio'                => ['value' => '1122334455667788', 'quality' => 0.9],
+            'audio' => ['value' => '1122334455667788', 'quality' => 0.9],
         ], $now);
         $analysis = $engine->analyze(new AnalysisInput($now, $signals, '1.2.3.4', 'Mozilla/5.0 Chrome/143.0.0.0'));
-        $manager  = new DeviceManager($devices, $users, $trusts, new FrozenClock($now));
+        $manager = new DeviceManager($devices, $users, $trusts, new FrozenClock($now));
         $manager->associate($analysis->device(), new UserIdentifier('alice'));
 
         $show = new CommandTester(new DeviceShowCommand($manager, $obs));
@@ -140,16 +137,16 @@ final class BundleBranchesTest extends TestCase
         $qb->method('getQuery')->willReturn($query);
         $em = $this->createMock(EntityManagerInterface::class);
         $em->method('createQueryBuilder')->willReturn($qb);
-        $mapper          = new DeviceMapper();
+        $mapper = new DeviceMapper();
         $doctrineDevices = new DoctrineDeviceRepository($em, $mapper);
-        $doctrineObs     = new DoctrineObservationRepository($em, $mapper);
-        $doctrineUsers   = new DoctrineDeviceUserRepository($em, $mapper);
-        $doctrineTrusts  = new DoctrineTrustedDeviceRepository($em, $mapper);
-        $stats           = new CommandTester(new StatsCommand($doctrineDevices, $doctrineObs, $doctrineUsers, $doctrineTrusts));
+        $doctrineObs = new DoctrineObservationRepository($em, $mapper);
+        $doctrineUsers = new DoctrineDeviceUserRepository($em, $mapper);
+        $doctrineTrusts = new DoctrineTrustedDeviceRepository($em, $mapper);
+        $stats = new CommandTester(new StatsCommand($doctrineDevices, $doctrineObs, $doctrineUsers, $doctrineTrusts));
         self::assertSame(0, $stats->execute([]));
         self::assertStringContainsString('3', $stats->getDisplay());
 
-        $unknown      = $this->createMock(DeviceRepositoryInterface::class);
+        $unknown = $this->createMock(DeviceRepositoryInterface::class);
         $unknownStats = new CommandTester(new StatsCommand(
             $unknown,
             $this->createMock(ObservationRepositoryInterface::class),
@@ -168,7 +165,7 @@ final class BundleBranchesTest extends TestCase
             new InMemoryTrustedDeviceRepository(),
         );
         $service = new AnalyzeService($engine, new EventDispatcher());
-        $file    = tempnam(sys_get_temp_dir(), 'di');
+        $file = tempnam(sys_get_temp_dir(), 'di');
         self::assertIsString($file);
         file_put_contents($file, 'not-json');
         $tester = new CommandTester(new RiskTestCommand($service));
@@ -186,20 +183,20 @@ final class BundleBranchesTest extends TestCase
 
     public function testDeviceRequestSubscriberBranches(): void
     {
-        $now          = Scenario::now();
-        $devices      = new InMemoryDeviceRepository();
+        $now = Scenario::now();
+        $devices = new InMemoryDeviceRepository();
         $observations = new InMemoryObservationRepository();
-        $users        = new InMemoryDeviceUserRepository();
-        $trusts       = new InMemoryTrustedDeviceRepository();
-        $engine       = DeviceIntelligence::create($devices, $observations, $users, $trusts);
-        $analysis     = $engine->analyze(new AnalysisInput($now, SignalBag::empty(), '1.2.3.4'));
-        $manager      = new DeviceManager($devices, $users, $trusts, new FrozenClock($now));
-        $kernel       = $this->createMock(HttpKernelInterface::class);
+        $users = new InMemoryDeviceUserRepository();
+        $trusts = new InMemoryTrustedDeviceRepository();
+        $engine = DeviceIntelligence::create($devices, $observations, $users, $trusts);
+        $analysis = $engine->analyze(new AnalysisInput($now, SignalBag::empty(), '1.2.3.4'));
+        $manager = new DeviceManager($devices, $users, $trusts, new FrozenClock($now));
+        $kernel = $this->createMock(HttpKernelInterface::class);
 
         $disabledObserve = ProcessedConfig::object(['enabled' => true, 'observe_on_every_request' => false]);
-        $tokens          = new ObservationTokenIssuer($disabledObserve, new FrozenClock($now), 's');
-        $sub             = new DeviceRequestSubscriber($disabledObserve, $tokens, $observations, $manager, new TokenDeviceContextFactory());
-        $event           = new RequestEvent($kernel, Request::create('/'), HttpKernelInterface::MAIN_REQUEST);
+        $tokens = new ObservationTokenIssuer($disabledObserve, new FrozenClock($now), 's');
+        $sub = new DeviceRequestSubscriber($disabledObserve, $tokens, $observations, $manager, new TokenDeviceContextFactory());
+        $event = new RequestEvent($kernel, Request::create('/'), HttpKernelInterface::MAIN_REQUEST);
         $sub->onRequest($event);
         self::assertNull($event->getRequest()->attributes->get('_device'));
 
@@ -213,8 +210,8 @@ final class BundleBranchesTest extends TestCase
         self::assertInstanceOf(DeviceContext::class, $already->attributes->get('_device'));
 
         $observe = ProcessedConfig::object(['observe_on_every_request' => true]);
-        $issuer  = new ObservationTokenIssuer($observe, new FrozenClock($now), 's');
-        $full    = new DeviceRequestSubscriber(
+        $issuer = new ObservationTokenIssuer($observe, new FrozenClock($now), 's');
+        $full = new DeviceRequestSubscriber(
             $observe,
             $issuer,
             $observations,
@@ -232,13 +229,13 @@ final class BundleBranchesTest extends TestCase
         $full->onRequest(new RequestEvent($kernel, $bad, HttpKernelInterface::MAIN_REQUEST));
 
         $missingObs = Request::create('/');
-        $cookie     = $issuer->issue(ObservationId::generate($now), 'n', true);
+        $cookie = $issuer->issue(ObservationId::generate($now), 'n', true);
         $missingObs->cookies->set($cookie->getName(), (string) $cookie->getValue());
         $full->onRequest(new RequestEvent($kernel, $missingObs, HttpKernelInterface::MAIN_REQUEST));
 
-        $ts       = $now->getTimestamp();
-        $payload  = 'not-a-ulid|' . $ts . '|' . ($ts + 3600) . '|n';
-        $bogus    = rtrim(strtr(base64_encode($payload), '+/', '-_'), '=') . '.' . hash_hmac('sha256', $payload, 's');
+        $ts = $now->getTimestamp();
+        $payload = 'not-a-ulid|'.$ts.'|'.($ts + 3600).'|n';
+        $bogus = rtrim(strtr(base64_encode($payload), '+/', '-_'), '=').'.'.hash_hmac('sha256', $payload, 's');
         $throwReq = Request::create('/');
         $throwReq->cookies->set((string) $observe->tokenCookie()['name'], $bogus);
         $full->onRequest(new RequestEvent($kernel, $throwReq, HttpKernelInterface::MAIN_REQUEST));
@@ -247,18 +244,18 @@ final class BundleBranchesTest extends TestCase
         $ghostObs = Scenario::observation($ghostDev, now: $now);
         $observations->save($ghostObs);
         $ghostReq = Request::create('/');
-        $ghostC   = $issuer->issue($ghostObs->id, 'g', true);
+        $ghostC = $issuer->issue($ghostObs->id, 'g', true);
         $ghostReq->cookies->set($ghostC->getName(), (string) $ghostC->getValue());
         $full->onRequest(new RequestEvent($kernel, $ghostReq, HttpKernelInterface::MAIN_REQUEST));
         self::assertNull($ghostReq->attributes->get('_device'));
 
         $okReq = Request::create('/');
-        $okC   = $issuer->issue($analysis->observation()->id, 'n2', true);
+        $okC = $issuer->issue($analysis->observation()->id, 'n2', true);
         $okReq->cookies->set($okC->getName(), (string) $okC->getValue());
         $full->onRequest(new RequestEvent($kernel, $okReq, HttpKernelInterface::MAIN_REQUEST));
         self::assertInstanceOf(DeviceContext::class, $okReq->attributes->get('_device'));
 
-        $user    = new InMemoryUser('alice', null);
+        $user = new InMemoryUser('alice', null);
         $storage = new TokenStorage();
         $storage->setToken(new UsernamePasswordToken($user, 'main', $user->getRoles()));
         $withUser = new DeviceRequestSubscriber(
@@ -299,16 +296,16 @@ final class BundleBranchesTest extends TestCase
 
     public function testSecuritySubscriberAssociatesOnLogin(): void
     {
-        $now      = Scenario::now();
-        $devices  = new InMemoryDeviceRepository();
-        $users    = new InMemoryDeviceUserRepository();
-        $trusts   = new InMemoryTrustedDeviceRepository();
-        $obs      = new InMemoryObservationRepository();
-        $engine   = DeviceIntelligence::create($devices, $obs, $users, $trusts);
+        $now = Scenario::now();
+        $devices = new InMemoryDeviceRepository();
+        $users = new InMemoryDeviceUserRepository();
+        $trusts = new InMemoryTrustedDeviceRepository();
+        $obs = new InMemoryObservationRepository();
+        $engine = DeviceIntelligence::create($devices, $obs, $users, $trusts);
         $analysis = $engine->analyze(new AnalysisInput($now, SignalBag::empty()));
-        $manager  = new DeviceManager($devices, $users, $trusts, new FrozenClock($now));
-        $stack    = new RequestStack();
-        $request  = Request::create('/');
+        $manager = new DeviceManager($devices, $users, $trusts, new FrozenClock($now));
+        $stack = new RequestStack();
+        $request = Request::create('/');
         $request->attributes->set('_device', new DeviceContext($analysis));
         $stack->push($request);
 
@@ -320,7 +317,7 @@ final class BundleBranchesTest extends TestCase
             new NullLogger(),
         );
 
-        $user  = new InMemoryUser('bob', null);
+        $user = new InMemoryUser('bob', null);
         $token = new UsernamePasswordToken($user, 'main', $user->getRoles());
         $login = $this->createMock(LoginSuccessEvent::class);
         $login->method('getUser')->willReturn($user);
@@ -359,9 +356,9 @@ final class BundleBranchesTest extends TestCase
 
     public function testHttpBranches(): void
     {
-        $config    = ProcessedConfig::object(['endpoint' => ['csrf' => 'none', 'max_payload_bytes' => 1024, 'replay_protection' => true]]);
+        $config = ProcessedConfig::object(['endpoint' => ['csrf' => 'none', 'max_payload_bytes' => 1024, 'replay_protection' => true]]);
         $validator = new CollectRequestValidator($config, new OriginValidator($config), new Psr16Cache(new ArrayAdapter()));
-        $big       = Request::create('/_device/collect', 'POST', content: str_repeat('a', 1100));
+        $big = Request::create('/_device/collect', 'POST', content: str_repeat('a', 1100));
         $big->headers->remove('Content-Length');
         try {
             $validator->validate($big);
@@ -385,31 +382,31 @@ final class BundleBranchesTest extends TestCase
         }
 
         $wide = ProcessedConfig::object(['endpoint' => ['csrf' => 'none', 'replay_protection' => true]]);
-        $v2   = new CollectRequestValidator($wide, new OriginValidator($wide), new Psr16Cache(new ArrayAdapter()));
+        $v2 = new CollectRequestValidator($wide, new OriginValidator($wide), new Psr16Cache(new ArrayAdapter()));
         try {
             $v2->validate(Request::create('/_device/collect', 'POST', content: json_encode([
-                'v'         => 1,
+                'v' => 1,
                 'timestamp' => time() * 1000,
-            ], JSON_THROW_ON_ERROR)));
+            ], \JSON_THROW_ON_ERROR)));
             self::fail('nonce');
         } catch (CollectValidationException) {
             $this->addToAssertionCount(1);
         }
 
         $msOk = json_encode([
-            'v'         => 1,
+            'v' => 1,
             'timestamp' => time() * 1000,
-            'nonce'     => 'n-ms',
-            'signals'   => [],
-        ], JSON_THROW_ON_ERROR);
+            'nonce' => 'n-ms',
+            'signals' => [],
+        ], \JSON_THROW_ON_ERROR);
         self::assertArrayHasKey('v', $v2->validate(Request::create('/_device/collect', 'POST', content: $msOk)));
 
-        $originCfg                                = ProcessedConfig::array();
+        $originCfg = ProcessedConfig::array();
         $originCfg['endpoint']['allowed_origins'] = ['', 1, 'cdn.internal'];
-        $origins                                  = new OriginValidator(new DeviceIntelligenceConfig($originCfg));
+        $origins = new OriginValidator(new DeviceIntelligenceConfig($originCfg));
         try {
             $origins->validate(Request::create('/_device/collect', 'POST', server: [
-                'HTTP_HOST'   => 'app.test',
+                'HTTP_HOST' => 'app.test',
                 'HTTP_ORIGIN' => 'http://',
             ]));
             self::fail('bad origin');
@@ -417,31 +414,31 @@ final class BundleBranchesTest extends TestCase
             $this->addToAssertionCount(1);
         }
         $ok = Request::create('https://app.test/_device/collect', 'POST', server: [
-            'HTTP_HOST'   => 'app.test',
+            'HTTP_HOST' => 'app.test',
             'HTTP_ORIGIN' => 'https://cdn.internal',
         ]);
         $origins->validate($ok);
 
-        $now                                 = Scenario::now();
-        $cookieA                             = ProcessedConfig::array();
-        $cookieA['token_cookie']['secure']   = 'true';
+        $now = Scenario::now();
+        $cookieA = ProcessedConfig::array();
+        $cookieA['token_cookie']['secure'] = 'true';
         $cookieA['token_cookie']['samesite'] = 'weird';
-        $cfg                                 = new DeviceIntelligenceConfig($cookieA);
-        $issuer                              = new ObservationTokenIssuer($cfg, new FrozenClock($now), 'secret');
-        $cookie                              = $issuer->issue(ObservationId::generate($now), 'n', false);
+        $cfg = new DeviceIntelligenceConfig($cookieA);
+        $issuer = new ObservationTokenIssuer($cfg, new FrozenClock($now), 'secret');
+        $cookie = $issuer->issue(ObservationId::generate($now), 'n', false);
         self::assertTrue($cookie->isSecure());
         self::assertSame('lax', $cookie->getSameSite());
 
         $off = ProcessedConfig::object(['token_cookie' => ['secure' => '0']]);
-        $c2  = (new ObservationTokenIssuer($off, new FrozenClock($now), 'secret'))->issue(ObservationId::generate($now), 'n', true);
+        $c2 = (new ObservationTokenIssuer($off, new FrozenClock($now), 'secret'))->issue(ObservationId::generate($now), 'n', true);
         self::assertFalse($c2->isSecure());
 
         $badSig = Request::create('/');
-        $parts  = explode('.', (string) $cookie->getValue());
-        $badSig->cookies->set($cookie->getName(), $parts[0] . '.deadbeef');
+        $parts = explode('.', (string) $cookie->getValue());
+        $badSig->cookies->set($cookie->getName(), $parts[0].'.deadbeef');
         self::assertNull($issuer->read($badSig));
 
-        $payload   = rtrim(strtr(base64_encode('only|three|parts'), '+/', '-_'), '=') . '.' . hash_hmac('sha256', 'only|three|parts', 'secret');
+        $payload = rtrim(strtr(base64_encode('only|three|parts'), '+/', '-_'), '=').'.'.hash_hmac('sha256', 'only|three|parts', 'secret');
         $badChunks = Request::create('/');
         $badChunks->cookies->set($cookie->getName(), $payload);
         self::assertNull($issuer->read($badChunks));
@@ -502,7 +499,7 @@ final class BundleBranchesTest extends TestCase
             new RiskEngine([$rule]),
         );
         $dispatcher = new EventDispatcher();
-        $seen       = false;
+        $seen = false;
         $dispatcher->addListener(SuspiciousDeviceEvent::class, static function () use (&$seen): void {
             $seen = true;
         });
@@ -512,8 +509,8 @@ final class BundleBranchesTest extends TestCase
         self::assertSame($analysis, (new SuspiciousDeviceEvent($analysis))->analysis);
 
         $devices = new InMemoryDeviceRepository();
-        $obs     = new InMemoryObservationRepository();
-        $device  = Scenario::device();
+        $obs = new InMemoryObservationRepository();
+        $device = Scenario::device();
         $devices->save($device);
         $handler = new RecalculateStabilityHandler($devices, $obs);
         self::assertSame(0, $handler(new RecalculateStabilityMessage($device->id->value)));
@@ -527,9 +524,9 @@ final class BundleBranchesTest extends TestCase
             new InMemoryDeviceUserRepository(),
             new InMemoryTrustedDeviceRepository(),
         );
-        $now       = Scenario::now();
-        $signals   = SignalFactory::bagFromClient(['timezone' => ['value' => 'UTC', 'quality' => 1]], $now);
-        $analysis  = $engine->analyze(new AnalysisInput($now, $signals, '1.1.1.1'));
+        $now = Scenario::now();
+        $signals = SignalFactory::bagFromClient(['timezone' => ['value' => 'UTC', 'quality' => 1]], $now);
+        $analysis = $engine->analyze(new AnalysisInput($now, $signals, '1.1.1.1'));
         $collector = new DeviceIntelligenceDataCollector();
         $collector->collectAnalysis($analysis);
         self::assertNotSame([], $collector->getSignals());
@@ -555,7 +552,7 @@ final class BundleBranchesTest extends TestCase
         try {
             (new Processor())->processConfiguration(new Configuration(), [[
                 'profiles' => ['default' => ['matching' => ['weights' => [
-                    'audio'    => 1.5, 'canvas' => 0, 'webgl' => 0, 'platform' => 0, 'screen' => 0,
+                    'audio' => 1.5, 'canvas' => 0, 'webgl' => 0, 'platform' => 0, 'screen' => 0,
                     'timezone' => 0, 'hardware' => 0, 'browser_capabilities' => 0, 'client_hints' => 0,
                 ]]]],
             ]]);
@@ -569,10 +566,10 @@ final class BundleBranchesTest extends TestCase
         $container->register('cache.app', ArrayAdapter::class);
         $extension = new NowoDeviceIntelligenceExtension();
         $extension->load([['profiles' => ['default' => ['risk' => ['enabled' => false]]]]], $container);
-        $ref  = new ReflectionClass($container);
+        $ref = new \ReflectionClass($container);
         $prop = null;
         foreach ($ref->getProperties() as $p) {
-            if ($p->getName() === 'autoconfiguredAttributes') {
+            if ('autoconfiguredAttributes' === $p->getName()) {
                 $prop = $p;
                 break;
             }
@@ -588,12 +585,12 @@ final class BundleBranchesTest extends TestCase
 
     public function testTablePrefixUniqueConstraintsAndMissingIndexes(): void
     {
-        $em       = $this->createMock(EntityManagerInterface::class);
+        $em = $this->createMock(EntityManagerInterface::class);
         $metadata = new ClassMetadata(DeviceEntity::class);
         $metadata->setPrimaryTable([
-            'name'              => 'device_intelligence_device',
+            'name' => 'device_intelligence_device',
             'uniqueConstraints' => [
-                'uniq_x'                     => ['columns' => ['id']],
+                'uniq_x' => ['columns' => ['id']],
                 'device_intelligence_uniq_y' => ['columns' => ['label']],
             ],
         ]);
@@ -606,7 +603,7 @@ final class BundleBranchesTest extends TestCase
 
     private function tokenStorageWithUser(): TokenStorage
     {
-        $user    = new InMemoryUser('carol', null);
+        $user = new InMemoryUser('carol', null);
         $storage = new TokenStorage();
         $storage->setToken(new UsernamePasswordToken($user, 'main', $user->getRoles()));
 

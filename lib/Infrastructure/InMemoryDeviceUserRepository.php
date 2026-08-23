@@ -16,7 +16,7 @@ final class InMemoryDeviceUserRepository implements DeviceUserRepositoryInterfac
 
     public function save(DeviceUserRelation $relation): void
     {
-        $this->rows[$relation->deviceId->value . '|' . $relation->userIdentifier->value] = $relation;
+        $this->rows[$relation->deviceId->value.'|'.$relation->userIdentifier->value] = $relation;
     }
 
     public function forDevice(DeviceId $deviceId): array
@@ -45,6 +45,6 @@ final class InMemoryDeviceUserRepository implements DeviceUserRepositoryInterfac
 
     public function find(DeviceId $deviceId, UserIdentifier $user): ?DeviceUserRelation
     {
-        return $this->rows[$deviceId->value . '|' . $user->value] ?? null;
+        return $this->rows[$deviceId->value.'|'.$user->value] ?? null;
     }
 }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\Request;
 
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\AnalysisInput;
 use Nowo\DeviceIntelligence\DeviceIntelligence;
 use Nowo\DeviceIntelligence\Infrastructure\InMemoryDeviceRepository;
@@ -33,8 +32,8 @@ final class TokenAndValueResolverTest extends TestCase
             new InMemoryDeviceUserRepository(),
             new InMemoryTrustedDeviceRepository(),
         );
-        $analysis = $engine->analyze(new AnalysisInput(new DateTimeImmutable(), SignalBag::empty(), '9.9.9.9'));
-        $context  = (new TokenDeviceContextFactory())->fromStored($analysis->device(), $analysis->observation(), true);
+        $analysis = $engine->analyze(new AnalysisInput(new \DateTimeImmutable(), SignalBag::empty(), '9.9.9.9'));
+        $context = (new TokenDeviceContextFactory())->fromStored($analysis->device(), $analysis->observation(), true);
 
         self::assertTrue($context->isTrusted());
         self::assertFalse($context->isNew());
@@ -43,13 +42,13 @@ final class TokenAndValueResolverTest extends TestCase
         $request = Request::create('/');
         $request->attributes->set('_device', $context);
         $resolver = new DeviceContextValueResolver();
-        $typed    = new ArgumentMetadata('device', DeviceContext::class, false, false, null);
+        $typed = new ArgumentMetadata('device', DeviceContext::class, false, false, null);
         self::assertSame([$context], iterator_to_array($resolver->resolve($request, $typed)));
 
         $other = new ArgumentMetadata('foo', 'string', false, false, null);
         self::assertSame([], iterator_to_array($resolver->resolve($request, $other)));
 
-        $empty    = Request::create('/');
+        $empty = Request::create('/');
         $nullable = new ArgumentMetadata('device', DeviceContext::class, false, false, null, true);
         self::assertSame([null], iterator_to_array($resolver->resolve($empty, $nullable)));
         $required = new ArgumentMetadata('device', DeviceContext::class, false, false, null, false);

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence;
 
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\Privacy\PrivacyContext;
 use Nowo\DeviceIntelligence\Privacy\PrivacyMode;
 use Nowo\DeviceIntelligence\Signal\SignalBag;
@@ -19,7 +18,7 @@ final readonly class AnalysisInput
      * @param array<string, string> $headers lowercase keys
      */
     public function __construct(
-        public DateTimeImmutable $now,
+        public \DateTimeImmutable $now,
         public SignalBag $clientSignals = new SignalBag([]),
         public ?string $clientIp = null,
         public ?string $userAgent = null,

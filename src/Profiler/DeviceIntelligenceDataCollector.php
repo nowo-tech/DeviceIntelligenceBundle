@@ -9,9 +9,6 @@ use Nowo\DeviceIntelligenceBundle\Request\DeviceContext;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\DataCollector\DataCollector;
-use Throwable;
-
-use function is_array;
 
 /**
  * Web Profiler panel. Signal values are truncated summaries only.
@@ -21,7 +18,7 @@ use function is_array;
  */
 final class DeviceIntelligenceDataCollector extends DataCollector
 {
-    public function collect(Request $request, Response $response, ?Throwable $exception = null): void
+    public function collect(Request $request, Response $response, ?\Throwable $exception = null): void
     {
         unset($response, $exception);
         $context = $request->attributes->get('_device');
@@ -39,19 +36,19 @@ final class DeviceIntelligenceDataCollector extends DataCollector
         }
 
         $this->data = [
-            'has_context'    => true,
-            'device_id'      => $analysis->device()->id->value,
-            'new'            => $analysis->match()->isNewDevice(),
-            'trusted'        => $trusted,
-            'confidence'     => $analysis->match()->confidence(),
-            'similarity'     => $analysis->match()->similarity(),
-            'stability'      => $analysis->device()->stability(),
-            'risk'           => $analysis->riskScore(),
-            'risk_level'     => $analysis->riskLevel(),
-            'reasons'        => $analysis->riskReasons(),
-            'signals'        => $summaries,
-            'timings'        => $analysis->timings,
-            'degraded'       => $analysis->degraded(),
+            'has_context' => true,
+            'device_id' => $analysis->device()->id->value,
+            'new' => $analysis->match()->isNewDevice(),
+            'trusted' => $trusted,
+            'confidence' => $analysis->match()->confidence(),
+            'similarity' => $analysis->match()->similarity(),
+            'stability' => $analysis->device()->stability(),
+            'risk' => $analysis->riskScore(),
+            'risk_level' => $analysis->riskLevel(),
+            'reasons' => $analysis->riskReasons(),
+            'signals' => $summaries,
+            'timings' => $analysis->timings,
+            'degraded' => $analysis->degraded(),
             'observation_id' => $analysis->observation()->id->value,
         ];
     }
@@ -118,7 +115,7 @@ final class DeviceIntelligenceDataCollector extends DataCollector
     {
         $reasons = $this->data['reasons'] ?? [];
 
-        return is_array($reasons) ? array_values($reasons) : [];
+        return \is_array($reasons) ? array_values($reasons) : [];
     }
 
     /**
@@ -128,7 +125,7 @@ final class DeviceIntelligenceDataCollector extends DataCollector
     {
         $signals = $this->data['signals'] ?? [];
 
-        return is_array($signals) ? $signals : [];
+        return \is_array($signals) ? $signals : [];
     }
 
     /**
@@ -138,7 +135,7 @@ final class DeviceIntelligenceDataCollector extends DataCollector
     {
         $timings = $this->data['timings'] ?? [];
 
-        return is_array($timings) ? $timings : [];
+        return \is_array($timings) ? $timings : [];
     }
 
     public function isDegraded(): bool

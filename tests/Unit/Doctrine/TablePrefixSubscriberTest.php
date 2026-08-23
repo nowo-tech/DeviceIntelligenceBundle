@@ -10,7 +10,6 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Nowo\DeviceIntelligenceBundle\Doctrine\TablePrefixSubscriber;
 use Nowo\DeviceIntelligenceBundle\Entity\DeviceEntity;
 use PHPUnit\Framework\TestCase;
-use stdClass;
 
 /**
  * @author Héctor Franco Aceituno <hectorfranco@nowo.tech>
@@ -20,7 +19,7 @@ final class TablePrefixSubscriberTest extends TestCase
 {
     public function testPrefixesBundleEntityTable(): void
     {
-        $em       = $this->createMock(EntityManagerInterface::class);
+        $em = $this->createMock(EntityManagerInterface::class);
         $metadata = new ClassMetadata(DeviceEntity::class);
         $metadata->setPrimaryTable(['name' => 'device', 'indexes' => ['idx_os' => ['columns' => ['os_family']]]]);
         $subscriber = new TablePrefixSubscriber('device_intelligence_');
@@ -31,8 +30,8 @@ final class TablePrefixSubscriberTest extends TestCase
 
     public function testIgnoresOtherEntities(): void
     {
-        $em       = $this->createMock(EntityManagerInterface::class);
-        $metadata = new ClassMetadata(stdClass::class);
+        $em = $this->createMock(EntityManagerInterface::class);
+        $metadata = new ClassMetadata(\stdClass::class);
         $metadata->setPrimaryTable(['name' => 'users']);
         $subscriber = new TablePrefixSubscriber('device_intelligence_');
         $subscriber->loadClassMetadata(new LoadClassMetadataEventArgs($metadata, $em));

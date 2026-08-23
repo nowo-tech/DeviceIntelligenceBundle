@@ -4,15 +4,13 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Attribute;
 
-use Attribute;
-
 /**
  * Rate-limit a controller using hashed IP and/or device ULID keys.
  *
  * @author Héctor Franco Aceituno <hectorfranco@nowo.tech>
  * @copyright 2026 Nowo.tech
  */
-#[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD)]
+#[\Attribute(\Attribute::TARGET_CLASS | \Attribute::TARGET_METHOD)]
 final class DeviceRateLimit
 {
     /**

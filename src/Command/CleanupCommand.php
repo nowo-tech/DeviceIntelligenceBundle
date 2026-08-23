@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Command;
 
-use DateInterval;
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\Port\ObservationRepositoryInterface;
 use Nowo\DeviceIntelligenceBundle\Messenger\CleanupMessage;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -15,10 +13,6 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Messenger\MessageBusInterface;
-
-use function sprintf;
-
-use const DATE_ATOM;
 
 /**
  * @author Héctor Franco Aceituno <hectorfranco@nowo.tech>
@@ -43,18 +37,18 @@ final class CleanupCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $io   = new SymfonyStyle($input, $output);
+        $io = new SymfonyStyle($input, $output);
         $spec = (string) $input->getOption('older-than');
-        if ($input->getOption('async') && $this->bus !== null) {
+        if ($input->getOption('async') && null !== $this->bus) {
             $this->bus->dispatch(new CleanupMessage($spec));
             $io->success('Cleanup dispatched.');
 
             return Command::SUCCESS;
         }
 
-        $cutoff  = (new DateTimeImmutable())->sub(new DateInterval($spec));
+        $cutoff = (new \DateTimeImmutable())->sub(new \DateInterval($spec));
         $deleted = $this->observations->deleteOlderThan($cutoff);
-        $io->success(sprintf('Deleted %d observation(s) older than %s.', $deleted, $cutoff->format(DATE_ATOM)));
+        $io->success(\sprintf('Deleted %d observation(s) older than %s.', $deleted, $cutoff->format(\DATE_ATOM)));
 
         return Command::SUCCESS;
     }

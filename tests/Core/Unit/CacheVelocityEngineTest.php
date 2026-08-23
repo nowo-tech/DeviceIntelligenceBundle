@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Tests\Unit;
 
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\Device\Device;
 use Nowo\DeviceIntelligence\Device\DeviceId;
 use Nowo\DeviceIntelligence\Matching\CandidateIndexKey;
@@ -25,8 +24,8 @@ final class CacheVelocityEngineTest extends TestCase
     {
         $engine = new CacheVelocityEngine(new Psr16Cache(new ArrayAdapter()), 't.');
         $device = Device::fromNew(
-            DeviceId::generate(new DateTimeImmutable()),
-            new DateTimeImmutable(),
+            DeviceId::generate(new \DateTimeImmutable()),
+            new \DateTimeImmutable(),
             CandidateIndexKey::unknown(),
             SignalBag::empty(),
             'x',

@@ -7,29 +7,24 @@ namespace Nowo\DeviceIntelligence\Matching\Comparator;
 use Nowo\DeviceIntelligence\Signal\Signal;
 use Nowo\DeviceIntelligence\Signal\SignalName;
 
-use function count;
-use function is_array;
-use function is_bool;
-use function is_string;
-
 final class DefaultSignalComparator implements SignalComparatorInterface
 {
     public function similarity(?Signal $incoming, ?Signal $stored): float
     {
-        if ($incoming === null || $stored === null) {
+        if (null === $incoming || null === $stored) {
             return -1.0; // skip
         }
 
         return match ($incoming->name) {
-            SignalName::Platform                                      => $this->platform($incoming, $stored),
-            SignalName::Screen                                        => $this->screen($incoming, $stored),
-            SignalName::Timezone                                      => $this->timezone($incoming, $stored),
-            SignalName::Webgl, SignalName::Gpu                        => $this->webgl($incoming, $stored),
-            SignalName::Canvas, SignalName::Audio, SignalName::Fonts  => $this->digest($incoming, $stored),
+            SignalName::Platform => $this->platform($incoming, $stored),
+            SignalName::Screen => $this->screen($incoming, $stored),
+            SignalName::Timezone => $this->timezone($incoming, $stored),
+            SignalName::Webgl, SignalName::Gpu => $this->webgl($incoming, $stored),
+            SignalName::Canvas, SignalName::Audio, SignalName::Fonts => $this->digest($incoming, $stored),
             SignalName::HardwareConcurrency, SignalName::DeviceMemory => $this->numeric($incoming, $stored),
-            SignalName::BrowserCapabilities                           => $this->jaccard($incoming, $stored),
-            SignalName::ClientHints, SignalName::UserAgent            => $this->browser($incoming, $stored),
-            default                                                   => json_encode($incoming->normalizedValue) === json_encode($stored->normalizedValue) ? 1.0 : 0.0,
+            SignalName::BrowserCapabilities => $this->jaccard($incoming, $stored),
+            SignalName::ClientHints, SignalName::UserAgent => $this->browser($incoming, $stored),
+            default => json_encode($incoming->normalizedValue) === json_encode($stored->normalizedValue) ? 1.0 : 0.0,
         };
     }
 
@@ -50,22 +45,22 @@ final class DefaultSignalComparator implements SignalComparatorInterface
 
     private function numeric(Signal $a, Signal $b): float
     {
-        $left  = (int) $a->normalizedValue;
+        $left = (int) $a->normalizedValue;
         $right = (int) $b->normalizedValue;
         $delta = abs($left - $right);
 
         return match (true) {
-            $delta === 0 => 1.0,
-            $delta === 1 => 0.7,
-            $delta === 2 => 0.4,
-            default      => 0.15,
+            0 === $delta => 1.0,
+            1 === $delta => 0.7,
+            2 === $delta => 0.4,
+            default => 0.15,
         };
     }
 
     private function screen(Signal $a, Signal $b): float
     {
-        $ca = is_array($a->normalizedValue) ? (string) ($a->normalizedValue['class'] ?? '') : (string) $a->normalizedValue;
-        $cb = is_array($b->normalizedValue) ? (string) ($b->normalizedValue['class'] ?? '') : (string) $b->normalizedValue;
+        $ca = \is_array($a->normalizedValue) ? (string) ($a->normalizedValue['class'] ?? '') : (string) $a->normalizedValue;
+        $cb = \is_array($b->normalizedValue) ? (string) ($b->normalizedValue['class'] ?? '') : (string) $b->normalizedValue;
         if ($ca === $cb) {
             return 1.0;
         }
@@ -75,10 +70,10 @@ final class DefaultSignalComparator implements SignalComparatorInterface
 
     private function webgl(Signal $a, Signal $b): float
     {
-        $va = is_array($a->normalizedValue) ? (string) ($a->normalizedValue['vendor'] ?? '') : (string) $a->normalizedValue;
-        $vb = is_array($b->normalizedValue) ? (string) ($b->normalizedValue['vendor'] ?? '') : (string) $b->normalizedValue;
-        $ra = is_array($a->normalizedValue) ? (string) ($a->normalizedValue['renderer'] ?? '') : '';
-        $rb = is_array($b->normalizedValue) ? (string) ($b->normalizedValue['renderer'] ?? '') : '';
+        $va = \is_array($a->normalizedValue) ? (string) ($a->normalizedValue['vendor'] ?? '') : (string) $a->normalizedValue;
+        $vb = \is_array($b->normalizedValue) ? (string) ($b->normalizedValue['vendor'] ?? '') : (string) $b->normalizedValue;
+        $ra = \is_array($a->normalizedValue) ? (string) ($a->normalizedValue['renderer'] ?? '') : '';
+        $rb = \is_array($b->normalizedValue) ? (string) ($b->normalizedValue['renderer'] ?? '') : '';
         if ($va === $vb && $ra === $rb) {
             return 1.0;
         }
@@ -91,13 +86,13 @@ final class DefaultSignalComparator implements SignalComparatorInterface
 
     private function jaccard(Signal $a, Signal $b): float
     {
-        $left  = $this->stringSet($a->normalizedValue);
+        $left = $this->stringSet($a->normalizedValue);
         $right = $this->stringSet($b->normalizedValue);
-        if ($left === [] && $right === []) {
+        if ([] === $left && [] === $right) {
             return 1.0;
         }
-        $inter = count(array_intersect($left, $right));
-        $union = count(array_unique([...$left, ...$right]));
+        $inter = \count(array_intersect($left, $right));
+        $union = \count(array_unique([...$left, ...$right]));
 
         return $union > 0 ? $inter / $union : 0.0;
     }
@@ -107,7 +102,7 @@ final class DefaultSignalComparator implements SignalComparatorInterface
      */
     private function browser(Signal $a, Signal $b): float
     {
-        $left  = $this->browserLabel($a->normalizedValue);
+        $left = $this->browserLabel($a->normalizedValue);
         $right = $this->browserLabel($b->normalizedValue);
         if ($left === $right) {
             return 1.0;
@@ -127,7 +122,7 @@ final class DefaultSignalComparator implements SignalComparatorInterface
 
     private function browserLabel(mixed $value): string
     {
-        if (is_array($value)) {
+        if (\is_array($value)) {
             return (string) ($value['browser'] ?? '');
         }
 
@@ -139,21 +134,21 @@ final class DefaultSignalComparator implements SignalComparatorInterface
      */
     private function stringSet(mixed $value): array
     {
-        if (is_array($value)) {
+        if (\is_array($value)) {
             $out = [];
             foreach ($value as $k => $v) {
-                if (is_bool($v)) {
+                if (\is_bool($v)) {
                     if ($v) {
                         $out[] = (string) $k;
                     }
                     continue;
                 }
-                $out[] = is_string($k) ? $k . ':' . (string) $v : (string) $v;
+                $out[] = \is_string($k) ? $k.':'.(string) $v : (string) $v;
             }
 
             return $out;
         }
 
-        return (string) $value === '' ? [] : [(string) $value];
+        return '' === (string) $value ? [] : [(string) $value];
     }
 }

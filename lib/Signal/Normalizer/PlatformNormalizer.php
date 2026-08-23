@@ -11,20 +11,20 @@ final class PlatformNormalizer implements SignalNormalizerInterface
 {
     public function supports(SignalName $name): bool
     {
-        return $name === SignalName::Platform;
+        return SignalName::Platform === $name;
     }
 
     public function normalize(Signal $signal): Signal
     {
-        $raw    = strtolower((string) $signal->value);
+        $raw = strtolower((string) $signal->value);
         $family = 'other';
         foreach (['windows', 'macos', 'mac os', 'macintel', 'iphone', 'ipad', 'ios', 'android', 'linux', 'chrome os', 'cros'] as $needle) {
             if (str_contains($raw, $needle)) {
                 $family = match ($needle) {
                     'mac os', 'macintel' => 'macos',
-                    'iphone', 'ipad'     => 'ios',
-                    'chrome os', 'cros'  => 'chromeos',
-                    default              => $needle,
+                    'iphone', 'ipad' => 'ios',
+                    'chrome os', 'cros' => 'chromeos',
+                    default => $needle,
                 };
                 break;
             }

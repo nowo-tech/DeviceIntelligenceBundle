@@ -4,13 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Signal;
 
-use DateTimeImmutable;
-
-use function is_scalar;
-use function strlen;
-
-use const JSON_UNESCAPED_SLASHES;
-
 /**
  * One device characteristic. `value` is already a compact derived representation.
  */
@@ -26,7 +19,7 @@ final readonly class Signal
         public Quality $quality,
         public float $stability,
         public EntropyCategory $entropyCategory,
-        public DateTimeImmutable $collectedAt,
+        public \DateTimeImmutable $collectedAt,
         public SignalSource $source = SignalSource::Client,
         public ?string $qualityReason = null,
     ) {
@@ -52,14 +45,14 @@ final readonly class Signal
      */
     public function summary(int $max = 48): string
     {
-        $encoded = is_scalar($this->normalizedValue)
+        $encoded = \is_scalar($this->normalizedValue)
             ? (string) $this->normalizedValue
-            : (json_encode($this->normalizedValue, JSON_UNESCAPED_SLASHES) ?: '');
+            : (json_encode($this->normalizedValue, \JSON_UNESCAPED_SLASHES) ?: '');
 
-        if (strlen($encoded) <= $max) {
+        if (\strlen($encoded) <= $max) {
             return $encoded;
         }
 
-        return substr($encoded, 0, $max) . '…';
+        return substr($encoded, 0, $max).'…';
     }
 }

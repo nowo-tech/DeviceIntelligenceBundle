@@ -7,7 +7,6 @@ namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\User;
 use Nowo\DeviceIntelligence\Exception\InvalidValueException;
 use Nowo\DeviceIntelligenceBundle\User\SecurityUserIdentifierResolver;
 use PHPUnit\Framework\TestCase;
-use stdClass;
 use Symfony\Component\Security\Core\User\InMemoryUser;
 
 /**
@@ -19,7 +18,7 @@ final class SecurityUserIdentifierResolverTest extends TestCase
     public function testResolvesUserInterface(): void
     {
         $resolver = new SecurityUserIdentifierResolver();
-        $id       = $resolver->resolve(new InMemoryUser('alice', null));
+        $id = $resolver->resolve(new InMemoryUser('alice', null));
 
         self::assertSame('alice', $id->value);
     }
@@ -27,7 +26,7 @@ final class SecurityUserIdentifierResolverTest extends TestCase
     public function testResolvesDuckTypedUser(): void
     {
         $resolver = new SecurityUserIdentifierResolver();
-        $user     = new class {
+        $user = new class {
             public function getUserIdentifier(): string
             {
                 return 'bob';
@@ -40,6 +39,6 @@ final class SecurityUserIdentifierResolverTest extends TestCase
     public function testRejectsUnknownObject(): void
     {
         $this->expectException(InvalidValueException::class);
-        (new SecurityUserIdentifierResolver())->resolve(new stdClass());
+        (new SecurityUserIdentifierResolver())->resolve(new \stdClass());
     }
 }

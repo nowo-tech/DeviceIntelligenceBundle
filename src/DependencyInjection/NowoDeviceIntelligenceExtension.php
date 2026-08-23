@@ -51,8 +51,6 @@ use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpKernel\DataCollector\DataCollector;
 
-use function dirname;
-
 /**
  * Processes nowo_device_intelligence config and wires core + Doctrine services.
  *
@@ -71,7 +69,7 @@ final class NowoDeviceIntelligenceExtension extends Extension implements Prepend
         if ($container->hasExtension('twig')) {
             $container->prependExtensionConfig('twig', [
                 'paths' => [
-                    dirname(__DIR__) . '/Resources/views' => 'NowoDeviceIntelligenceBundle',
+                    \dirname(__DIR__).'/Resources/views' => 'NowoDeviceIntelligenceBundle',
                 ],
             ]);
         }
@@ -92,9 +90,9 @@ final class NowoDeviceIntelligenceExtension extends Extension implements Prepend
     public function load(array $configs, ContainerBuilder $container): void
     {
         $configuration = new Configuration();
-        $config        = $this->processConfiguration($configuration, $configs);
+        $config = $this->processConfiguration($configuration, $configs);
 
-        $loader = new PhpFileLoader($container, new FileLocator(dirname(__DIR__) . '/Resources/config'));
+        $loader = new PhpFileLoader($container, new FileLocator(\dirname(__DIR__).'/Resources/config'));
         $loader->load('services.php');
 
         $this->setParameters($container, $config);
@@ -155,7 +153,7 @@ final class NowoDeviceIntelligenceExtension extends Extension implements Prepend
      */
     private function registerCore(ContainerBuilder $container, array $config, array $profile): void
     {
-        $weights  = new Definition(MatchingWeights::class, [$profile['matching']['weights']]);
+        $weights = new Definition(MatchingWeights::class, [$profile['matching']['weights']]);
         $matching = new Definition(MatchingConfig::class, [
             $weights,
             $profile['matching']['minimum_confidence'],
@@ -309,7 +307,7 @@ final class NowoDeviceIntelligenceExtension extends Extension implements Prepend
         if ($container->hasDefinition(DeviceIntelligenceDataCollector::class)) {
             $container->getDefinition(DeviceIntelligenceDataCollector::class)
                 ->addTag('data_collector', [
-                    'id'       => 'nowo_device_intelligence',
+                    'id' => 'nowo_device_intelligence',
                     'template' => '@NowoDeviceIntelligenceBundle/Collector/device_intelligence.html.twig',
                     'priority' => 250,
                 ]);

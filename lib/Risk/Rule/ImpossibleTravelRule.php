@@ -18,12 +18,12 @@ final class ImpossibleTravelRule implements RiskRuleInterface
 
     public function evaluate(RiskContext $context): RiskResult
     {
-        if ($context->geo === null) {
+        if (null === $context->geo) {
             return RiskResult::skipped($this->name());
         }
         $previous = $context->previousCountry;
-        $current  = $context->observation->country ?? $context->geo->country;
-        if ($previous === null || $previous === $current) {
+        $current = $context->observation->country ?? $context->geo->country;
+        if (null === $previous || $previous === $current) {
             return new RiskResult(0, $this->name());
         }
         $hours = max(0.01, ($context->observation->createdAt->getTimestamp() - $context->device->lastSeenAt->getTimestamp()) / 3600);

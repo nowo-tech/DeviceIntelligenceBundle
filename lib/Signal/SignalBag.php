@@ -4,21 +4,12 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Signal;
 
-use ArrayIterator;
-use Countable;
-use IteratorAggregate;
-use Traversable;
-
-use function count;
-
-use const DATE_ATOM;
-
 /**
  * Unique map of signal name → Signal.
  *
- * @implements IteratorAggregate<string, Signal>
+ * @implements \IteratorAggregate<string, Signal>
  */
-final readonly class SignalBag implements IteratorAggregate, Countable
+final readonly class SignalBag implements \IteratorAggregate, \Countable
 {
     /**
      * @param array<string, Signal> $signals
@@ -34,7 +25,7 @@ final readonly class SignalBag implements IteratorAggregate, Countable
 
     public function with(Signal $signal): self
     {
-        $signals                       = $this->signals;
+        $signals = $this->signals;
         $signals[$signal->name->value] = $signal;
 
         return new self($signals);
@@ -81,12 +72,12 @@ final readonly class SignalBag implements IteratorAggregate, Countable
 
     public function count(): int
     {
-        return count($this->signals);
+        return \count($this->signals);
     }
 
-    public function getIterator(): Traversable
+    public function getIterator(): \Traversable
     {
-        return new ArrayIterator($this->signals);
+        return new \ArrayIterator($this->signals);
     }
 
     /**
@@ -97,13 +88,13 @@ final readonly class SignalBag implements IteratorAggregate, Countable
         $out = [];
         foreach ($this->signals as $name => $signal) {
             $out[$name] = [
-                'value'           => $signal->value,
+                'value' => $signal->value,
                 'normalizedValue' => $signal->normalizedValue,
-                'quality'         => $signal->quality->value,
-                'stability'       => $signal->stability,
+                'quality' => $signal->quality->value,
+                'stability' => $signal->stability,
                 'entropyCategory' => $signal->entropyCategory->value,
-                'collectedAt'     => $signal->collectedAt->format(DATE_ATOM),
-                'source'          => $signal->source->value,
+                'collectedAt' => $signal->collectedAt->format(\DATE_ATOM),
+                'source' => $signal->source->value,
             ];
         }
 

@@ -28,7 +28,7 @@ final class TokenDeviceContextFactory
             $observation->riskScore >= 90 => RiskLevel::Critical,
             $observation->riskScore >= 65 => RiskLevel::High,
             $observation->riskScore >= 30 => RiskLevel::Medium,
-            default                       => RiskLevel::Low,
+            default => RiskLevel::Low,
         };
         $analysis = new Analysis(
             $device,

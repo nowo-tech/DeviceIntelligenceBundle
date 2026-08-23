@@ -17,9 +17,6 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Throwable;
-
-use function is_object;
 
 /**
  * Sets the `_device` request attribute after collect or when observe_on_every_request.
@@ -65,31 +62,31 @@ final class DeviceRequestSubscriber implements EventSubscriberInterface
         }
 
         $token = $this->tokens->read($request);
-        if ($token === null) {
+        if (null === $token) {
             return;
         }
 
         try {
             $observation = $this->observations->find(new ObservationId($token['observation_id']));
-        } catch (Throwable $e) {
+        } catch (\Throwable $e) {
             $this->logger?->info('device_intelligence.token_lookup_failed', ['error' => $e->getMessage()]);
 
             return;
         }
-        if ($observation === null) {
+        if (null === $observation) {
             return;
         }
         $device = $this->devices->get($observation->deviceId);
-        if ($device === null) {
+        if (null === $device) {
             return;
         }
 
         $trusted = false;
         $userObj = $this->security?->getToken()?->getUser();
-        if (is_object($userObj) && $this->users !== null) {
+        if (\is_object($userObj) && null !== $this->users) {
             try {
                 $trusted = $this->devices->isTrusted($device, $this->users->resolve($userObj));
-            } catch (Throwable) {
+            } catch (\Throwable) {
                 $trusted = false;
             }
         }

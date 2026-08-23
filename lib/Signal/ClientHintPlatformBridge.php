@@ -4,28 +4,24 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Signal;
 
-use DateTimeImmutable;
-
-use function is_array;
-
 final class ClientHintPlatformBridge
 {
-    public static function platformFromHints(SignalBag $bag, DateTimeImmutable $now): SignalBag
+    public static function platformFromHints(SignalBag $bag, \DateTimeImmutable $now): SignalBag
     {
         if ($bag->has(SignalName::Platform)) {
             return $bag;
         }
         $hints = $bag->get(SignalName::ClientHints);
-        if ($hints === null) {
+        if (null === $hints) {
             return $bag;
         }
         $platform = null;
-        if (is_array($hints->normalizedValue) && isset($hints->normalizedValue['platform'])) {
+        if (\is_array($hints->normalizedValue) && isset($hints->normalizedValue['platform'])) {
             $platform = (string) $hints->normalizedValue['platform'];
-        } elseif (is_array($hints->value) && isset($hints->value['sec-ch-ua-platform'])) {
+        } elseif (\is_array($hints->value) && isset($hints->value['sec-ch-ua-platform'])) {
             $platform = trim((string) $hints->value['sec-ch-ua-platform'], '"');
         }
-        if ($platform === null || $platform === '') {
+        if (null === $platform || '' === $platform) {
             return $bag;
         }
 

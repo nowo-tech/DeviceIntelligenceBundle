@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\Request;
 
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\AnalysisInput;
 use Nowo\DeviceIntelligence\DeviceIntelligence;
 use Nowo\DeviceIntelligence\Infrastructure\InMemoryDeviceRepository;
@@ -32,9 +31,9 @@ final class DeviceContextAndCollectorTest extends TestCase
             new InMemoryDeviceUserRepository(),
             new InMemoryTrustedDeviceRepository(),
         );
-        $analysis = $engine->analyze(new AnalysisInput(new DateTimeImmutable(), SignalBag::empty(), '1.1.1.1'));
-        $context  = new DeviceContext($analysis);
-        $trusted  = $context->withTrusted(true);
+        $analysis = $engine->analyze(new AnalysisInput(new \DateTimeImmutable(), SignalBag::empty(), '1.1.1.1'));
+        $context = new DeviceContext($analysis);
+        $trusted = $context->withTrusted(true);
 
         self::assertSame($analysis, $context->analysis());
         self::assertSame($analysis->risk(), $context->risk());
@@ -45,7 +44,7 @@ final class DeviceContextAndCollectorTest extends TestCase
         self::assertTrue($trusted->isTrusted());
 
         $collector = new DeviceIntelligenceDataCollector();
-        $request   = Request::create('/');
+        $request = Request::create('/');
         $request->attributes->set('_device', $trusted);
         $collector->collect($request, new Response());
 

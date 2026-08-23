@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Device;
 
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\Port\DeviceRepositoryInterface;
 use Nowo\DeviceIntelligence\Port\DeviceUserRepositoryInterface;
 use Nowo\DeviceIntelligence\Port\TrustedDeviceRepositoryInterface;
@@ -14,8 +13,6 @@ use Nowo\DeviceIntelligence\User\DeviceUserRelation;
 use Nowo\DeviceIntelligence\User\UserIdentifier;
 use Psr\Clock\ClockInterface;
 
-use function count;
-
 final class DeviceManager implements DeviceManagerInterface, TrustedDeviceManagerInterface
 {
     public function __construct(
@@ -23,7 +20,7 @@ final class DeviceManager implements DeviceManagerInterface, TrustedDeviceManage
         private DeviceUserRepositoryInterface $users,
         private TrustedDeviceRepositoryInterface $trusts,
         private ClockInterface $clock,
-        private ?DateTimeImmutable $defaultExpiration = null,
+        private ?\DateTimeImmutable $defaultExpiration = null,
     ) {
     }
 
@@ -39,7 +36,7 @@ final class DeviceManager implements DeviceManagerInterface, TrustedDeviceManage
 
     public function accountCount(Device $device): int
     {
-        return count($this->users->forDevice($device->id));
+        return \count($this->users->forDevice($device->id));
     }
 
     public function devicesForUser(UserIdentifier $user): iterable
@@ -47,7 +44,7 @@ final class DeviceManager implements DeviceManagerInterface, TrustedDeviceManage
         $out = [];
         foreach ($this->users->forUser($user) as $rel) {
             $device = $this->devices->find($rel->deviceId);
-            if ($device !== null) {
+            if (null !== $device) {
                 $out[] = $device;
             }
         }
@@ -57,9 +54,9 @@ final class DeviceManager implements DeviceManagerInterface, TrustedDeviceManage
 
     public function associate(Device $device, UserIdentifier $user): DeviceUserRelation
     {
-        $now      = $this->clock->now();
+        $now = $this->clock->now();
         $existing = $this->users->find($device->id, $user);
-        if ($existing === null) {
+        if (null === $existing) {
             $rel = new DeviceUserRelation($device->id, $user, $now, $now, 1);
         } else {
             $rel = $existing->withLogin($now);
@@ -69,7 +66,7 @@ final class DeviceManager implements DeviceManagerInterface, TrustedDeviceManage
         return $rel;
     }
 
-    public function trust(Device $device, UserIdentifier $user, ?DateTimeImmutable $expiresAt = null, ?string $label = null): void
+    public function trust(Device $device, UserIdentifier $user, ?\DateTimeImmutable $expiresAt = null, ?string $label = null): void
     {
         $now = $this->clock->now();
         $this->trusts->save(new TrustedDevice(
@@ -85,9 +82,9 @@ final class DeviceManager implements DeviceManagerInterface, TrustedDeviceManage
 
     public function revoke(Device $device, UserIdentifier $user): void
     {
-        $now      = $this->clock->now();
+        $now = $this->clock->now();
         $existing = $this->trusts->findActive($device->id, $user, $now);
-        if ($existing === null) {
+        if (null === $existing) {
             $existing = new TrustedDevice($device->id, $user, $now, null, $now, $device->label);
         } else {
             $existing = new TrustedDevice(
@@ -105,6 +102,6 @@ final class DeviceManager implements DeviceManagerInterface, TrustedDeviceManage
 
     public function isTrusted(Device $device, UserIdentifier $user): bool
     {
-        return $this->trusts->findActive($device->id, $user, $this->clock->now()) !== null;
+        return null !== $this->trusts->findActive($device->id, $user, $this->clock->now());
     }
 }

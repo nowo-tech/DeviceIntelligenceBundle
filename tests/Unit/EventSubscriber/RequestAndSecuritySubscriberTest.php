@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\EventSubscriber;
 
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\AnalysisInput;
 use Nowo\DeviceIntelligence\Device\DeviceManager;
 use Nowo\DeviceIntelligence\DeviceIntelligence;
@@ -40,17 +39,17 @@ final class RequestAndSecuritySubscriberTest extends TestCase
 {
     public function testDeviceRequestSubscriberSkipsWhenDisabled(): void
     {
-        $config       = ProcessedConfig::object(['enabled' => false]);
-        $now          = new DateTimeImmutable();
-        $devices      = new InMemoryDeviceRepository();
+        $config = ProcessedConfig::object(['enabled' => false]);
+        $now = new \DateTimeImmutable();
+        $devices = new InMemoryDeviceRepository();
         $observations = new InMemoryObservationRepository();
-        $manager      = new DeviceManager(
+        $manager = new DeviceManager(
             $devices,
             new InMemoryDeviceUserRepository(),
             new InMemoryTrustedDeviceRepository(),
             new FrozenClock($now),
         );
-        $tokens     = new ObservationTokenIssuer($config, new FrozenClock($now), 's');
+        $tokens = new ObservationTokenIssuer($config, new FrozenClock($now), 's');
         $subscriber = new DeviceRequestSubscriber(
             $config,
             $tokens,
@@ -59,7 +58,7 @@ final class RequestAndSecuritySubscriberTest extends TestCase
             new TokenDeviceContextFactory(),
         );
         $kernel = $this->createMock(HttpKernelInterface::class);
-        $event  = new RequestEvent($kernel, Request::create('/'), HttpKernelInterface::MAIN_REQUEST);
+        $event = new RequestEvent($kernel, Request::create('/'), HttpKernelInterface::MAIN_REQUEST);
         $subscriber->onRequest($event);
         self::assertNull($event->getRequest()->attributes->get('_device'));
         self::assertArrayHasKey(KernelEvents::REQUEST, DeviceRequestSubscriber::getSubscribedEvents());
@@ -67,12 +66,12 @@ final class RequestAndSecuritySubscriberTest extends TestCase
 
     public function testSecurityLogoutAndFailureWithoutContext(): void
     {
-        $now     = new DateTimeImmutable();
+        $now = new \DateTimeImmutable();
         $devices = new InMemoryDeviceRepository();
-        $users   = new InMemoryDeviceUserRepository();
-        $trusts  = new InMemoryTrustedDeviceRepository();
+        $users = new InMemoryDeviceUserRepository();
+        $trusts = new InMemoryTrustedDeviceRepository();
         $manager = new DeviceManager($devices, $users, $trusts, new FrozenClock($now));
-        $stack   = new RequestStack();
+        $stack = new RequestStack();
         $stack->push(Request::create('/'));
         $subscriber = new SecurityDeviceSubscriber(
             $manager,
@@ -85,9 +84,9 @@ final class RequestAndSecuritySubscriberTest extends TestCase
         $subscriber->onLoginFailure($this->createMock(LoginFailureEvent::class));
         self::assertNotSame([], SecurityDeviceSubscriber::getSubscribedEvents());
 
-        $engine   = DeviceIntelligence::create($devices, new InMemoryObservationRepository(), $users, $trusts);
+        $engine = DeviceIntelligence::create($devices, new InMemoryObservationRepository(), $users, $trusts);
         $analysis = $engine->analyze(new AnalysisInput($now, SignalBag::empty(), '1.2.3.4'));
-        $request  = Request::create('/');
+        $request = Request::create('/');
         $request->attributes->set('_device', new DeviceContext($analysis));
         $stack->pop();
         $stack->push($request);

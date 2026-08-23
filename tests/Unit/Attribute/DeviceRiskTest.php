@@ -6,7 +6,6 @@ namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\Attribute;
 
 use Nowo\DeviceIntelligenceBundle\Attribute\DeviceRisk;
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
 
 /**
  * @author Héctor Franco Aceituno <hectorfranco@nowo.tech>
@@ -16,13 +15,13 @@ final class DeviceRiskTest extends TestCase
 {
     public function testReflectionReadsMax(): void
     {
-        $class      = new ReflectionClass(DeviceRiskProbe::class);
+        $class = new \ReflectionClass(DeviceRiskProbe::class);
         $attributes = $class->getAttributes(DeviceRisk::class);
         self::assertCount(1, $attributes);
         $instance = $attributes[0]->newInstance();
         self::assertSame(70, $instance->max);
 
-        $method      = $class->getMethod('sensitive');
+        $method = $class->getMethod('sensitive');
         $methodAttrs = $method->getAttributes(DeviceRisk::class);
         self::assertCount(1, $methodAttrs);
         self::assertSame(40, $methodAttrs[0]->newInstance()->max);

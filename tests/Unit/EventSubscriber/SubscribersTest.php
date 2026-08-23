@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\EventSubscriber;
 
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\AnalysisInput;
 use Nowo\DeviceIntelligence\DeviceIntelligence;
 use Nowo\DeviceIntelligence\Infrastructure\InMemoryDeviceRepository;
@@ -42,8 +41,8 @@ final class SubscribersTest extends TestCase
             new InMemoryDeviceUserRepository(),
             new InMemoryTrustedDeviceRepository(),
         );
-        $analysis   = $engine->analyze(new AnalysisInput(new DateTimeImmutable(), SignalBag::empty()));
-        $collector  = new DeviceIntelligenceDataCollector();
+        $analysis = $engine->analyze(new AnalysisInput(new \DateTimeImmutable(), SignalBag::empty()));
+        $collector = new DeviceIntelligenceDataCollector();
         $subscriber = new AnalyzeSubscriber($collector);
         $subscriber->onObserved(new DeviceObservedEvent($analysis));
         self::assertTrue($collector->hasContext());
@@ -52,11 +51,11 @@ final class SubscribersTest extends TestCase
 
     public function testRequireTrustedDeviceDenies(): void
     {
-        $limiter    = $this->createMock(DeviceRateLimiterInterface::class);
+        $limiter = $this->createMock(DeviceRateLimiterInterface::class);
         $subscriber = new ControllerAttributeSubscriber($limiter);
-        $request    = Request::create('/');
-        $kernel     = $this->createMock(HttpKernelInterface::class);
-        $event      = new ControllerEvent($kernel, [new GuardedController(), 'payout'], $request, HttpKernelInterface::MAIN_REQUEST);
+        $request = Request::create('/');
+        $kernel = $this->createMock(HttpKernelInterface::class);
+        $event = new ControllerEvent($kernel, [new GuardedController(), 'payout'], $request, HttpKernelInterface::MAIN_REQUEST);
 
         $this->expectException(AccessDeniedHttpException::class);
         $subscriber->onController($event);
@@ -70,14 +69,14 @@ final class SubscribersTest extends TestCase
             new InMemoryDeviceUserRepository(),
             new InMemoryTrustedDeviceRepository(),
         );
-        $analysis = $engine->analyze(new AnalysisInput(new DateTimeImmutable(), SignalBag::empty(), '1.1.1.1'));
-        $request  = Request::create('/');
+        $analysis = $engine->analyze(new AnalysisInput(new \DateTimeImmutable(), SignalBag::empty(), '1.1.1.1'));
+        $request = Request::create('/');
         $request->attributes->set('_device', new DeviceContext($analysis, true));
         $limiter = $this->createMock(DeviceRateLimiterInterface::class);
         $limiter->method('consume')->willReturn(true);
         $subscriber = new ControllerAttributeSubscriber($limiter);
-        $kernel     = $this->createMock(HttpKernelInterface::class);
-        $event      = new ControllerEvent($kernel, [new GuardedController(), 'risky'], $request, HttpKernelInterface::MAIN_REQUEST);
+        $kernel = $this->createMock(HttpKernelInterface::class);
+        $event = new ControllerEvent($kernel, [new GuardedController(), 'risky'], $request, HttpKernelInterface::MAIN_REQUEST);
 
         if ($analysis->riskScore() > 0) {
             try {
@@ -97,9 +96,9 @@ final class SubscribersTest extends TestCase
         $limiter = $this->createMock(DeviceRateLimiterInterface::class);
         $limiter->method('consume')->willReturn(false);
         $subscriber = new ControllerAttributeSubscriber($limiter);
-        $request    = Request::create('/');
-        $kernel     = $this->createMock(HttpKernelInterface::class);
-        $event      = new ControllerEvent($kernel, [new GuardedController(), 'limited'], $request, HttpKernelInterface::MAIN_REQUEST);
+        $request = Request::create('/');
+        $kernel = $this->createMock(HttpKernelInterface::class);
+        $event = new ControllerEvent($kernel, [new GuardedController(), 'limited'], $request, HttpKernelInterface::MAIN_REQUEST);
 
         $this->expectException(AccessDeniedHttpException::class);
         $subscriber->onController($event);

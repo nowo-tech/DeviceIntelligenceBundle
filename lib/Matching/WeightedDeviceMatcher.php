@@ -26,14 +26,14 @@ final class WeightedDeviceMatcher implements DeviceMatcherInterface
         }
         usort($ranked, static fn (array $a, array $b): int => $b['similarity'] <=> $a['similarity']);
 
-        if ($ranked === []) {
+        if ([] === $ranked) {
             return new DeviceMatch(null, new Confidence(0.5), new Similarity(0.0), [], [], true);
         }
 
-        $best             = $ranked[0];
+        $best = $ranked[0];
         $secondSimilarity = $ranked[1]['similarity'] ?? 0.0;
-        $confidence       = $this->confidence($best, $secondSimilarity, $observation);
-        $hard             = $best['hard'];
+        $confidence = $this->confidence($best, $secondSimilarity, $observation);
+        $hard = $best['hard'];
 
         $attach = false;
         if (!$hard && $confidence >= $this->config->minimumConfidence) {
@@ -70,15 +70,15 @@ final class WeightedDeviceMatcher implements DeviceMatcherInterface
      */
     private function score(DeviceObservation $observation, Device $device): array
     {
-        $num          = 0.0;
-        $den          = 0.0;
-        $qualitySum   = 0.0;
-        $qualityN     = 0;
+        $num = 0.0;
+        $den = 0.0;
+        $qualitySum = 0.0;
+        $qualityN = 0;
         $highExpected = 0;
-        $highPresent  = 0;
-        $hard         = false;
-        $changed      = [];
-        $stable       = [];
+        $highPresent = 0;
+        $hard = false;
+        $changed = [];
+        $stable = [];
 
         foreach (SignalName::cases() as $name) {
             if (!$name->isIdentityFeature()) {
@@ -92,9 +92,9 @@ final class WeightedDeviceMatcher implements DeviceMatcherInterface
                 ++$highExpected;
             }
             $incoming = $observation->signals->get($name);
-            $stored   = $device->lastSignals->get($name);
-            if ($incoming === null) {
-                if ($stored !== null && $stored->stability >= 0.8 && $observation->enhancementLevel >= 2) {
+            $stored = $device->lastSignals->get($name);
+            if (null === $incoming) {
+                if (null !== $stored && $stored->stability >= 0.8 && $observation->enhancementLevel >= 2) {
                     $num += $weight * 0.15 * 0.85;
                     $den += $weight * 0.85;
                     $changed[] = $name;
@@ -105,7 +105,7 @@ final class WeightedDeviceMatcher implements DeviceMatcherInterface
                 ++$highPresent;
             }
             $s = $this->comparator->similarity($incoming, $stored);
-            if ($s < 0.0 || $stored === null) {
+            if ($s < 0.0 || null === $stored) {
                 continue;
             }
             $q = min($incoming->quality->value, $stored->quality->value);
@@ -118,7 +118,7 @@ final class WeightedDeviceMatcher implements DeviceMatcherInterface
             } else {
                 $stable[] = $name;
             }
-            if ($name === SignalName::Platform && $s < 0.01) {
+            if (SignalName::Platform === $name && $s < 0.01) {
                 $hard = true;
             }
             if ($name->isHighEntropy() && $s < 0.01 && $q >= 0.8) {
@@ -126,18 +126,18 @@ final class WeightedDeviceMatcher implements DeviceMatcherInterface
             }
         }
 
-        $similarity  = $den > 0.0 ? $num / $den : 0.0;
-        $coverage    = $highExpected > 0 ? $highPresent / $highExpected : 1.0;
+        $similarity = $den > 0.0 ? $num / $den : 0.0;
+        $coverage = $highExpected > 0 ? $highPresent / $highExpected : 1.0;
         $qualityMean = $qualityN > 0 ? $qualitySum / $qualityN : 0.5;
 
         return [
-            'device'     => $device,
+            'device' => $device,
             'similarity' => $similarity,
-            'coverage'   => $coverage,
-            'quality'    => $qualityMean,
-            'hard'       => $hard,
-            'changed'    => $changed,
-            'stable'     => $stable,
+            'coverage' => $coverage,
+            'quality' => $qualityMean,
+            'hard' => $hard,
+            'changed' => $changed,
+            'stable' => $stable,
         ];
     }
 
@@ -146,7 +146,7 @@ final class WeightedDeviceMatcher implements DeviceMatcherInterface
      */
     private function confidence(array $best, float $secondSimilarity, DeviceObservation $observation): float
     {
-        $delta     = $best['similarity'] - $secondSimilarity;
+        $delta = $best['similarity'] - $secondSimilarity;
         $ambiguity = max(0.0, min(1.0, $delta / 0.12));
         $stability = $best['device']->stability();
         if ($best['device']->observationCount < 3) {
@@ -171,8 +171,8 @@ final class WeightedDeviceMatcher implements DeviceMatcherInterface
         $n = 0;
         foreach ([SignalName::Canvas, SignalName::Audio, SignalName::Webgl] as $name) {
             $incoming = $observation->signals->get($name);
-            $stored   = $device->lastSignals->get($name);
-            if ($incoming === null || $stored === null) {
+            $stored = $device->lastSignals->get($name);
+            if (null === $incoming || null === $stored) {
                 continue;
             }
             if ($incoming->quality->value < 0.8 || $stored->quality->value < 0.8) {

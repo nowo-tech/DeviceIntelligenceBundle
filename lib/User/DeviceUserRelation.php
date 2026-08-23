@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\User;
 
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\Device\DeviceId;
 
 final readonly class DeviceUserRelation
@@ -12,13 +11,13 @@ final readonly class DeviceUserRelation
     public function __construct(
         public DeviceId $deviceId,
         public UserIdentifier $userIdentifier,
-        public DateTimeImmutable $firstSeenAt,
-        public DateTimeImmutable $lastSeenAt,
+        public \DateTimeImmutable $firstSeenAt,
+        public \DateTimeImmutable $lastSeenAt,
         public int $loginCount,
     ) {
     }
 
-    public function withLogin(DateTimeImmutable $at): self
+    public function withLogin(\DateTimeImmutable $at): self
     {
         return new self(
             $this->deviceId,

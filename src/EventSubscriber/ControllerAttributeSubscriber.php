@@ -46,14 +46,14 @@ final class ControllerAttributeSubscriber implements EventSubscriberInterface
                     throw new AccessDeniedHttpException('Device risk exceeds the allowed maximum.');
                 }
             }
-            if ($attribute instanceof RequireTrustedDevice && ($context === null || !$context->isTrusted())) {
+            if ($attribute instanceof RequireTrustedDevice && (null === $context || !$context->isTrusted())) {
                 throw new AccessDeniedHttpException('A trusted device is required.');
             }
             if ($attribute instanceof DeviceRateLimit) {
-                $ipHash   = hash('sha256', (string) $request->getClientIp());
-                $userId   = $context?->analysis()->observation()->userIdentifier?->value;
+                $ipHash = hash('sha256', (string) $request->getClientIp());
+                $userId = $context?->analysis()->observation()->userIdentifier?->value;
                 $deviceId = $context?->device()->id->value;
-                $ok       = $this->limiter->consume(
+                $ok = $this->limiter->consume(
                     'attribute',
                     $attribute->policy,
                     $ipHash,

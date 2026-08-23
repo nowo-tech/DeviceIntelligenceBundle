@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\Event;
 
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\AnalysisInput;
 use Nowo\DeviceIntelligence\DeviceIntelligence;
 use Nowo\DeviceIntelligence\Infrastructure\InMemoryDeviceRepository;
@@ -33,7 +32,7 @@ final class AnalyzeServiceTest extends TestCase
     public function testDispatchesCreateEventsOnFirstVisit(): void
     {
         $dispatcher = new EventDispatcher();
-        $seen       = [];
+        $seen = [];
         foreach ([
             BeforeRiskAssessmentEvent::class,
             DeviceObservedEvent::class,
@@ -47,8 +46,8 @@ final class AnalyzeServiceTest extends TestCase
             });
         }
 
-        $service  = new AnalyzeService($this->engine(), $dispatcher);
-        $analysis = $service->analyze(new AnalysisInput(new DateTimeImmutable(), SignalBag::empty(), '10.0.0.1'));
+        $service = new AnalyzeService($this->engine(), $dispatcher);
+        $analysis = $service->analyze(new AnalysisInput(new \DateTimeImmutable(), SignalBag::empty(), '10.0.0.1'));
 
         self::assertTrue($analysis->match()->isNewDevice());
         self::assertContains(DeviceCreatedEvent::class, $seen);
@@ -58,28 +57,28 @@ final class AnalyzeServiceTest extends TestCase
 
     public function testDispatchesMatchOnSecondVisit(): void
     {
-        $engine  = $this->engine();
+        $engine = $this->engine();
         $service = new AnalyzeService($engine, new EventDispatcher());
-        $now     = new DateTimeImmutable('2026-08-23T10:00:00Z');
+        $now = new \DateTimeImmutable('2026-08-23T10:00:00Z');
         $signals = SignalFactory::bagFromClient([
-            'platform'             => ['value' => 'MacIntel', 'quality' => 1],
-            'canvas'               => ['value' => 'aabbccddeeff0011', 'quality' => 0.95],
-            'webgl'                => ['value' => ['vendor' => 'Apple', 'renderer' => 'Apple GPU'], 'quality' => 0.9],
-            'screen'               => ['value' => ['width' => 1440, 'height' => 900], 'quality' => 1],
-            'timezone'             => ['value' => 'Europe/Madrid', 'quality' => 1],
-            'client_hints'         => ['value' => ['brands' => [['brand' => 'Google Chrome', 'version' => '143']], 'platform' => 'macOS'], 'quality' => 0.9],
+            'platform' => ['value' => 'MacIntel', 'quality' => 1],
+            'canvas' => ['value' => 'aabbccddeeff0011', 'quality' => 0.95],
+            'webgl' => ['value' => ['vendor' => 'Apple', 'renderer' => 'Apple GPU'], 'quality' => 0.9],
+            'screen' => ['value' => ['width' => 1440, 'height' => 900], 'quality' => 1],
+            'timezone' => ['value' => 'Europe/Madrid', 'quality' => 1],
+            'client_hints' => ['value' => ['brands' => [['brand' => 'Google Chrome', 'version' => '143']], 'platform' => 'macOS'], 'quality' => 0.9],
             'hardware_concurrency' => ['value' => 8, 'quality' => 1],
             'browser_capabilities' => ['value' => ['webp' => true], 'quality' => 1],
-            'audio'                => ['value' => '1122334455667788', 'quality' => 0.9],
+            'audio' => ['value' => '1122334455667788', 'quality' => 0.9],
         ], $now);
         $service->analyze(new AnalysisInput($now, $signals, '10.0.0.1', 'Mozilla/5.0 Chrome/143.0.0.0'));
 
         $dispatcher = new EventDispatcher();
-        $matched    = false;
+        $matched = false;
         $dispatcher->addListener(DeviceMatchedEvent::class, static function () use (&$matched): void {
             $matched = true;
         });
-        $again  = new AnalyzeService($engine, $dispatcher);
+        $again = new AnalyzeService($engine, $dispatcher);
         $second = $again->analyze(new AnalysisInput($now->modify('+1 hour'), $signals, '10.0.0.1', 'Mozilla/5.0 Chrome/143.0.0.0'));
 
         self::assertFalse($second->match()->isNewDevice());

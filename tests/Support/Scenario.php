@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Tests\Support;
 
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\Device\Device;
 use Nowo\DeviceIntelligence\Device\DeviceId;
 use Nowo\DeviceIntelligence\Device\DeviceStatus;
@@ -33,9 +32,9 @@ use Nowo\DeviceIntelligence\User\UserIdentifier;
  */
 final class Scenario
 {
-    public static function now(): DateTimeImmutable
+    public static function now(): \DateTimeImmutable
     {
-        return new DateTimeImmutable('2026-08-23T12:00:00+00:00');
+        return new \DateTimeImmutable('2026-08-23T12:00:00+00:00');
     }
 
     public static function signal(
@@ -44,7 +43,7 @@ final class Scenario
         mixed $normalized = null,
         float $quality = 1.0,
         float $stability = 0.9,
-        ?DateTimeImmutable $at = null,
+        ?\DateTimeImmutable $at = null,
     ): Signal {
         return new Signal(
             $name,
@@ -69,7 +68,7 @@ final class Scenario
     }
 
     public static function device(
-        ?DateTimeImmutable $now = null,
+        ?\DateTimeImmutable $now = null,
         ?SignalBag $signals = null,
         DeviceStatus $status = DeviceStatus::Active,
         string $os = 'macos',
@@ -97,7 +96,7 @@ final class Scenario
     public static function observation(
         Device $device,
         ?SignalBag $signals = null,
-        ?DateTimeImmutable $now = null,
+        ?\DateTimeImmutable $now = null,
         ?string $country = 'ES',
         ?string $session = 'sess-1',
         ?IpHash $ipHash = null,
@@ -126,7 +125,7 @@ final class Scenario
 
     /**
      * @param list<DeviceUserRelation> $relations
-     * @param array<string, int> $velocity
+     * @param array<string, int>       $velocity
      */
     public static function context(
         Device $device,

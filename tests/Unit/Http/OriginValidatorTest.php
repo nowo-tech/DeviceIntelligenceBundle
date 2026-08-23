@@ -26,8 +26,8 @@ final class OriginValidatorTest extends TestCase
     public function testOriginAllowsSameHost(): void
     {
         $validator = new OriginValidator(ProcessedConfig::object());
-        $request   = Request::create('https://app.test/_device/collect', 'POST', server: [
-            'HTTP_HOST'   => 'app.test',
+        $request = Request::create('https://app.test/_device/collect', 'POST', server: [
+            'HTTP_HOST' => 'app.test',
             'HTTP_ORIGIN' => 'https://app.test',
         ]);
         $validator->validate($request);
@@ -44,8 +44,8 @@ final class OriginValidatorTest extends TestCase
     public function testOriginRejectsOtherHost(): void
     {
         $validator = new OriginValidator(ProcessedConfig::object());
-        $request   = Request::create('https://app.test/_device/collect', 'POST', server: [
-            'HTTP_HOST'   => 'app.test',
+        $request = Request::create('https://app.test/_device/collect', 'POST', server: [
+            'HTTP_HOST' => 'app.test',
             'HTTP_ORIGIN' => 'https://evil.test',
         ]);
         $this->expectException(CollectValidationException::class);
@@ -58,7 +58,7 @@ final class OriginValidatorTest extends TestCase
             'endpoint' => ['allowed_origins' => ['https://cdn.example']],
         ]));
         $request = Request::create('https://app.test/_device/collect', 'POST', server: [
-            'HTTP_HOST'   => 'app.test',
+            'HTTP_HOST' => 'app.test',
             'HTTP_ORIGIN' => 'https://cdn.example',
         ]);
         $validator->validate($request);
@@ -68,7 +68,7 @@ final class OriginValidatorTest extends TestCase
     public function testDoubleSubmit(): void
     {
         $validator = new OriginValidator(ProcessedConfig::object(['endpoint' => ['csrf' => 'double_submit']]));
-        $request   = Request::create('/_device/collect', 'POST');
+        $request = Request::create('/_device/collect', 'POST');
         $request->headers->set('X-CSRF-Token', 'abc');
         $request->cookies->set('di_csrf', 'abc');
         $validator->validate($request);
@@ -78,7 +78,7 @@ final class OriginValidatorTest extends TestCase
     public function testDoubleSubmitMismatch(): void
     {
         $validator = new OriginValidator(ProcessedConfig::object(['endpoint' => ['csrf' => 'double_submit']]));
-        $request   = Request::create('/_device/collect', 'POST');
+        $request = Request::create('/_device/collect', 'POST');
         $request->headers->set('X-CSRF-Token', 'abc');
         $request->cookies->set('di_csrf', 'xyz');
         $this->expectException(CollectValidationException::class);

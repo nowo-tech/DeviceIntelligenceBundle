@@ -17,7 +17,7 @@ final class PrivacyProcessor implements PrivacyProcessorInterface
         }
         foreach ($blocked as $name) {
             $enum = SignalName::tryFrom($name);
-            if ($enum !== null) {
+            if (null !== $enum) {
                 $signals = $signals->without($enum);
             }
         }

@@ -21,7 +21,7 @@ final class DeviceContextValueResolver implements ValueResolverInterface
      */
     public function resolve(Request $request, ArgumentMetadata $argument): iterable
     {
-        if ($argument->getType() !== DeviceContext::class) {
+        if (DeviceContext::class !== $argument->getType()) {
             return [];
         }
         $context = $request->attributes->get('_device');

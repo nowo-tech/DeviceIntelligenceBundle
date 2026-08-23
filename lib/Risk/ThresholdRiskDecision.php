@@ -15,12 +15,12 @@ final readonly class ThresholdRiskDecision implements RiskDecisionInterface
 
     public function decide(RiskAssessment $assessment): RiskDecision
     {
-        $score  = $assessment->score();
+        $score = $assessment->score();
         $action = match (true) {
-            $score >= $this->block   => RiskDecisionAction::Block,
-            $score >= $this->stepUp  => RiskDecisionAction::StepUp,
+            $score >= $this->block => RiskDecisionAction::Block,
+            $score >= $this->stepUp => RiskDecisionAction::StepUp,
             $score >= $this->observe => RiskDecisionAction::Observe,
-            default                  => RiskDecisionAction::Allow,
+            default => RiskDecisionAction::Allow,
         };
 
         return new RiskDecision($action);

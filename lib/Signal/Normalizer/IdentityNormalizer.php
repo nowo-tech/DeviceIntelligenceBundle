@@ -21,7 +21,7 @@ final class IdentityNormalizer implements SignalNormalizerInterface
 
     public function normalize(Signal $signal): Signal
     {
-        if ($signal->normalizedValue !== null && $signal->normalizedValue !== $signal->value) {
+        if (null !== $signal->normalizedValue && $signal->normalizedValue !== $signal->value) {
             return $signal;
         }
 

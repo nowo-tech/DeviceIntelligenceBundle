@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Risk;
 
-use function sprintf;
-
 final readonly class RiskReason
 {
     public function __construct(
@@ -19,6 +17,6 @@ final readonly class RiskReason
     {
         $sign = $this->contribution >= 0 ? '+' : '';
 
-        return sprintf('%s %s%d', $this->code, $sign, $this->contribution);
+        return \sprintf('%s %s%d', $this->code, $sign, $this->contribution);
     }
 }

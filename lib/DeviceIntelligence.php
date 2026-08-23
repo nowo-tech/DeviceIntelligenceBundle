@@ -45,9 +45,6 @@ use Nowo\DeviceIntelligence\Velocity\InMemoryVelocityEngine;
 use Nowo\DeviceIntelligence\Velocity\TimeWindow;
 use Nowo\DeviceIntelligence\Velocity\VelocityEngineInterface;
 
-use function count;
-use function is_array;
-
 final class DeviceIntelligence implements DeviceIntelligenceInterface
 {
     public function __construct(
@@ -104,7 +101,7 @@ final class DeviceIntelligence implements DeviceIntelligenceInterface
 
     public function analyze(AnalysisInput $input): Analysis
     {
-        $t0  = hrtime(true);
+        $t0 = hrtime(true);
         $bag = $input->clientSignals;
         foreach ($this->serverSignals->collect($input) as $signal) {
             if (!$bag->has($signal->name)) {
@@ -114,7 +111,7 @@ final class DeviceIntelligence implements DeviceIntelligenceInterface
         foreach ($this->networkSignals->collect($input) as $signal) {
             $bag = $bag->with($signal);
         }
-        $bag        = $this->privacy->process($bag, $input->privacy);
+        $bag = $this->privacy->process($bag, $input->privacy);
         $normalized = SignalBag::empty();
         foreach ($bag as $signal) {
             $normalized = $normalized->with($this->normalizers->normalize($signal));
@@ -122,17 +119,17 @@ final class DeviceIntelligence implements DeviceIntelligenceInterface
         $normalized = ClientHintPlatformBridge::platformFromHints($normalized, $input->now);
         $tNormalize = (hrtime(true) - $t0) / 1e6;
 
-        $degraded = EnhancementLevel::of($normalized) === 0;
-        $ipHash   = IpHasher::hash($input->clientIp, $input->ipSalt, $input->privacy->hashIp);
-        $country  = null;
-        $geo      = null;
-        if ($input->clientIp !== null) {
-            $geo     = $this->geoIp->locate($input->clientIp);
+        $degraded = 0 === EnhancementLevel::of($normalized);
+        $ipHash = IpHasher::hash($input->clientIp, $input->ipSalt, $input->privacy->hashIp);
+        $country = null;
+        $geo = null;
+        if (null !== $input->clientIp) {
+            $geo = $this->geoIp->locate($input->clientIp);
             $country = $geo?->country;
         }
 
         $placeholderId = DeviceId::generate($input->now);
-        $draft         = new DeviceObservation(
+        $draft = new DeviceObservation(
             ObservationId::generate($input->now),
             $placeholderId,
             $input->now,
@@ -150,18 +147,18 @@ final class DeviceIntelligence implements DeviceIntelligenceInterface
             EnhancementLevel::of($normalized),
         );
 
-        $tCand0     = hrtime(true);
-        $provider   = $this->candidates ?? new RepositoryCandidateProvider($this->devices);
+        $tCand0 = hrtime(true);
+        $provider = $this->candidates ?? new RepositoryCandidateProvider($this->devices);
         $candidates = $provider->candidates($draft);
-        $tCand      = (hrtime(true) - $tCand0) / 1e6;
+        $tCand = (hrtime(true) - $tCand0) / 1e6;
 
         $tMatch0 = hrtime(true);
-        $match   = $this->matcher->match($draft, $candidates);
-        $tMatch  = (hrtime(true) - $tMatch0) / 1e6;
+        $match = $this->matcher->match($draft, $candidates);
+        $tMatch = (hrtime(true) - $tMatch0) / 1e6;
 
-        $key   = $this->indexKeys->fromSignals($normalized);
+        $key = $this->indexKeys->fromSignals($normalized);
         $label = $this->labeler->label($normalized);
-        if ($match->isNewDevice() || $match->device() === null) {
+        if ($match->isNewDevice() || null === $match->device()) {
             $device = Device::fromNew(DeviceId::generate($input->now), $input->now, $key, $normalized, $label);
             $device = new Device(
                 $device->id,
@@ -178,9 +175,9 @@ final class DeviceIntelligence implements DeviceIntelligenceInterface
             );
             $this->metrics->increment('device_intelligence.new_devices');
         } else {
-            $existing  = $match->device();
+            $existing = $match->device();
             $stability = $this->emaStability($existing, $match);
-            $device    = $existing->withObservation($input->now, new Confidence($match->confidence()), $stability, $key, $normalized, $label);
+            $device = $existing->withObservation($input->now, new Confidence($match->confidence()), $stability, $key, $normalized, $label);
             $this->metrics->increment('device_intelligence.matches');
         }
         $this->devices->save($device);
@@ -203,23 +200,23 @@ final class DeviceIntelligence implements DeviceIntelligenceInterface
             $draft->enhancementLevel,
         );
 
-        $latest   = $this->observations->latestForDevice($device, 1);
+        $latest = $this->observations->latestForDevice($device, 1);
         $previous = $latest[0] ?? null;
-        $trusted  = false;
-        if ($input->userIdentifier !== null) {
-            $trusted = $this->trusts->findActive($device->id, $input->userIdentifier, $input->now) !== null;
+        $trusted = false;
+        if (null !== $input->userIdentifier) {
+            $trusted = null !== $this->trusts->findActive($device->id, $input->userIdentifier, $input->now);
         }
         $this->velocity->increment('request', $device);
-        $relations  = $this->deviceUsers->forDevice($device->id);
-        $tRisk0     = hrtime(true);
+        $relations = $this->deviceUsers->forDevice($device->id);
+        $tRisk0 = hrtime(true);
         $assessment = $this->risk->assess(new RiskContext(
             $observation,
             $device,
             $match,
             $relations,
             [
-                'request'       => $this->velocity->count('request', $device, TimeWindow::parse('1 hour')),
-                'registration'  => $this->velocity->count('registration', $device, TimeWindow::parse('1 day')),
+                'request' => $this->velocity->count('request', $device, TimeWindow::parse('1 hour')),
+                'registration' => $this->velocity->count('registration', $device, TimeWindow::parse('1 day')),
                 'login_failure' => $this->velocity->count('login_failure', $device, TimeWindow::parse('1 hour')),
             ],
             $trusted,
@@ -229,7 +226,7 @@ final class DeviceIntelligence implements DeviceIntelligenceInterface
             $previous?->ipHash?->value,
             $previous?->sessionIdentifier,
         ));
-        $tRisk       = (hrtime(true) - $tRisk0) / 1e6;
+        $tRisk = (hrtime(true) - $tRisk0) / 1e6;
         $observation = $observation->withRiskScore($assessment->score());
         $this->observations->save($observation);
         $this->metrics->increment('device_intelligence.observations');
@@ -247,11 +244,11 @@ final class DeviceIntelligence implements DeviceIntelligenceInterface
             $normalized,
             $degraded,
             [
-                'normalize'  => $tNormalize,
+                'normalize' => $tNormalize,
                 'candidates' => $tCand,
-                'match'      => $tMatch,
-                'risk'       => $tRisk,
-                'total'      => $total,
+                'match' => $tMatch,
+                'risk' => $tRisk,
+                'total' => $total,
             ],
         );
     }
@@ -259,9 +256,9 @@ final class DeviceIntelligence implements DeviceIntelligenceInterface
     private function emaStability(Device $device, DeviceMatch $match): Stability
     {
         $changedMass = 0.0;
-        $total       = max(1, count($match->changedSignals()) + count($match->stableSignals()));
-        $changedMass = count($match->changedSignals()) / $total;
-        $next        = 0.88 * $device->stability() + 0.12 * (1 - $changedMass);
+        $total = max(1, \count($match->changedSignals()) + \count($match->stableSignals()));
+        $changedMass = \count($match->changedSignals()) / $total;
+        $next = 0.88 * $device->stability() + 0.12 * (1 - $changedMass);
         if ($device->observationCount < 3) {
             $next = min($next, 0.7);
         }
@@ -273,10 +270,10 @@ final class DeviceIntelligence implements DeviceIntelligenceInterface
     {
         $s = $bag->get(SignalName::ClientHints)
             ?? $bag->get(SignalName::UserAgent);
-        if ($s === null) {
+        if (null === $s) {
             return null;
         }
-        if (is_array($s->normalizedValue)) {
+        if (\is_array($s->normalizedValue)) {
             return (string) ($s->normalizedValue['browser'] ?? null);
         }
 

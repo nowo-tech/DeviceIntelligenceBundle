@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\Command;
 
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\AnalysisInput;
 use Nowo\DeviceIntelligence\Device\DeviceId;
 use Nowo\DeviceIntelligence\Device\DeviceManager;
@@ -40,7 +39,7 @@ final class CommandsTest extends TestCase
     public function testCleanupSyncAndAsync(): void
     {
         $observations = new InMemoryObservationRepository();
-        $sync         = new CommandTester(new CleanupCommand($observations));
+        $sync = new CommandTester(new CleanupCommand($observations));
         self::assertSame(0, $sync->execute(['--older-than' => 'P30D']));
 
         $bus = $this->createMock(MessageBusInterface::class);
@@ -58,7 +57,7 @@ final class CommandsTest extends TestCase
     public function testStatsWithInMemory(): void
     {
         $devices = new InMemoryDeviceRepository();
-        $tester  = new CommandTester(new StatsCommand(
+        $tester = new CommandTester(new StatsCommand(
             $devices,
             new InMemoryObservationRepository(),
             new InMemoryDeviceUserRepository(),
@@ -87,7 +86,7 @@ final class CommandsTest extends TestCase
 
     public function testDeviceShowMissing(): void
     {
-        $now     = new DateTimeImmutable();
+        $now = new \DateTimeImmutable();
         $manager = new DeviceManager(
             new InMemoryDeviceRepository(),
             new InMemoryDeviceUserRepository(),
@@ -100,7 +99,7 @@ final class CommandsTest extends TestCase
 
     public function testUserDevicesEmpty(): void
     {
-        $now     = new DateTimeImmutable();
+        $now = new \DateTimeImmutable();
         $manager = new DeviceManager(
             new InMemoryDeviceRepository(),
             new InMemoryDeviceUserRepository(),
@@ -115,7 +114,7 @@ final class CommandsTest extends TestCase
     public function testRecalculateSyncAndAsync(): void
     {
         $handler = new RecalculateStabilityHandler(new InMemoryDeviceRepository(), new InMemoryObservationRepository());
-        $sync    = new CommandTester(new RecalculateCommand($handler));
+        $sync = new CommandTester(new RecalculateCommand($handler));
         self::assertSame(0, $sync->execute([]));
 
         $bus = $this->createMock(MessageBusInterface::class);
@@ -132,7 +131,7 @@ final class CommandsTest extends TestCase
 
     public function testAnalyzeInputDto(): void
     {
-        $input = new AnalysisInput(new DateTimeImmutable(), SignalBag::empty());
+        $input = new AnalysisInput(new \DateTimeImmutable(), SignalBag::empty());
         self::assertSame(1, $input->schemaVersion);
         self::assertTrue($input->highEntropyConsent);
     }

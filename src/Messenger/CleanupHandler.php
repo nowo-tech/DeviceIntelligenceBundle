@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Messenger;
 
-use DateInterval;
 use Nowo\DeviceIntelligence\Port\ObservationRepositoryInterface;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -26,7 +25,7 @@ final class CleanupHandler
 
     public function __invoke(CleanupMessage $message): int
     {
-        $cutoff = $this->clock->now()->sub(new DateInterval($message->olderThan));
+        $cutoff = $this->clock->now()->sub(new \DateInterval($message->olderThan));
 
         return $this->observations->deleteOlderThan($cutoff);
     }

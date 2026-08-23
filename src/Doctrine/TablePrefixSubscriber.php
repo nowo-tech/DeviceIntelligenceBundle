@@ -7,8 +7,6 @@ namespace Nowo\DeviceIntelligenceBundle\Doctrine;
 use Doctrine\ORM\Event\LoadClassMetadataEventArgs;
 use Doctrine\ORM\Mapping\ClassMetadata;
 
-use function is_array;
-
 /**
  * Applies the configured table prefix to bundle entities on LoadClassMetadata.
  *
@@ -32,7 +30,7 @@ final class TablePrefixSubscriber
 
         $table = $metadata->getTableName();
         if (!str_starts_with($table, $this->prefix)) {
-            $metadata->setPrimaryTable(['name' => $this->prefix . $table]);
+            $metadata->setPrimaryTable(['name' => $this->prefix.$table]);
         }
 
         $this->prefixUniqueConstraints($metadata);
@@ -45,16 +43,16 @@ final class TablePrefixSubscriber
     private function prefixUniqueConstraints(ClassMetadata $metadata): void
     {
         $table = $metadata->table;
-        if (!isset($table['uniqueConstraints']) || !is_array($table['uniqueConstraints'])) {
+        if (!isset($table['uniqueConstraints']) || !\is_array($table['uniqueConstraints'])) {
             return;
         }
         $prefixed = [];
         foreach ($table['uniqueConstraints'] as $name => $definition) {
-            $newName            = str_starts_with((string) $name, $this->prefix) ? (string) $name : $this->prefix . $name;
+            $newName = str_starts_with((string) $name, $this->prefix) ? (string) $name : $this->prefix.$name;
             $prefixed[$newName] = $definition;
         }
         $table['uniqueConstraints'] = $prefixed;
-        $metadata->table            = $table;
+        $metadata->table = $table;
     }
 
     /**
@@ -63,15 +61,15 @@ final class TablePrefixSubscriber
     private function prefixIndexes(ClassMetadata $metadata): void
     {
         $table = $metadata->table;
-        if (!isset($table['indexes']) || !is_array($table['indexes'])) {
+        if (!isset($table['indexes']) || !\is_array($table['indexes'])) {
             return;
         }
         $prefixed = [];
         foreach ($table['indexes'] as $name => $definition) {
-            $newName            = str_starts_with((string) $name, $this->prefix) ? (string) $name : $this->prefix . $name;
+            $newName = str_starts_with((string) $name, $this->prefix) ? (string) $name : $this->prefix.$name;
             $prefixed[$newName] = $definition;
         }
         $table['indexes'] = $prefixed;
-        $metadata->table  = $table;
+        $metadata->table = $table;
     }
 }

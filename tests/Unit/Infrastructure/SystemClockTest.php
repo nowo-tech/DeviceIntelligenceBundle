@@ -16,8 +16,8 @@ final class SystemClockTest extends TestCase
     public function testNowReturnsImmutable(): void
     {
         $clock = new SystemClock();
-        $a     = $clock->now();
-        $b     = $clock->now();
+        $a = $clock->now();
+        $b = $clock->now();
 
         self::assertGreaterThanOrEqual($a->getTimestamp(), $b->getTimestamp());
     }

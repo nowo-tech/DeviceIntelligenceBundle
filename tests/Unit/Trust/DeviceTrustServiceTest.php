@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\Trust;
 
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\AnalysisInput;
 use Nowo\DeviceIntelligence\Device\DeviceManager;
 use Nowo\DeviceIntelligence\DeviceIntelligence;
@@ -29,15 +28,15 @@ final class DeviceTrustServiceTest extends TestCase
 {
     public function testTrustAndRevokeDispatchEvents(): void
     {
-        $now        = new DateTimeImmutable('2026-08-23T12:00:00Z');
-        $devices    = new InMemoryDeviceRepository();
-        $users      = new InMemoryDeviceUserRepository();
-        $trusts     = new InMemoryTrustedDeviceRepository();
-        $engine     = DeviceIntelligence::create($devices, new InMemoryObservationRepository(), $users, $trusts);
-        $analysis   = $engine->analyze(new AnalysisInput($now, SignalBag::empty(), '8.8.8.8'));
-        $manager    = new DeviceManager($devices, $users, $trusts, new FrozenClock($now));
+        $now = new \DateTimeImmutable('2026-08-23T12:00:00Z');
+        $devices = new InMemoryDeviceRepository();
+        $users = new InMemoryDeviceUserRepository();
+        $trusts = new InMemoryTrustedDeviceRepository();
+        $engine = DeviceIntelligence::create($devices, new InMemoryObservationRepository(), $users, $trusts);
+        $analysis = $engine->analyze(new AnalysisInput($now, SignalBag::empty(), '8.8.8.8'));
+        $manager = new DeviceManager($devices, $users, $trusts, new FrozenClock($now));
         $dispatcher = new EventDispatcher();
-        $events     = [];
+        $events = [];
         $dispatcher->addListener(DeviceTrustedEvent::class, static function (DeviceTrustedEvent $e) use (&$events): void {
             $events[] = $e;
         });
@@ -45,7 +44,7 @@ final class DeviceTrustServiceTest extends TestCase
             $events[] = $e;
         });
         $service = new DeviceTrustService($manager, $dispatcher);
-        $user    = new UserIdentifier('alice');
+        $user = new UserIdentifier('alice');
 
         $service->trust($analysis->device(), $user, null, 'laptop');
         self::assertTrue($service->isTrusted($analysis->device(), $user));

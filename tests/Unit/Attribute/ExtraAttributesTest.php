@@ -8,7 +8,6 @@ use Nowo\DeviceIntelligenceBundle\Attribute\AsDeviceRiskRule;
 use Nowo\DeviceIntelligenceBundle\Attribute\DeviceRateLimit;
 use Nowo\DeviceIntelligenceBundle\Attribute\RequireTrustedDevice;
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
 
 /**
  * @author Héctor Franco Aceituno <hectorfranco@nowo.tech>
@@ -18,7 +17,7 @@ final class ExtraAttributesTest extends TestCase
 {
     public function testRateLimitAndTrustedAndRule(): void
     {
-        $class = new ReflectionClass(AttributeProbe::class);
+        $class = new \ReflectionClass(AttributeProbe::class);
 
         $rate = $class->getAttributes(DeviceRateLimit::class)[0]->newInstance();
         self::assertSame(10, $rate->limit);

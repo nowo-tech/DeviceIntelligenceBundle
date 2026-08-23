@@ -63,7 +63,7 @@ final class ExtensionPrependTest extends TestCase
     public function testBundleExposesExtension(): void
     {
         $bundle = new NowoDeviceIntelligenceBundle();
-        $ext    = $bundle->getContainerExtension();
+        $ext = $bundle->getContainerExtension();
         self::assertInstanceOf(NowoDeviceIntelligenceExtension::class, $ext);
         self::assertSame('nowo_device_intelligence', $ext->getAlias());
         $bundle->build(new ContainerBuilder());

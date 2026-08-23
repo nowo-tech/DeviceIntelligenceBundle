@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Observation;
 
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\Device\DeviceId;
 use Nowo\DeviceIntelligence\Privacy\IpHash;
 use Nowo\DeviceIntelligence\Signal\SignalBag;
@@ -18,7 +17,7 @@ final readonly class DeviceObservation
     public function __construct(
         public ObservationId $id,
         public DeviceId $deviceId,
-        public DateTimeImmutable $createdAt,
+        public \DateTimeImmutable $createdAt,
         public int $schemaVersion,
         public ?string $sdkVersion,
         public ?IpHash $ipHash,

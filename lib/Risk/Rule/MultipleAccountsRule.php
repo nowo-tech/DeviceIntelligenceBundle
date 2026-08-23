@@ -9,8 +9,6 @@ use Nowo\DeviceIntelligence\Risk\RiskResult;
 use Nowo\DeviceIntelligence\Risk\RiskRuleInterface;
 use Nowo\DeviceIntelligence\Risk\RiskSeverity;
 
-use function count;
-
 final class MultipleAccountsRule implements RiskRuleInterface
 {
     public function __construct(private int $threshold = 3)
@@ -24,7 +22,7 @@ final class MultipleAccountsRule implements RiskRuleInterface
 
     public function evaluate(RiskContext $context): RiskResult
     {
-        $n = count($context->userRelations);
+        $n = \count($context->userRelations);
         if ($n < $this->threshold) {
             return new RiskResult(0, $this->name(), ['accounts' => $n]);
         }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Entity;
 
-use DateTimeImmutable;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -25,10 +24,10 @@ final class DeviceEntity
     private string $id = '';
 
     #[ORM\Column(name: 'first_seen_at', type: Types::DATETIME_IMMUTABLE)]
-    private DateTimeImmutable $firstSeenAt;
+    private \DateTimeImmutable $firstSeenAt;
 
     #[ORM\Column(name: 'last_seen_at', type: Types::DATETIME_IMMUTABLE)]
-    private DateTimeImmutable $lastSeenAt;
+    private \DateTimeImmutable $lastSeenAt;
 
     #[ORM\Column(name: 'observation_count', type: Types::INTEGER)]
     private int $observationCount = 0;
@@ -73,9 +72,9 @@ final class DeviceEntity
 
     public function __construct()
     {
-        $now               = new DateTimeImmutable();
+        $now = new \DateTimeImmutable();
         $this->firstSeenAt = $now;
-        $this->lastSeenAt  = $now;
+        $this->lastSeenAt = $now;
     }
 
     public function getId(): string
@@ -88,22 +87,22 @@ final class DeviceEntity
         $this->id = $id;
     }
 
-    public function getFirstSeenAt(): DateTimeImmutable
+    public function getFirstSeenAt(): \DateTimeImmutable
     {
         return $this->firstSeenAt;
     }
 
-    public function setFirstSeenAt(DateTimeImmutable $firstSeenAt): void
+    public function setFirstSeenAt(\DateTimeImmutable $firstSeenAt): void
     {
         $this->firstSeenAt = $firstSeenAt;
     }
 
-    public function getLastSeenAt(): DateTimeImmutable
+    public function getLastSeenAt(): \DateTimeImmutable
     {
         return $this->lastSeenAt;
     }
 
-    public function setLastSeenAt(DateTimeImmutable $lastSeenAt): void
+    public function setLastSeenAt(\DateTimeImmutable $lastSeenAt): void
     {
         $this->lastSeenAt = $lastSeenAt;
     }

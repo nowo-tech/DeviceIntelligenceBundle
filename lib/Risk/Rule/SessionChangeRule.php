@@ -18,9 +18,9 @@ final class SessionChangeRule implements RiskRuleInterface
 
     public function evaluate(RiskContext $context): RiskResult
     {
-        $current  = $context->observation->sessionIdentifier;
+        $current = $context->observation->sessionIdentifier;
         $previous = $context->previousSession;
-        if ($current === null || $previous === null || $current === $previous) {
+        if (null === $current || null === $previous || $current === $previous) {
             return new RiskResult(0, $this->name());
         }
 

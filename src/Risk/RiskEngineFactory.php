@@ -29,7 +29,7 @@ use Nowo\DeviceIntelligence\Risk\Rule\TrustedDeviceRule;
 final class RiskEngineFactory
 {
     /**
-     * @param iterable<RiskRuleInterface> $tagged
+     * @param iterable<RiskRuleInterface>                            $tagged
      * @param array<string, array{enabled: bool, weight?: int|null}> $rulesConfig
      */
     public static function create(iterable $tagged, array $rulesConfig, RiskLevels $levels): RiskEngine

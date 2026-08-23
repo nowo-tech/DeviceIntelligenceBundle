@@ -13,8 +13,6 @@ use Nowo\DeviceIntelligence\Port\ObservationRepositoryInterface;
 use Nowo\DeviceIntelligenceBundle\Doctrine\DoctrineDeviceRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-use function count;
-
 /**
  * Recalculates EMA-style stability from stored observations. Does not rematch.
  *
@@ -33,9 +31,9 @@ final class RecalculateStabilityHandler
     public function __invoke(RecalculateStabilityMessage $message): int
     {
         $targets = [];
-        if ($message->deviceId !== null && $message->deviceId !== '') {
+        if (null !== $message->deviceId && '' !== $message->deviceId) {
             $device = $this->devices->find(new DeviceId($message->deviceId));
-            if ($device !== null) {
+            if (null !== $device) {
                 $targets[] = $device;
             }
         } elseif ($this->devices instanceof InMemoryDeviceRepository || $this->devices instanceof DoctrineDeviceRepository) {
@@ -55,12 +53,12 @@ final class RecalculateStabilityHandler
     private function recalculate(Device $device): bool
     {
         $history = $this->observations->latestForDevice($device, 20);
-        if (count($history) < 2) {
+        if (\count($history) < 2) {
             return false;
         }
-        $newest  = $history[0];
-        $report  = $device->compare($newest);
-        $next    = 0.88 * $device->stability() + 0.12 * (1 - $report->mutationScore());
+        $newest = $history[0];
+        $report = $device->compare($newest);
+        $next = 0.88 * $device->stability() + 0.12 * (1 - $report->mutationScore());
         $updated = new Device(
             $device->id,
             $device->firstSeenAt,

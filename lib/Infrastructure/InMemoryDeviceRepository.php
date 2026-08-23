@@ -4,13 +4,10 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Infrastructure;
 
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\Device\Device;
 use Nowo\DeviceIntelligence\Device\DeviceId;
 use Nowo\DeviceIntelligence\Device\DeviceStatus;
 use Nowo\DeviceIntelligence\Port\DeviceRepositoryInterface;
-
-use function count;
 
 final class InMemoryDeviceRepository implements DeviceRepositoryInterface
 {
@@ -33,11 +30,11 @@ final class InMemoryDeviceRepository implements DeviceRepositoryInterface
         ?string $timezone,
         ?string $gpuFamily,
         int $limit,
-        DateTimeImmutable $since,
+        \DateTimeImmutable $since,
     ): array {
         $out = [];
         foreach ($this->devices as $device) {
-            if ($device->status !== DeviceStatus::Active) {
+            if (DeviceStatus::Active !== $device->status) {
                 continue;
             }
             if ($device->lastSeenAt < $since) {
@@ -49,14 +46,14 @@ final class InMemoryDeviceRepository implements DeviceRepositoryInterface
             if ($device->indexKey->browserFamily !== $browserFamily) {
                 continue;
             }
-            if ($timezone !== null && $device->indexKey->timezone !== $timezone) {
+            if (null !== $timezone && $device->indexKey->timezone !== $timezone) {
                 continue;
             }
-            if ($gpuFamily !== null && $device->indexKey->gpuFamily !== $gpuFamily) {
+            if (null !== $gpuFamily && $device->indexKey->gpuFamily !== $gpuFamily) {
                 continue;
             }
             $out[] = $device;
-            if (count($out) >= $limit) {
+            if (\count($out) >= $limit) {
                 break;
             }
         }

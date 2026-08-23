@@ -6,8 +6,6 @@ namespace Nowo\DeviceIntelligence\Matching;
 
 use Nowo\DeviceIntelligence\Signal\SignalName;
 
-use function is_string;
-
 final readonly class CandidateIndexKey
 {
     public function __construct(
@@ -32,7 +30,7 @@ final readonly class CandidateIndexKey
      */
     public static function blockingKeyFrom(array $stableDigests): string
     {
-        if ($stableDigests === []) {
+        if ([] === $stableDigests) {
             return '';
         }
         ksort($stableDigests);
@@ -44,7 +42,7 @@ final readonly class CandidateIndexKey
     public function digestFor(SignalName $name, mixed $normalized): ?string
     {
         unset($name);
-        if (is_string($normalized) && $normalized !== '') {
+        if (\is_string($normalized) && '' !== $normalized) {
             return $normalized;
         }
 

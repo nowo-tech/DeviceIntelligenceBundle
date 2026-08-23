@@ -13,8 +13,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-use const DATE_ATOM;
-
 /**
  * @author Héctor Franco Aceituno <hectorfranco@nowo.tech>
  * @copyright 2026 Nowo.tech
@@ -34,7 +32,7 @@ final class UserDevicesCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $io   = new SymfonyStyle($input, $output);
+        $io = new SymfonyStyle($input, $output);
         $rows = [];
         foreach ($this->devices->devicesForUser(new UserIdentifier((string) $input->getArgument('user'))) as $device) {
             $rows[] = [
@@ -42,10 +40,10 @@ final class UserDevicesCommand extends Command
                 $device->label,
                 $device->status->value,
                 (string) $device->confidence->value,
-                $device->lastSeenAt->format(DATE_ATOM),
+                $device->lastSeenAt->format(\DATE_ATOM),
             ];
         }
-        if ($rows === []) {
+        if ([] === $rows) {
             $io->warning('No devices for this user.');
 
             return Command::SUCCESS;

@@ -17,9 +17,9 @@ final readonly class RiskLevels
     {
         return match (true) {
             $score >= $this->critical => RiskLevel::Critical,
-            $score >= $this->high     => RiskLevel::High,
-            $score >= $this->medium   => RiskLevel::Medium,
-            default                   => RiskLevel::Low,
+            $score >= $this->high => RiskLevel::High,
+            $score >= $this->medium => RiskLevel::Medium,
+            default => RiskLevel::Low,
         };
     }
 }

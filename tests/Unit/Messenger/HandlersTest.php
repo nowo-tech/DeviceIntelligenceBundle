@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\Messenger;
 
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\Device\Device;
 use Nowo\DeviceIntelligence\Device\DeviceId;
 use Nowo\DeviceIntelligence\Device\DeviceStatus;
@@ -31,10 +30,10 @@ final class HandlersTest extends TestCase
 {
     public function testCleanupDeletesOldObservations(): void
     {
-        $now          = new DateTimeImmutable('2026-08-23T12:00:00Z');
+        $now = new \DateTimeImmutable('2026-08-23T12:00:00Z');
         $observations = new InMemoryObservationRepository();
-        $deviceId     = DeviceId::generate($now);
-        $old          = new DeviceObservation(
+        $deviceId = DeviceId::generate($now);
+        $old = new DeviceObservation(
             ObservationId::generate($now->modify('-200 days')),
             $deviceId,
             $now->modify('-200 days'),
@@ -80,11 +79,11 @@ final class HandlersTest extends TestCase
 
     public function testRecalculateUpdatesStabilityWhenHistoryExists(): void
     {
-        $now          = new DateTimeImmutable('2026-08-23T12:00:00Z');
-        $devices      = new InMemoryDeviceRepository();
+        $now = new \DateTimeImmutable('2026-08-23T12:00:00Z');
+        $devices = new InMemoryDeviceRepository();
         $observations = new InMemoryObservationRepository();
-        $id           = DeviceId::generate($now);
-        $device       = new Device(
+        $id = DeviceId::generate($now);
+        $device = new Device(
             $id,
             $now,
             $now,
@@ -143,7 +142,7 @@ final class HandlersTest extends TestCase
 
     public function testRecalculateNoopsWithoutHistory(): void
     {
-        $now     = new DateTimeImmutable('2026-08-23T12:00:00Z');
+        $now = new \DateTimeImmutable('2026-08-23T12:00:00Z');
         $handler = new RecalculateStabilityHandler(new InMemoryDeviceRepository(), new InMemoryObservationRepository());
 
         self::assertSame(0, $handler(new RecalculateStabilityMessage('01ARZ3NDEKTSV4RRFFQ69G5FAV')));

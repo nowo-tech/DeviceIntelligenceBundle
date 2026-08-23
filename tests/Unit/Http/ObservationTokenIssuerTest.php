@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\Http;
 
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\Infrastructure\FrozenClock;
 use Nowo\DeviceIntelligence\Observation\ObservationId;
 use Nowo\DeviceIntelligenceBundle\Http\ObservationTokenIssuer;
@@ -20,8 +19,8 @@ final class ObservationTokenIssuerTest extends TestCase
 {
     public function testIssueAndRead(): void
     {
-        $now    = new DateTimeImmutable('2026-08-23T10:00:00Z');
-        $id     = ObservationId::generate($now);
+        $now = new \DateTimeImmutable('2026-08-23T10:00:00Z');
+        $id = ObservationId::generate($now);
         $issuer = new ObservationTokenIssuer(ProcessedConfig::object(), new FrozenClock($now), 'secret');
         $cookie = $issuer->issue($id, 'nonce-1', true);
 
@@ -39,7 +38,7 @@ final class ObservationTokenIssuerTest extends TestCase
 
     public function testReadEmptyAndTampered(): void
     {
-        $now    = new DateTimeImmutable('2026-08-23T10:00:00Z');
+        $now = new \DateTimeImmutable('2026-08-23T10:00:00Z');
         $issuer = new ObservationTokenIssuer(ProcessedConfig::object(), new FrozenClock($now), 'secret');
 
         self::assertNull($issuer->read(Request::create('/')));
@@ -51,15 +50,15 @@ final class ObservationTokenIssuerTest extends TestCase
 
     public function testExpiredTokenIsIgnored(): void
     {
-        $now    = new DateTimeImmutable('2026-08-23T10:00:00Z');
-        $id     = ObservationId::generate($now);
+        $now = new \DateTimeImmutable('2026-08-23T10:00:00Z');
+        $id = ObservationId::generate($now);
         $issuer = new ObservationTokenIssuer(
             ProcessedConfig::object(['token_ttl' => 60]),
             new FrozenClock($now),
             'secret',
         );
         $cookie = $issuer->issue($id, 'n', false);
-        $later  = new ObservationTokenIssuer(
+        $later = new ObservationTokenIssuer(
             ProcessedConfig::object(['token_ttl' => 60]),
             new FrozenClock($now->modify('+2 hours')),
             'secret',

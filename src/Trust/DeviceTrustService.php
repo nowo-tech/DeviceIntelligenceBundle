@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Trust;
 
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\Device\Device;
 use Nowo\DeviceIntelligence\Device\DeviceManager;
 use Nowo\DeviceIntelligence\User\UserIdentifier;
@@ -26,7 +25,7 @@ final class DeviceTrustService
     ) {
     }
 
-    public function trust(Device $device, UserIdentifier $user, ?DateTimeImmutable $expiresAt = null, ?string $label = null): void
+    public function trust(Device $device, UserIdentifier $user, ?\DateTimeImmutable $expiresAt = null, ?string $label = null): void
     {
         $this->devices->trust($device, $user, $expiresAt, $label);
         $this->dispatcher->dispatch(new DeviceTrustedEvent($device, $user));

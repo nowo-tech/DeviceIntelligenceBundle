@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Doctrine;
 
-use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Nowo\DeviceIntelligence\Device\Device;
 use Nowo\DeviceIntelligence\Observation\DeviceObservation;
@@ -69,7 +68,7 @@ final class DoctrineObservationRepository implements ObservationRepositoryInterf
         return $out;
     }
 
-    public function deleteOlderThan(DateTimeImmutable $cutoff): int
+    public function deleteOlderThan(\DateTimeImmutable $cutoff): int
     {
         return (int) $this->em->createQueryBuilder()
             ->delete(DeviceObservationEntity::class, 'o')

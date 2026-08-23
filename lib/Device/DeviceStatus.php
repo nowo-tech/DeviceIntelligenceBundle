@@ -6,8 +6,8 @@ namespace Nowo\DeviceIntelligence\Device;
 
 enum DeviceStatus: string
 {
-    case Active  = 'active';
+    case Active = 'active';
     case Dormant = 'dormant';
-    case Merged  = 'merged';
+    case Merged = 'merged';
     case Revoked = 'revoked';
 }

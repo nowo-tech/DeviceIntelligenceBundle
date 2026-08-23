@@ -10,10 +10,6 @@ use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 
-use function array_key_exists;
-use function is_array;
-use function sprintf;
-
 /**
  * Configuration tree for nowo_device_intelligence.
  *
@@ -70,7 +66,7 @@ final class Configuration implements ConfigurationInterface
     public function getConfigTreeBuilder(): TreeBuilder
     {
         $treeBuilder = new TreeBuilder(self::ALIAS);
-        $root        = $treeBuilder->getRootNode();
+        $root = $treeBuilder->getRootNode();
 
         $root
             ->beforeNormalization()
@@ -94,7 +90,7 @@ final class Configuration implements ConfigurationInterface
                 ->always(function (array $config): array {
                     $default = $config['default_profile'];
                     if (!isset($config['profiles'][$default])) {
-                        throw new InvalidConfigurationException(sprintf('nowo_device_intelligence.default_profile "%s" does not match any configured profile.', $default));
+                        throw new InvalidConfigurationException(\sprintf('nowo_device_intelligence.default_profile "%s" does not match any configured profile.', $default));
                     }
 
                     foreach ($config['profiles'] as $name => $profile) {
@@ -119,28 +115,28 @@ final class Configuration implements ConfigurationInterface
     {
         $config ??= [];
         $legacyKeys = ['collectors', 'matching', 'risk', 'trusted_devices', 'privacy', 'rate_limit'];
-        $extracted  = [];
+        $extracted = [];
         foreach ($legacyKeys as $key) {
-            if (array_key_exists($key, $config)) {
+            if (\array_key_exists($key, $config)) {
                 $extracted[$key] = $config[$key];
                 unset($config[$key]);
             }
         }
 
-        if ($extracted !== []) {
+        if ([] !== $extracted) {
             $config['profiles'] ??= [];
-            $existing = is_array($config['profiles'][self::DEFAULT_PROFILE] ?? null)
+            $existing = \is_array($config['profiles'][self::DEFAULT_PROFILE] ?? null)
                 ? $config['profiles'][self::DEFAULT_PROFILE]
                 : [];
             $config['profiles'][self::DEFAULT_PROFILE] = array_replace_recursive($extracted, $existing);
         }
 
-        if (!isset($config['profiles']) || $config['profiles'] === []) {
+        if (!isset($config['profiles']) || [] === $config['profiles']) {
             $config['profiles'] = [self::DEFAULT_PROFILE => []];
         }
 
         if (!isset($config['default_profile'])) {
-            $names                     = array_keys($config['profiles']);
+            $names = array_keys($config['profiles']);
             $config['default_profile'] = $names[0] ?? self::DEFAULT_PROFILE;
         }
 
@@ -159,7 +155,7 @@ final class Configuration implements ConfigurationInterface
                         ->scalarPrototype()
                             ->validate()
                                 ->ifNotInArray(self::ALLOWED_COLLECTORS)
-                                ->thenInvalid('Unknown collector "%s". Allowed: ' . implode(', ', self::ALLOWED_COLLECTORS) . '.')
+                                ->thenInvalid('Unknown collector "%s". Allowed: '.implode(', ', self::ALLOWED_COLLECTORS).'.')
                             ->end()
                         ->end()
                         ->defaultValue([
@@ -188,7 +184,7 @@ final class Configuration implements ConfigurationInterface
     private function matchingNode(): ArrayNodeDefinition
     {
         $defaults = MatchingWeights::defaults()->weights;
-        $node     = (new TreeBuilder('matching'))->getRootNode();
+        $node = (new TreeBuilder('matching'))->getRootNode();
         $node
             ->addDefaultsIfNotSet()
             ->children()
@@ -242,7 +238,7 @@ final class Configuration implements ConfigurationInterface
                             ->variableNode('weight')
                                 ->defaultNull()
                                 ->validate()
-                                    ->ifTrue(static fn (mixed $v): bool => $v !== null && (!is_numeric($v) || (int) $v < 0 || (int) $v > 100))
+                                    ->ifTrue(static fn (mixed $v): bool => null !== $v && (!is_numeric($v) || (int) $v < 0 || (int) $v > 100))
                                     ->thenInvalid('Risk rule weight must be null or an integer 0..100.')
                                 ->end()
                             ->end()
@@ -413,12 +409,12 @@ final class Configuration implements ConfigurationInterface
         foreach ($weights as $name => $weight) {
             $value = (float) $weight;
             if ($value < 0.0 || $value > 1.0) {
-                throw new InvalidConfigurationException(sprintf('Matching weight "%s" in profile "%s" must be in [0, 1].', $name, $profile));
+                throw new InvalidConfigurationException(\sprintf('Matching weight "%s" in profile "%s" must be in [0, 1].', $name, $profile));
             }
             $sum += $value;
         }
         if (abs($sum - 1.0) > 0.001) {
-            throw new InvalidConfigurationException(sprintf('Matching weights in profile "%s" must sum to ~1.0, got %s.', $profile, (string) $sum));
+            throw new InvalidConfigurationException(\sprintf('Matching weights in profile "%s" must sum to ~1.0, got %s.', $profile, (string) $sum));
         }
     }
 }

@@ -9,8 +9,6 @@ use Nowo\DeviceIntelligence\User\UserIdentifier;
 use Nowo\DeviceIntelligence\User\UserIdentifierResolverInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
-use function is_string;
-
 /**
  * Resolves the application user via UserInterface::getUserIdentifier().
  *
@@ -26,11 +24,11 @@ final class SecurityUserIdentifierResolver implements UserIdentifierResolverInte
         }
         if (method_exists($user, 'getUserIdentifier')) {
             $value = $user->getUserIdentifier();
-            if (is_string($value)) {
+            if (\is_string($value)) {
                 return new UserIdentifier($value);
             }
         }
 
-        throw new InvalidValueException('Cannot resolve a user identifier from ' . $user::class . '.');
+        throw new InvalidValueException('Cannot resolve a user identifier from '.$user::class.'.');
     }
 }

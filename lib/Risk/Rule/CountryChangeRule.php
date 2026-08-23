@@ -18,9 +18,9 @@ final class CountryChangeRule implements RiskRuleInterface
 
     public function evaluate(RiskContext $context): RiskResult
     {
-        $current  = $context->observation->country;
+        $current = $context->observation->country;
         $previous = $context->previousCountry;
-        if ($current === null || $previous === null || $current === $previous) {
+        if (null === $current || null === $previous || $current === $previous) {
             return new RiskResult(0, $this->name());
         }
 

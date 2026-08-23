@@ -16,7 +16,7 @@ final class InMemoryVelocityEngine implements VelocityEngineInterface
 
     public function increment(string $key, Device $device, int $by = 1): void
     {
-        $k = $key . '.' . $device->id->value;
+        $k = $key.'.'.$device->id->value;
         for ($i = 0; $i < $by; ++$i) {
             $this->hits[$k][] = time();
         }
@@ -24,9 +24,9 @@ final class InMemoryVelocityEngine implements VelocityEngineInterface
 
     public function count(string $key, Device $device, TimeWindow $window): int
     {
-        $k      = $key . '.' . $device->id->value;
+        $k = $key.'.'.$device->id->value;
         $cutoff = time() - $window->seconds();
-        $n      = 0;
+        $n = 0;
         foreach ($this->hits[$k] ?? [] as $ts) {
             if ($ts >= $cutoff) {
                 ++$n;

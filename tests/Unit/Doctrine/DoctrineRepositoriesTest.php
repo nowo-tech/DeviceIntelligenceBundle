@@ -24,7 +24,6 @@ use Nowo\DeviceIntelligenceBundle\Entity\DeviceUserEntity;
 use Nowo\DeviceIntelligenceBundle\Tests\Support\Scenario;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use stdClass;
 
 /**
  * @author Héctor Franco Aceituno <hectorfranco@nowo.tech>
@@ -37,10 +36,10 @@ final class DoctrineRepositoriesTest extends TestCase
         $mapper = new DeviceMapper();
         $device = Scenario::device();
         $entity = $mapper->toDeviceEntity($device);
-        $query  = $this->queryMock();
-        $query->method('getResult')->willReturn([$entity, new stdClass()]);
+        $query = $this->queryMock();
+        $query->method('getResult')->willReturn([$entity, new \stdClass()]);
         $query->method('getSingleScalarResult')->willReturn('4');
-        $em    = $this->em($query);
+        $em = $this->em($query);
         $finds = 0;
         $em->method('find')->willReturnCallback(static function () use (&$finds, $entity): ?object {
             ++$finds;
@@ -69,7 +68,7 @@ final class DoctrineRepositoriesTest extends TestCase
     public function testDeviceRepositoryCandidatesWithoutOptionalFilters(): void
     {
         $mapper = new DeviceMapper();
-        $query  = $this->queryMock();
+        $query = $this->queryMock();
         $query->method('getResult')->willReturn([]);
         $em = $this->em($query);
 
@@ -79,11 +78,11 @@ final class DoctrineRepositoriesTest extends TestCase
 
     public function testObservationRepositoryRoundtrip(): void
     {
-        $mapper      = new DeviceMapper();
-        $device      = Scenario::device();
+        $mapper = new DeviceMapper();
+        $device = Scenario::device();
         $observation = Scenario::observation($device, ipHash: IpHash::hmac('1.1.1.1', 'salt'));
-        $entity      = $mapper->toObservationEntity($observation);
-        $query       = $this->queryMock();
+        $entity = $mapper->toObservationEntity($observation);
+        $query = $this->queryMock();
         $query->method('getResult')->willReturn([$entity, 'skip']);
         $query->method('getSingleScalarResult')->willReturn(2);
         $query->method('execute')->willReturn(3);
@@ -101,12 +100,12 @@ final class DoctrineRepositoriesTest extends TestCase
 
     public function testUserRepositorySaveFindAndLists(): void
     {
-        $mapper   = new DeviceMapper();
-        $device   = Scenario::device();
-        $user     = new UserIdentifier('alice');
+        $mapper = new DeviceMapper();
+        $device = Scenario::device();
+        $user = new UserIdentifier('alice');
         $relation = new DeviceUserRelation($device->id, $user, Scenario::now(), Scenario::now(), 1);
-        $entity   = $mapper->toUserEntity($relation);
-        $query    = $this->queryMock();
+        $entity = $mapper->toUserEntity($relation);
+        $query = $this->queryMock();
         $query->method('getOneOrNullResult')->willReturnOnConsecutiveCalls(null, $entity, $entity, null);
         $query->method('getResult')->willReturn([$entity, 0]);
         $query->method('getSingleScalarResult')->willReturn(1);
@@ -124,16 +123,16 @@ final class DoctrineRepositoriesTest extends TestCase
 
     public function testTrustRepositoryActiveExpiredAndForUser(): void
     {
-        $mapper  = new DeviceMapper();
-        $device  = Scenario::device();
-        $user    = new UserIdentifier('alice');
-        $now     = Scenario::now();
-        $active  = new TrustedDevice($device->id, $user, $now, $now->modify('+1 day'), null, 'laptop');
+        $mapper = new DeviceMapper();
+        $device = Scenario::device();
+        $user = new UserIdentifier('alice');
+        $now = Scenario::now();
+        $active = new TrustedDevice($device->id, $user, $now, $now->modify('+1 day'), null, 'laptop');
         $expired = new TrustedDevice($device->id, $user, $now, $now->modify('-1 day'), null, 'old');
         $activeE = $mapper->toTrustEntity($active);
-        $expE    = $mapper->toTrustEntity($expired);
-        $query   = $this->queryMock();
-        $query->method('getOneOrNullResult')->willReturnOnConsecutiveCalls(null, $activeE, $expE, new stdClass());
+        $expE = $mapper->toTrustEntity($expired);
+        $query = $this->queryMock();
+        $query->method('getOneOrNullResult')->willReturnOnConsecutiveCalls(null, $activeE, $expE, new \stdClass());
         $query->method('getResult')->willReturn([$activeE, $expE, 'nope']);
         $query->method('getSingleScalarResult')->willReturn(2);
         $em = $this->em($query);
@@ -159,7 +158,7 @@ final class DoctrineRepositoriesTest extends TestCase
         self::assertSame(3, $trust->getId());
 
         $bag = (new DeviceMapper())->signalsFromArray([
-            'timezone'     => ['value' => 'UTC', 'normalizedValue' => 'UTC'],
+            'timezone' => ['value' => 'UTC', 'normalizedValue' => 'UTC'],
             'not_a_signal' => ['value' => 'y'],
         ]);
         self::assertTrue($bag->has(SignalName::Timezone));

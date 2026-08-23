@@ -53,9 +53,9 @@ final class ConfigurationTest extends TestCase
                 'default' => [
                     'matching' => [
                         'weights' => [
-                            'audio'  => 0.5,
+                            'audio' => 0.5,
                             'canvas' => 0.5,
-                            'webgl'  => 0.5,
+                            'webgl' => 0.5,
                         ],
                     ],
                 ],

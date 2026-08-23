@@ -15,7 +15,7 @@ final readonly class RiskContext
 {
     /**
      * @param list<DeviceUserRelation> $userRelations
-     * @param array<string, int> $velocity
+     * @param array<string, int>       $velocity
      */
     public function __construct(
         public DeviceObservation $observation,

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Tests\Unit;
 
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\Device\Device;
 use Nowo\DeviceIntelligence\Device\DeviceId;
 use Nowo\DeviceIntelligence\Device\DeviceStatus;
@@ -27,9 +26,9 @@ final class WeightedDeviceMatcherTest extends TestCase
     #[Test]
     public function minorBrowserUpdateDoesNotCreateNewDevice(): void
     {
-        $stored   = $this->observation('Chrome 143', 'macos', 'a' . str_repeat('1', 15), 'apple');
-        $device   = $this->device($stored);
-        $incoming = $this->observation('Chrome 144', 'macos', 'a' . str_repeat('1', 15), 'apple');
+        $stored = $this->observation('Chrome 143', 'macos', 'a'.str_repeat('1', 15), 'apple');
+        $device = $this->device($stored);
+        $incoming = $this->observation('Chrome 144', 'macos', 'a'.str_repeat('1', 15), 'apple');
 
         $match = (new WeightedDeviceMatcher())->match($incoming, [$device]);
 
@@ -41,9 +40,9 @@ final class WeightedDeviceMatcherTest extends TestCase
     #[Test]
     public function osSwapCreatesNewDevice(): void
     {
-        $stored   = $this->observation('Chrome 143', 'macos', 'a' . str_repeat('1', 15), 'apple');
-        $device   = $this->device($stored);
-        $incoming = $this->observation('Chrome 143', 'windows', 'b' . str_repeat('2', 15), 'nvidia');
+        $stored = $this->observation('Chrome 143', 'macos', 'a'.str_repeat('1', 15), 'apple');
+        $device = $this->device($stored);
+        $incoming = $this->observation('Chrome 143', 'windows', 'b'.str_repeat('2', 15), 'nvidia');
 
         $match = (new WeightedDeviceMatcher())->match($incoming, [$device]);
 
@@ -53,9 +52,9 @@ final class WeightedDeviceMatcherTest extends TestCase
     #[Test]
     public function missingAudioStillMatches(): void
     {
-        $stored   = $this->observation('Chrome 143', 'linux', 'c' . str_repeat('3', 15), 'intel', true);
-        $device   = $this->device($stored);
-        $incoming = $this->observation('Chrome 143', 'linux', 'c' . str_repeat('3', 15), 'intel', false);
+        $stored = $this->observation('Chrome 143', 'linux', 'c'.str_repeat('3', 15), 'intel', true);
+        $device = $this->device($stored);
+        $incoming = $this->observation('Chrome 143', 'linux', 'c'.str_repeat('3', 15), 'intel', false);
 
         $match = (new WeightedDeviceMatcher())->match($incoming, [$device]);
 
@@ -65,8 +64,8 @@ final class WeightedDeviceMatcherTest extends TestCase
     #[Test]
     public function emptyCandidatesIsNewDevice(): void
     {
-        $incoming = $this->observation('Firefox 120', 'linux', 'd' . str_repeat('4', 15), 'amd');
-        $match    = (new WeightedDeviceMatcher())->match($incoming, []);
+        $incoming = $this->observation('Firefox 120', 'linux', 'd'.str_repeat('4', 15), 'amd');
+        $match = (new WeightedDeviceMatcher())->match($incoming, []);
 
         self::assertTrue($match->isNewDevice());
         self::assertNull($match->device());
@@ -74,18 +73,18 @@ final class WeightedDeviceMatcherTest extends TestCase
 
     private function observation(string $browser, string $os, string $canvas, string $gpu, bool $audio = true): DeviceObservation
     {
-        $now = new DateTimeImmutable('2026-08-22T12:00:00Z');
+        $now = new \DateTimeImmutable('2026-08-22T12:00:00Z');
         $bag = SignalBag::empty()
             ->with($this->signal(SignalName::Platform, $os, $now))
             ->with($this->signal(SignalName::ClientHints, ['browser' => $browser, 'platform' => $os], $now))
             ->with($this->signal(SignalName::Canvas, $canvas, $now, 0.95))
-            ->with($this->signal(SignalName::Webgl, ['vendor' => $gpu, 'renderer' => $gpu . '-gpu'], $now, 0.9))
+            ->with($this->signal(SignalName::Webgl, ['vendor' => $gpu, 'renderer' => $gpu.'-gpu'], $now, 0.9))
             ->with($this->signal(SignalName::Screen, ['class' => 'hd', 'width' => 1920, 'height' => 1080], $now))
             ->with($this->signal(SignalName::Timezone, 'Europe/Madrid', $now))
             ->with($this->signal(SignalName::HardwareConcurrency, 8, $now))
             ->with($this->signal(SignalName::BrowserCapabilities, ['webp' => true, 'av1' => true], $now));
         if ($audio) {
-            $bag = $bag->with($this->signal(SignalName::Audio, 'e' . str_repeat('5', 15), $now, 0.9));
+            $bag = $bag->with($this->signal(SignalName::Audio, 'e'.str_repeat('5', 15), $now, 0.9));
         }
 
         return new DeviceObservation(
@@ -124,7 +123,7 @@ final class WeightedDeviceMatcherTest extends TestCase
         );
     }
 
-    private function signal(SignalName $name, mixed $value, DateTimeImmutable $now, float $q = 0.9): Signal
+    private function signal(SignalName $name, mixed $value, \DateTimeImmutable $now, float $q = 0.9): Signal
     {
         return new Signal(
             $name,

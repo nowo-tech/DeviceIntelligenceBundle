@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\Http;
 
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\Infrastructure\FrozenClock;
 use Nowo\DeviceIntelligence\Privacy\PrivacyContext;
 use Nowo\DeviceIntelligence\Privacy\PrivacyMode;
@@ -20,8 +19,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 
-use const JSON_THROW_ON_ERROR;
-
 /**
  * @author Héctor Franco Aceituno <hectorfranco@nowo.tech>
  * @copyright 2026 Nowo.tech
@@ -30,16 +27,16 @@ final class CollectValidatorAndFactoryTest extends TestCase
 {
     public function testValidatorHappyPathAndReplay(): void
     {
-        $config    = ProcessedConfig::object(['endpoint' => ['csrf' => 'none']]);
-        $cache     = new Psr16Cache(new ArrayAdapter());
+        $config = ProcessedConfig::object(['endpoint' => ['csrf' => 'none']]);
+        $cache = new Psr16Cache(new ArrayAdapter());
         $validator = new CollectRequestValidator($config, new OriginValidator($config), $cache);
-        $now       = time();
-        $body      = json_encode([
-            'v'         => 1,
+        $now = time();
+        $body = json_encode([
+            'v' => 1,
             'timestamp' => $now,
-            'nonce'     => 'once',
-            'signals'   => [],
-        ], JSON_THROW_ON_ERROR);
+            'nonce' => 'once',
+            'signals' => [],
+        ], \JSON_THROW_ON_ERROR);
         $request = Request::create('/_device/collect', 'POST', content: $body);
         $payload = $validator->validate($request);
         self::assertSame(1, $payload['v']);
@@ -50,7 +47,7 @@ final class CollectValidatorAndFactoryTest extends TestCase
 
     public function testValidatorRejectsEmptyUnsupportedAndOversized(): void
     {
-        $config    = ProcessedConfig::object(['endpoint' => ['csrf' => 'none', 'max_payload_bytes' => 1024]]);
+        $config = ProcessedConfig::object(['endpoint' => ['csrf' => 'none', 'max_payload_bytes' => 1024]]);
         $validator = new CollectRequestValidator($config, new OriginValidator($config), new Psr16Cache(new ArrayAdapter()));
 
         try {
@@ -79,20 +76,20 @@ final class CollectValidatorAndFactoryTest extends TestCase
 
     public function testAnalysisInputFactoryMapsPayload(): void
     {
-        $config  = ProcessedConfig::object();
-        $now     = new DateTimeImmutable('2026-08-23T12:00:00Z');
+        $config = ProcessedConfig::object();
+        $now = new \DateTimeImmutable('2026-08-23T12:00:00Z');
         $factory = new AnalysisInputFactory($config, new FrozenClock($now), new PrivacyContext(PrivacyMode::Balanced), 'secret');
         $request = Request::create('/_device/collect', 'POST', server: [
-            'REMOTE_ADDR'     => '203.0.113.9',
+            'REMOTE_ADDR' => '203.0.113.9',
             'HTTP_USER_AGENT' => 'Mozilla/5.0',
         ]);
         $request->setSession(new Session(new MockArraySessionStorage()));
         $input = $factory->fromRequest($request, [
-            'v'          => 1,
+            'v' => 1,
             'sdkVersion' => '1.0.0',
-            'nonce'      => 'n1',
-            'consent'    => ['highEntropy' => false],
-            'signals'    => [
+            'nonce' => 'n1',
+            'consent' => ['highEntropy' => false],
+            'signals' => [
                 'timezone' => ['value' => 'UTC', 'quality' => 1],
             ],
         ]);

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Tests\Unit;
 
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\AnalysisInput;
 use Nowo\DeviceIntelligence\Device\DefaultDeviceLabeler;
 use Nowo\DeviceIntelligence\Device\Device;
@@ -34,8 +33,6 @@ use Nowo\DeviceIntelligence\Velocity\InMemoryVelocityEngine;
 use Nowo\DeviceIntelligence\Velocity\TimeWindow;
 use PHPUnit\Framework\TestCase;
 
-use function strlen;
-
 /**
  * @author Héctor Franco Aceituno <hectorfranco@nowo.tech>
  * @copyright 2026 Nowo.tech
@@ -44,8 +41,8 @@ final class ValueObjectsTest extends TestCase
 {
     public function testUlidAndDeviceId(): void
     {
-        $now = new DateTimeImmutable();
-        $id  = DeviceId::generate($now);
+        $now = new \DateTimeImmutable();
+        $id = DeviceId::generate($now);
         self::assertTrue(Ulid::isValid($id->value));
         self::assertTrue($id->equals($id));
         self::assertSame($id->value, (string) $id);
@@ -83,7 +80,7 @@ final class ValueObjectsTest extends TestCase
         $key = CandidateIndexKey::unknown();
         self::assertSame('other', $key->osFamily);
         self::assertSame('', CandidateIndexKey::blockingKeyFrom([]));
-        self::assertSame(4, strlen(CandidateIndexKey::blockingKeyFrom(['a' => '1'])));
+        self::assertSame(4, \strlen(CandidateIndexKey::blockingKeyFrom(['a' => '1'])));
         self::assertSame('x', $key->digestFor(SignalName::Timezone, 'x'));
         self::assertNull($key->digestFor(SignalName::Timezone, []));
     }
@@ -114,14 +111,14 @@ final class ValueObjectsTest extends TestCase
         $metrics->increment('x');
         $metrics->timing('y', 1.0);
         $net = new NullNetworkSignalProvider();
-        self::assertSame([], iterator_to_array($net->collect(new AnalysisInput(new DateTimeImmutable()))));
+        self::assertSame([], iterator_to_array($net->collect(new AnalysisInput(new \DateTimeImmutable()))));
         $label = (new DefaultDeviceLabeler())->label(SignalBag::empty());
         self::assertStringContainsString('on', $label);
         $velocity = new InMemoryVelocityEngine();
-        $id       = DeviceId::generate(new DateTimeImmutable());
-        $device   = Device::fromNew(
+        $id = DeviceId::generate(new \DateTimeImmutable());
+        $device = Device::fromNew(
             $id,
-            new DateTimeImmutable(),
+            new \DateTimeImmutable(),
             CandidateIndexKey::unknown(),
             SignalBag::empty(),
             'Browser on unknown OS',
@@ -130,7 +127,7 @@ final class ValueObjectsTest extends TestCase
         self::assertGreaterThanOrEqual(1, $velocity->count('login', $device, TimeWindow::parse('1 hours')));
         self::assertContains(DeviceStatus::Active, DeviceStatus::cases());
         $processor = new PrivacyProcessor();
-        $strict    = $processor->process(
+        $strict = $processor->process(
             SignalBag::empty(),
             new PrivacyContext(PrivacyMode::Strict, false, true, false, false),
         );

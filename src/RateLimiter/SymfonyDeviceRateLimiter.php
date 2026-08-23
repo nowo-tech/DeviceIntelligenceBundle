@@ -7,10 +7,6 @@ namespace Nowo\DeviceIntelligenceBundle\RateLimiter;
 use Nowo\DeviceIntelligenceBundle\Config\DeviceIntelligenceConfig;
 use Psr\SimpleCache\CacheInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
-use Throwable;
-
-use function count;
-use function is_array;
 
 /**
  * Uses Symfony RateLimiter factories when configured; otherwise in-memory/cache counting.
@@ -43,37 +39,37 @@ final class SymfonyDeviceRateLimiter implements DeviceRateLimiterInterface
         ?string $interval = null,
     ): bool {
         $compound = $this->compoundKey($key, $ipHash, $userId, $deviceId);
-        $factory  = $this->factories[$policy] ?? null;
+        $factory = $this->factories[$policy] ?? null;
         if ($factory instanceof RateLimiterFactory) {
             return $factory->create($compound)->consume()->isAccepted();
         }
 
-        $profile  = $this->config->profile();
+        $profile = $this->config->profile();
         $policies = $profile['rate_limit']['policies'] ?? [];
-        $cfg      = is_array($policies[$policy] ?? null) ? $policies[$policy] : [];
-        $max      = $limit ?? (int) ($cfg['limit'] ?? 60);
-        $window   = $interval ?? (string) ($cfg['interval'] ?? '1 minute');
-        $seconds  = $this->intervalSeconds($window);
-        $bucket   = 'di.rl.' . $policy . '.' . $compound;
-        $now      = time();
+        $cfg = \is_array($policies[$policy] ?? null) ? $policies[$policy] : [];
+        $max = $limit ?? (int) ($cfg['limit'] ?? 60);
+        $window = $interval ?? (string) ($cfg['interval'] ?? '1 minute');
+        $seconds = $this->intervalSeconds($window);
+        $bucket = 'di.rl.'.$policy.'.'.$compound;
+        $now = time();
 
         try {
             $hits = $this->cache->get($bucket, []);
-        } catch (Throwable) {
+        } catch (\Throwable) {
             $hits = $this->memory[$bucket] ?? [];
         }
-        if (!is_array($hits)) {
+        if (!\is_array($hits)) {
             $hits = [];
         }
         $cutoff = $now - $seconds;
-        $hits   = array_values(array_filter($hits, static fn (mixed $ts): bool => (int) $ts >= $cutoff));
-        if (count($hits) >= $max) {
+        $hits = array_values(array_filter($hits, static fn (mixed $ts): bool => (int) $ts >= $cutoff));
+        if (\count($hits) >= $max) {
             return false;
         }
         $hits[] = $now;
         try {
             $this->cache->set($bucket, $hits, $seconds);
-        } catch (Throwable) {
+        } catch (\Throwable) {
             $this->memory[$bucket] = $hits;
         }
 
@@ -82,16 +78,16 @@ final class SymfonyDeviceRateLimiter implements DeviceRateLimiterInterface
 
     private function compoundKey(string $key, ?string $ipHash, ?string $userId, ?string $deviceId): string
     {
-        $ip     = $ipHash ?? 'anon';
-        $user   = $userId ?? 'anon';
+        $ip = $ipHash ?? 'anon';
+        $user = $userId ?? 'anon';
         $device = $deviceId ?? 'anon';
 
         return match ($key) {
-            'user'        => 'u:' . $user,
-            'device'      => 'd:' . $device,
-            'device_ip'   => 'di:' . $device . ':' . $ip,
-            'user_device' => 'ud:' . $user . ':' . $device,
-            default       => 'ip:' . $ip,
+            'user' => 'u:'.$user,
+            'device' => 'd:'.$device,
+            'device_ip' => 'di:'.$device.':'.$ip,
+            'user_device' => 'ud:'.$user.':'.$device,
+            default => 'ip:'.$ip,
         };
     }
 

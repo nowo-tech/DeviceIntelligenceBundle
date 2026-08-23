@@ -28,7 +28,7 @@ final class DoctrineDeviceUserRepository implements DeviceUserRepositoryInterfac
     public function save(DeviceUserRelation $relation): void
     {
         $existing = $this->findEntity($relation->deviceId, $relation->userIdentifier);
-        $entity   = $this->mapper->toUserEntity($relation, $existing);
+        $entity = $this->mapper->toUserEntity($relation, $existing);
         $this->em->persist($entity);
         $this->em->flush();
     }

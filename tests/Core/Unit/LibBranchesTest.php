@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Tests\Unit;
 
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\AnalysisInput;
 use Nowo\DeviceIntelligence\Device\DefaultDeviceLabeler;
 use Nowo\DeviceIntelligence\Device\Device;
@@ -79,8 +78,6 @@ use Nowo\DeviceIntelligence\Velocity\TimeWindow;
 use Nowo\DeviceIntelligenceBundle\Tests\Support\Scenario;
 use PHPUnit\Framework\TestCase;
 use Psr\SimpleCache\CacheInterface;
-
-use function strlen;
 
 /**
  * Remaining core branches for ≥99% line coverage.
@@ -161,13 +158,13 @@ final class LibBranchesTest extends TestCase
 
     public function testInMemoryRepositoriesAndDeviceManager(): void
     {
-        $now     = Scenario::now();
+        $now = Scenario::now();
         $devices = new InMemoryDeviceRepository();
-        $users   = new InMemoryDeviceUserRepository();
-        $trusts  = new InMemoryTrustedDeviceRepository();
-        $active  = Scenario::device($now);
+        $users = new InMemoryDeviceUserRepository();
+        $trusts = new InMemoryTrustedDeviceRepository();
+        $active = Scenario::device($now);
         $revoked = Scenario::device($now->modify('-1 day'), status: DeviceStatus::Revoked, os: 'linux');
-        $old     = new Device(
+        $old = new Device(
             DeviceId::generate($now),
             $now->modify('-400 days'),
             $now->modify('-400 days'),
@@ -180,7 +177,7 @@ final class LibBranchesTest extends TestCase
             [],
             SignalBag::empty(),
         );
-        $tzMiss  = Scenario::device($now, os: 'macos', browser: 'chrome', gpu: 'apple', tz: 'UTC');
+        $tzMiss = Scenario::device($now, os: 'macos', browser: 'chrome', gpu: 'apple', tz: 'UTC');
         $gpuMiss = Scenario::device($now, os: 'macos', browser: 'chrome', gpu: 'nvidia', tz: 'Europe/Madrid');
         $devices->save($revoked);
         $devices->save($old);
@@ -196,8 +193,8 @@ final class LibBranchesTest extends TestCase
         $manager = new DeviceManager($devices, $users, $trusts, new FrozenClock($now));
         self::assertSame($active, $manager->get($active->id));
         $alice = new UserIdentifier('alice');
-        $rel1  = $manager->associate($active, $alice);
-        $rel2  = $manager->associate($active, $alice);
+        $rel1 = $manager->associate($active, $alice);
+        $rel2 = $manager->associate($active, $alice);
         self::assertSame(2, $rel2->loginCount);
         self::assertSame(1, $manager->accountCount($active));
         self::assertNotSame([], iterator_to_array($manager->usersForDevice($active)));
@@ -224,9 +221,9 @@ final class LibBranchesTest extends TestCase
             Scenario::signal(SignalName::Timezone, 'Europe/Madrid', stability: 0.9),
             Scenario::signal(SignalName::Canvas, 'aaa', stability: 0.5),
         );
-        $dev  = Scenario::device($now, $bag);
+        $dev = Scenario::device($now, $bag);
         $same = Scenario::observation($dev, $bag, $now);
-        $mut  = Scenario::observation($dev, Scenario::bag(
+        $mut = Scenario::observation($dev, Scenario::bag(
             Scenario::signal(SignalName::Timezone, 'UTC', 'UTC', stability: 0.9),
             Scenario::signal(SignalName::Canvas, 'bbb', stability: 0.5),
         ), $now);
@@ -263,7 +260,7 @@ final class LibBranchesTest extends TestCase
         self::assertFalse($mergedBag->without(SignalName::Timezone)->has(SignalName::Timezone));
 
         $fromClient = SignalFactory::bagFromClient([
-            'unknown'  => 'x',
+            'unknown' => 'x',
             'timezone' => ['value' => 'UTC', 'quality' => 1, 'collectedAt' => time() * 1000],
             'platform' => 'linux',
         ], $now);
@@ -273,11 +270,11 @@ final class LibBranchesTest extends TestCase
 
     public function testRiskRulesAndEngineWeights(): void
     {
-        $now     = Scenario::now();
-        $device  = Scenario::device($now);
+        $now = Scenario::now();
+        $device = Scenario::device($now);
         $autoBag = Scenario::bag(Scenario::signal(SignalName::AutomationIndicators, ['confidence' => 0.9, 'indicators' => ['webdriver']], ['confidence' => 0.9, 'indicators' => ['webdriver']]));
-        $obs     = Scenario::observation($device, $autoBag, $now, 'FR', 'sess-2', null, new UserIdentifier('a'));
-        $ctx     = Scenario::context(
+        $obs = Scenario::observation($device, $autoBag, $now, 'FR', 'sess-2', null, new UserIdentifier('a'));
+        $ctx = Scenario::context(
             $device,
             $obs,
             false,
@@ -308,11 +305,11 @@ final class LibBranchesTest extends TestCase
         self::assertGreaterThan(0, (new IpChangeRule())->evaluate($ctxIp)->scoreContribution);
 
         $mutDevice = Scenario::device($now, Scenario::bag(Scenario::signal(SignalName::Timezone, 'Europe/Madrid', stability: 0.9)));
-        $mutObs    = Scenario::observation($mutDevice, Scenario::bag(Scenario::signal(SignalName::Timezone, 'UTC', 'UTC', stability: 0.9)));
+        $mutObs = Scenario::observation($mutDevice, Scenario::bag(Scenario::signal(SignalName::Timezone, 'UTC', 'UTC', stability: 0.9)));
         self::assertGreaterThan(0, (new FingerprintMutationRule())->evaluate(Scenario::context($mutDevice, $mutObs))->scoreContribution);
 
-        $travelSoon  = Scenario::observation($device, country: 'US', now: $now);
-        $travelCtx   = Scenario::context($device, $travelSoon, previousCountry: 'ES', geo: new GeoIpResult('US'));
+        $travelSoon = Scenario::observation($device, country: 'US', now: $now);
+        $travelCtx = Scenario::context($device, $travelSoon, previousCountry: 'ES', geo: new GeoIpResult('US'));
         $sameCountry = Scenario::context($device, $travelSoon, previousCountry: 'US', geo: new GeoIpResult('US'));
         self::assertSame(0, (new ImpossibleTravelRule())->evaluate($sameCountry)->scoreContribution);
         self::assertGreaterThan(0, (new ImpossibleTravelRule())->evaluate($travelCtx)->scoreContribution);
@@ -341,17 +338,17 @@ final class LibBranchesTest extends TestCase
     public function testNormalizersComparatorsMatcherAndServerSignals(): void
     {
         $now = Scenario::now();
-        $ua  = Scenario::signal(SignalName::UserAgent, 'Mozilla/5.0 Edg/120.0');
+        $ua = Scenario::signal(SignalName::UserAgent, 'Mozilla/5.0 Edg/120.0');
         self::assertSame('Edge 120', (new BrowserVersionNormalizer())->normalize($ua)->normalizedValue);
         $opr = Scenario::signal(SignalName::UserAgent, 'OPR/90.0');
         self::assertSame('Opera 90', (new BrowserVersionNormalizer())->normalize($opr)->normalizedValue);
         $sam = Scenario::signal(SignalName::UserAgent, 'SamsungBrowser/25.0');
         self::assertSame('Samsung 25', (new BrowserVersionNormalizer())->normalize($sam)->normalizedValue);
         $hints = Scenario::signal(SignalName::ClientHints, [
-            'brands'        => ['skip', ['brand' => 'Not A Brand', 'version' => '99'], ['brand' => 'Chromium', 'version' => '143']],
+            'brands' => ['skip', ['brand' => 'Not A Brand', 'version' => '99'], ['brand' => 'Chromium', 'version' => '143']],
             'uaFullVersion' => '143.0.0',
-            'platform'      => 'Windows',
-            'mobile'        => true,
+            'platform' => 'Windows',
+            'mobile' => true,
         ]);
         $normHints = (new BrowserVersionNormalizer())->normalize($hints);
         self::assertSame('windows', $normHints->normalizedValue['platform']);
@@ -388,16 +385,16 @@ final class LibBranchesTest extends TestCase
         $digest = new CompactDigestNormalizer();
         self::assertSame('aabbccdd', $digest->normalize(Scenario::signal(SignalName::Canvas, ['digest' => 'aabbccdd']))->normalizedValue);
         $long = $digest->normalize(Scenario::signal(SignalName::Audio, str_repeat('ab', 40)));
-        self::assertSame(16, strlen((string) $long->normalizedValue));
+        self::assertSame(16, \strlen((string) $long->normalizedValue));
         self::assertLessThan(0.3, $digest->normalize(Scenario::signal(SignalName::Fonts, 'zz'))->quality->value);
 
-        $id      = new IdentityNormalizer();
+        $id = new IdentityNormalizer();
         $already = Scenario::signal(SignalName::Language, 'raw', 'norm');
         self::assertSame($already, $id->normalize($already));
         self::assertSame('raw', $id->normalize(Scenario::signal(SignalName::Language, 'raw', 'raw'))->normalizedValue);
 
         $emptyReg = new SignalNormalizerRegistry([]);
-        $sig      = Scenario::signal(SignalName::Language, 'es');
+        $sig = Scenario::signal(SignalName::Language, 'es');
         self::assertSame($sig, $emptyReg->normalize($sig));
 
         $cmp = new DefaultSignalComparator();
@@ -451,8 +448,8 @@ final class LibBranchesTest extends TestCase
             Scenario::signal(SignalName::Platform, 'macos', 'macos'),
         );
         $storedDev = Scenario::device($now, $storedSignals);
-        $obs       = Scenario::observation($storedDev, $incoming, $now);
-        $match     = (new WeightedDeviceMatcher())->match($obs, [$storedDev]);
+        $obs = Scenario::observation($storedDev, $incoming, $now);
+        $match = (new WeightedDeviceMatcher())->match($obs, [$storedDev]);
         self::assertGreaterThanOrEqual(0.0, $match->confidence());
 
         $mixedQ = Scenario::observation($storedDev, Scenario::bag(
@@ -463,16 +460,16 @@ final class LibBranchesTest extends TestCase
         (new WeightedDeviceMatcher())->match($mixedQ, [$storedDev]);
 
         $secondEmpty = 0;
-        $secondRepo  = $this->createMock(DeviceRepositoryInterface::class);
+        $secondRepo = $this->createMock(DeviceRepositoryInterface::class);
         $secondRepo->method('findCandidates')->willReturnCallback(static function () use (&$secondEmpty, $storedDev): array {
             ++$secondEmpty;
 
-            return $secondEmpty === 1 ? [] : [$storedDev];
+            return 1 === $secondEmpty ? [] : [$storedDev];
         });
         self::assertNotSame([], iterator_to_array((new RepositoryCandidateProvider($secondRepo))->candidates($obs)));
 
         $epochCalls = 0;
-        $epochRepo  = $this->createMock(DeviceRepositoryInterface::class);
+        $epochRepo = $this->createMock(DeviceRepositoryInterface::class);
         $epochRepo->method('findCandidates')->willReturnCallback(static function () use (&$epochCalls, $storedDev): array {
             ++$epochCalls;
 
@@ -481,11 +478,11 @@ final class LibBranchesTest extends TestCase
         self::assertNotSame([], iterator_to_array((new RepositoryCandidateProvider($epochRepo))->candidates($obs)));
 
         $server = new DefaultServerSignalProvider();
-        $names  = [];
+        $names = [];
         foreach ($server->collect(new AnalysisInput($now, SignalBag::empty(), '1.1.1.1', 'Mozilla/5.0', [
-            'accept-language'    => 'es',
-            'sec-ch-ua'          => '"Chromium"',
-            'sec-ch-ua-mobile'   => '?0',
+            'accept-language' => 'es',
+            'sec-ch-ua' => '"Chromium"',
+            'sec-ch-ua-mobile' => '?0',
             'sec-ch-ua-platform' => '"macOS"',
         ], 'session-1')) as $signal) {
             $names[] = $signal->name;
@@ -512,11 +509,11 @@ final class LibBranchesTest extends TestCase
 
     public function testAnalyzeNetworkTrustAndHighRisk(): void
     {
-        $now     = Scenario::now();
+        $now = Scenario::now();
         $devices = new InMemoryDeviceRepository();
-        $obs     = new InMemoryObservationRepository();
-        $users   = new InMemoryDeviceUserRepository();
-        $trusts  = new InMemoryTrustedDeviceRepository();
+        $obs = new InMemoryObservationRepository();
+        $users = new InMemoryDeviceUserRepository();
+        $trusts = new InMemoryTrustedDeviceRepository();
         $network = new class implements NetworkSignalProviderInterface {
             public function collect(AnalysisInput $input): iterable
             {
@@ -528,7 +525,7 @@ final class LibBranchesTest extends TestCase
                     new Quality(1),
                     0.4,
                     SignalName::IpAsn->entropyCategory(),
-                    new DateTimeImmutable(),
+                    new \DateTimeImmutable(),
                     SignalSource::Server,
                 );
             }
@@ -549,7 +546,7 @@ final class LibBranchesTest extends TestCase
             new NullGeoIpProvider(),
             new InMemoryVelocityEngine(),
         );
-        $user  = new UserIdentifier('dana');
+        $user = new UserIdentifier('dana');
         $first = $engine->analyze(new AnalysisInput($now, SignalBag::empty(), '8.8.8.8', userIdentifier: $user));
         $trusts->save(new TrustedDevice($first->device()->id, $user, $now, null, null, 'p'));
         $second = $engine->analyze(new AnalysisInput($now->modify('+1 minute'), SignalBag::empty(), '8.8.8.8', userIdentifier: $user));

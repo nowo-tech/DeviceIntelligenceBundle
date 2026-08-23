@@ -6,13 +6,13 @@ namespace Nowo\DeviceIntelligence\Risk;
 
 enum RiskLevel: string
 {
-    case Low      = 'low';
-    case Medium   = 'medium';
-    case High     = 'high';
+    case Low = 'low';
+    case Medium = 'medium';
+    case High = 'high';
     case Critical = 'critical';
 
     public function isHigh(): bool
     {
-        return $this === self::High || $this === self::Critical;
+        return self::High === $this || self::Critical === $this;
     }
 }

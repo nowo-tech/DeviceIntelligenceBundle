@@ -6,8 +6,8 @@ namespace Nowo\DeviceIntelligence\Risk;
 
 enum RiskDecisionAction: string
 {
-    case Allow   = 'allow';
+    case Allow = 'allow';
     case Observe = 'observe';
-    case StepUp  = 'step_up';
-    case Block   = 'block';
+    case StepUp = 'step_up';
+    case Block = 'block';
 }

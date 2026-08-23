@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Doctrine;
 
-use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Nowo\DeviceIntelligence\Device\Device;
 use Nowo\DeviceIntelligence\Device\DeviceId;
@@ -50,7 +49,7 @@ final class DoctrineDeviceRepository implements DeviceRepositoryInterface
         ?string $timezone,
         ?string $gpuFamily,
         int $limit,
-        DateTimeImmutable $since,
+        \DateTimeImmutable $since,
     ): array {
         $qb = $this->em->createQueryBuilder()
             ->select('d')
@@ -65,10 +64,10 @@ final class DoctrineDeviceRepository implements DeviceRepositoryInterface
             ->setParameter('browser', $browserFamily)
             ->setMaxResults($limit);
 
-        if ($timezone !== null) {
+        if (null !== $timezone) {
             $qb->andWhere('d.timezone = :tz')->setParameter('tz', $timezone);
         }
-        if ($gpuFamily !== null) {
+        if (null !== $gpuFamily) {
             $qb->andWhere('d.gpuFamily = :gpu')->setParameter('gpu', $gpuFamily);
         }
 

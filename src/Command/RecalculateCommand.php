@@ -15,9 +15,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Messenger\MessageBusInterface;
 
-use function is_string;
-use function sprintf;
-
 /**
  * @author Héctor Franco Aceituno <hectorfranco@nowo.tech>
  * @copyright 2026 Nowo.tech
@@ -41,11 +38,11 @@ final class RecalculateCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $io      = new SymfonyStyle($input, $output);
-        $id      = $input->getArgument('deviceId');
-        $id      = is_string($id) && $id !== '' ? $id : null;
+        $io = new SymfonyStyle($input, $output);
+        $id = $input->getArgument('deviceId');
+        $id = \is_string($id) && '' !== $id ? $id : null;
         $message = new RecalculateStabilityMessage($id);
-        if ($input->getOption('async') && $this->bus !== null) {
+        if ($input->getOption('async') && null !== $this->bus) {
             $this->bus->dispatch($message);
             $io->success('Recalculation dispatched.');
 
@@ -53,7 +50,7 @@ final class RecalculateCommand extends Command
         }
 
         $updated = ($this->handler)($message);
-        $io->success(sprintf('Updated stability on %d device(s).', $updated));
+        $io->success(\sprintf('Updated stability on %d device(s).', $updated));
 
         return Command::SUCCESS;
     }

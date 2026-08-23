@@ -14,10 +14,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-use function sprintf;
-
-use const DATE_ATOM;
-
 /**
  * @author Héctor Franco Aceituno <hectorfranco@nowo.tech>
  * @copyright 2026 Nowo.tech
@@ -39,9 +35,9 @@ final class DeviceShowCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $io     = new SymfonyStyle($input, $output);
+        $io = new SymfonyStyle($input, $output);
         $device = $this->devices->get(new DeviceId((string) $input->getArgument('deviceId')));
-        if ($device === null) {
+        if (null === $device) {
             $io->error('Device not found.');
 
             return Command::FAILURE;
@@ -54,8 +50,8 @@ final class DeviceShowCommand extends Command
             ['Confidence' => (string) $device->confidence->value],
             ['Stability' => (string) $device->stability()],
             ['Observations' => (string) $device->observationCount],
-            ['First seen' => $device->firstSeenAt->format(DATE_ATOM)],
-            ['Last seen' => $device->lastSeenAt->format(DATE_ATOM)],
+            ['First seen' => $device->firstSeenAt->format(\DATE_ATOM)],
+            ['Last seen' => $device->lastSeenAt->format(\DATE_ATOM)],
             ['OS' => $device->indexKey->osFamily],
             ['Browser' => $device->indexKey->browserFamily],
         );
@@ -63,7 +59,7 @@ final class DeviceShowCommand extends Command
         $latest = $this->observations->latestForDevice($device, 5);
         $io->section('Recent observations (ids only)');
         foreach ($latest as $obs) {
-            $io->writeln(sprintf('%s  risk=%d  %s', $obs->id->value, $obs->riskScore, $obs->createdAt->format(DATE_ATOM)));
+            $io->writeln(\sprintf('%s  risk=%d  %s', $obs->id->value, $obs->riskScore, $obs->createdAt->format(\DATE_ATOM)));
         }
 
         return Command::SUCCESS;

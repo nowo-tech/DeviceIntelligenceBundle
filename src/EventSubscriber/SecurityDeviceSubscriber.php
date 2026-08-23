@@ -15,9 +15,6 @@ use Symfony\Component\Security\Http\Event\InteractiveLoginEvent;
 use Symfony\Component\Security\Http\Event\LoginFailureEvent;
 use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
 use Symfony\Component\Security\Http\Event\LogoutEvent;
-use Throwable;
-
-use function is_object;
 
 /**
  * Associates users on login, records velocity, never auto-trusts. Logout keeps the cookie.
@@ -41,7 +38,7 @@ final class SecurityDeviceSubscriber implements EventSubscriberInterface
         $events = [
             LoginSuccessEvent::class => 'onLoginSuccess',
             LoginFailureEvent::class => 'onLoginFailure',
-            LogoutEvent::class       => 'onLogout',
+            LogoutEvent::class => 'onLogout',
         ];
         if (class_exists(InteractiveLoginEvent::class)) {
             $events[InteractiveLoginEvent::class] = 'onInteractiveLogin';
@@ -58,7 +55,7 @@ final class SecurityDeviceSubscriber implements EventSubscriberInterface
     public function onInteractiveLogin(InteractiveLoginEvent $event): void
     {
         $user = $event->getAuthenticationToken()->getUser();
-        if (is_object($user)) {
+        if (\is_object($user)) {
             $this->associate($user);
         }
     }
@@ -67,7 +64,7 @@ final class SecurityDeviceSubscriber implements EventSubscriberInterface
     {
         unset($event);
         $context = $this->context();
-        if ($context === null) {
+        if (null === $context) {
             return;
         }
         $this->velocity->increment('login_failure', $context->device());
@@ -85,12 +82,12 @@ final class SecurityDeviceSubscriber implements EventSubscriberInterface
     private function associate(object $user): void
     {
         $context = $this->context();
-        if ($context === null) {
+        if (null === $context) {
             return;
         }
         try {
             $identifier = $this->users->resolve($user);
-        } catch (Throwable $e) {
+        } catch (\Throwable $e) {
             $this->logger?->info('device_intelligence.user_resolve_failed', ['error' => $e->getMessage()]);
 
             return;
@@ -105,7 +102,7 @@ final class SecurityDeviceSubscriber implements EventSubscriberInterface
     private function context(): ?DeviceContext
     {
         $request = $this->requests->getCurrentRequest();
-        $device  = $request?->attributes->get('_device');
+        $device = $request?->attributes->get('_device');
 
         return $device instanceof DeviceContext ? $device : null;
     }

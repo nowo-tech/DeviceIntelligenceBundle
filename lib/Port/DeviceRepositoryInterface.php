@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Port;
 
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\Device\Device;
 use Nowo\DeviceIntelligence\Device\DeviceId;
 
@@ -23,6 +22,6 @@ interface DeviceRepositoryInterface
         ?string $timezone,
         ?string $gpuFamily,
         int $limit,
-        DateTimeImmutable $since,
+        \DateTimeImmutable $since,
     ): array;
 }

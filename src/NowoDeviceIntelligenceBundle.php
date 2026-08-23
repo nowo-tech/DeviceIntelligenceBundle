@@ -20,7 +20,7 @@ final class NowoDeviceIntelligenceBundle extends Bundle
 {
     public function build(ContainerBuilder $container): void
     {
-        $entityDir = __DIR__ . '/Entity';
+        $entityDir = __DIR__.'/Entity';
         if (is_dir($entityDir) && class_exists(DoctrineOrmMappingsPass::class)) {
             $container->addCompilerPass(DoctrineOrmMappingsPass::createAttributeMappingDriver(
                 ['Nowo\\DeviceIntelligenceBundle\\Entity'],

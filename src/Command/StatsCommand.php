@@ -19,8 +19,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-use function count;
-
 /**
  * @author Héctor Franco Aceituno <hectorfranco@nowo.tech>
  * @copyright 2026 Nowo.tech
@@ -56,7 +54,7 @@ final class StatsCommand extends Command
             return $this->devices->countAll();
         }
         if ($this->devices instanceof InMemoryDeviceRepository) {
-            return count($this->devices->all());
+            return \count($this->devices->all());
         }
 
         return 0;

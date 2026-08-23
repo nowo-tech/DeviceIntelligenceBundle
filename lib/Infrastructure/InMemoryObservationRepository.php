@@ -4,13 +4,10 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Infrastructure;
 
-use DateTimeImmutable;
 use Nowo\DeviceIntelligence\Device\Device;
 use Nowo\DeviceIntelligence\Observation\DeviceObservation;
 use Nowo\DeviceIntelligence\Observation\ObservationId;
 use Nowo\DeviceIntelligence\Port\ObservationRepositoryInterface;
-
-use function array_slice;
 
 final class InMemoryObservationRepository implements ObservationRepositoryInterface
 {
@@ -37,10 +34,10 @@ final class InMemoryObservationRepository implements ObservationRepositoryInterf
         }
         usort($out, static fn (DeviceObservation $a, DeviceObservation $b): int => $b->createdAt <=> $a->createdAt);
 
-        return array_slice($out, 0, $limit);
+        return \array_slice($out, 0, $limit);
     }
 
-    public function deleteOlderThan(DateTimeImmutable $cutoff): int
+    public function deleteOlderThan(\DateTimeImmutable $cutoff): int
     {
         $n = 0;
         foreach ($this->rows as $id => $row) {
