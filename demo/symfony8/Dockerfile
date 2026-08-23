@@ -1,6 +1,13 @@
-FROM dunglas/frankenphp:1-php8.4-alpine
+# FrankenPHP + Node for Device Intelligence demo (Symfony 8.1, Pentatrion Vite, pnpm)
+FROM dunglas/frankenphp:1-php8.5-alpine
 
-RUN apk add --no-cache git unzip bash curl ca-certificates mysql-client
+RUN apk add --no-cache git unzip bash curl ca-certificates mysql-client nodejs npm
+
+# Pin pnpm to packageManager in package.json (Alpine nodejs often has no corepack).
+RUN npm install -g pnpm@10.32.1 \
+    && pnpm --version
+ENV PNPM_HOME="/usr/local/share/pnpm"
+ENV PATH="/usr/local/bin:/usr/local/share/pnpm:${PATH}"
 
 RUN install-php-extensions pdo_mysql zip intl
 

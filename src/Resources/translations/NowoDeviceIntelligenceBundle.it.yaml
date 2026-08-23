@@ -1,0 +1,26 @@
+profiler:
+  menu: 'Device Intelligence'
+  title: 'Device Intelligence'
+  device: Dispositivo
+  device_id: 'ID dispositivo'
+  new: Nuovo
+  'yes': sì
+  'no': 'no'
+  risk: Rischio
+  confidence: Confidenza
+  similarity: Similarità
+  stability: Stabilità
+  no_observation: 'nessuna osservazione'
+  empty: 'Nessuna osservazione del dispositivo in questa richiesta.'
+  empty_hint: 'Ricarica dopo collect(), oppure apri POST /_device/collect nella scheda Ajax di questa barra.'
+  reasons: Motivi
+  no_reasons: 'Nessun motivo di rischio.'
+  signals: 'Riassunti dei segnali (troncati)'
+  name: Nome
+  summary: Riassunto
+  timings: 'Tempi (ms)'
+  phase: Fase
+  ms: ms
+  observation: Osservazione
+  degraded: degradato
+  trusted: attendibile

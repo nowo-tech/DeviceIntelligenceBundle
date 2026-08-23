@@ -1,0 +1,26 @@
+profiler:
+  menu: 'Device Intelligence'
+  title: 'Device Intelligence'
+  device: Device
+  device_id: 'Device ID'
+  new: New
+  'yes': 'yes'
+  'no': 'no'
+  risk: Risk
+  confidence: Confidence
+  similarity: Similarity
+  stability: Stability
+  no_observation: 'no observation'
+  empty: 'No device observation on this request.'
+  empty_hint: 'Reload after collect(), or open POST /_device/collect in the Ajax tab of this toolbar.'
+  reasons: Reasons
+  no_reasons: 'No risk reasons.'
+  signals: 'Signal summaries (truncated)'
+  name: Name
+  summary: Summary
+  timings: 'Timings (ms)'
+  phase: Phase
+  ms: ms
+  observation: Observation
+  degraded: degraded
+  trusted: trusted

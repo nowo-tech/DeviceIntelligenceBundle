@@ -13,6 +13,8 @@
 /public/bundles/
 /public/assets/
 /assets/vendor/
+/node_modules/
+/public/build/
 
 # pnpm local store (REQ-GITIGNORE-003)
 /.pnpm-store
@@ -49,3 +51,11 @@
 /phpunit.xml
 /.phpunit.cache/
 ###< phpunit/phpunit ###
+
+###> pentatrion/vite-bundle ###
+/node_modules/
+/public/build/
+###< pentatrion/vite-bundle ###
+
+# Auto-generated Symfony config dump (do not commit)
+/config/reference.php

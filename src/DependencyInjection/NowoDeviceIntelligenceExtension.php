@@ -83,6 +83,11 @@ final class NowoDeviceIntelligenceExtension extends Extension implements Prepend
                         ],
                     ],
                 ],
+                'translator' => [
+                    'paths' => [
+                        \dirname(__DIR__).'/Resources/translations',
+                    ],
+                ],
             ]);
         }
     }

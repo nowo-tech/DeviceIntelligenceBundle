@@ -63,7 +63,15 @@ Matchers and analysis collaborators have no static mutable state. In-memory repo
 
 ## AI security audit
 
-This document is the maintained threat model for the bundle (REQ-SEC-004). Maintainers re-read it before each release and after changes to collect, cookies, or logging. There is no separate unpublished audit file.
+| Field | Value |
+| --- | --- |
+| Date | 2026-08-23 |
+| Method | Cursor static review of `src/`, `lib/`, recipe, Twig/TS assets, `docs/SECURITY.md`, `.github/SECURITY.md` |
+| Grade | **Pass (conditional)** |
+| Overall risk | **Medium** |
+| Open residuals | Client signals are attacker-controlled (by design — Device ID is not a credential). Host must not treat collect cookies as session auth. Rate limits are per hashed IP; additional HTTP limits remain host-owned. |
+
+This subsection is the in-package REQ-SEC-004 record (date, method, grade, residuals). The monorepo catalog row lives in `BUNDLES_SECURITY_ANALYSIS.md` §4 / §7.2.
 
 ## Reporting a vulnerability
 

@@ -19,3 +19,4 @@ parameters:
         - vendor/*
     reportUnmatchedIgnoredErrors: false
     treatPhpDocTypesAsCertain: false
+    ignoreErrors: []

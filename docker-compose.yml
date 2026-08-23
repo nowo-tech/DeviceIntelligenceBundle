@@ -13,7 +13,7 @@ services:
       - coverage-data:/app/coverage
     environment:
       - COMPOSER_ALLOW_SUPERUSER=1
-      - COMPOSER_ROOT_VERSION=1.0.0-dev
+      - COMPOSER_ROOT_VERSION=1.0.1-dev
       - XDEBUG_MODE=coverage
     command: ["tail", "-f", "/dev/null"]
     networks:

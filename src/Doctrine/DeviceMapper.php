@@ -186,6 +186,8 @@ final class DeviceMapper
 
     /**
      * @param array<string, mixed> $data
+     *
+     * @return SignalBag
      */
     public function signalsFromArray(array $data): SignalBag
     {

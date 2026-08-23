@@ -9,8 +9,8 @@ case "$MODE" in
 		fi
 		;;
 	worker)
-		if [ -f /etc/frankenphp/Caddyfile ]; then
-			:
+		if [ -f /app/docker/frankenphp/Caddyfile ]; then
+			cp /app/docker/frankenphp/Caddyfile /etc/frankenphp/Caddyfile
 		fi
 		;;
 	*)

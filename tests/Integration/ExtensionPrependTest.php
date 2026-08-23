@@ -56,6 +56,10 @@ final class ExtensionPrependTest extends TestCase
             '/bundles/nowodeviceintelligence',
             $framework[0]['assets']['packages']['nowo_device_intelligence']['base_path'],
         );
+        self::assertStringEndsWith(
+            '/Resources/translations',
+            $framework[0]['translator']['paths'][0],
+        );
         $twig = $container->getExtensionConfig('twig');
         self::assertContains('NowoDeviceIntelligenceBundle', $twig[0]['paths']);
     }

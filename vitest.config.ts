@@ -1,6 +1,9 @@
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  define: {
+    __DEVICE_INTELLIGENCE_BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+  },
   test: {
     environment: 'jsdom',
     include: ['src/Resources/assets/tests/**/*.test.ts'],

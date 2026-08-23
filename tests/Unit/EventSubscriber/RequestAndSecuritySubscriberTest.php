@@ -64,6 +64,35 @@ final class RequestAndSecuritySubscriberTest extends TestCase
         self::assertArrayHasKey(KernelEvents::REQUEST, DeviceRequestSubscriber::getSubscribedEvents());
     }
 
+    public function testHydratesDeviceFromObservationCookieWhenObserveOnEveryRequestIsFalse(): void
+    {
+        $now = new \DateTimeImmutable();
+        $devices = new InMemoryDeviceRepository();
+        $observations = new InMemoryObservationRepository();
+        $users = new InMemoryDeviceUserRepository();
+        $trusts = new InMemoryTrustedDeviceRepository();
+        $engine = DeviceIntelligence::create($devices, $observations, $users, $trusts);
+        $analysis = $engine->analyze(new AnalysisInput($now, SignalBag::empty(), '1.2.3.4'));
+        $manager = new DeviceManager($devices, $users, $trusts, new FrozenClock($now));
+        $config = ProcessedConfig::object(['enabled' => true, 'observe_on_every_request' => false]);
+        $tokens = new ObservationTokenIssuer($config, new FrozenClock($now), 's');
+        $subscriber = new DeviceRequestSubscriber(
+            $config,
+            $tokens,
+            $observations,
+            $manager,
+            new TokenDeviceContextFactory(),
+        );
+        $request = Request::create('/');
+        $cookie = $tokens->issue($analysis->observation()->id, 'n', false);
+        $request->cookies->set($cookie->getName(), (string) $cookie->getValue());
+        $kernel = $this->createMock(HttpKernelInterface::class);
+        $subscriber->onRequest(new RequestEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST));
+        $context = $request->attributes->get('_device');
+        self::assertInstanceOf(DeviceContext::class, $context);
+        self::assertSame($analysis->device()->id->value, $context->device()->id->value);
+    }
+
     public function testSecurityLogoutAndFailureWithoutContext(): void
     {
         $now = new \DateTimeImmutable();

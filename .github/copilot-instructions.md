@@ -10,7 +10,7 @@ Follow these rules when contributing PHP, TypeScript, Twig, and documentation to
 - **PHP:** `>=8.3 <8.6` with `declare(strict_types=1);` in every PHP file.
 - **Symfony:** **7.4**, **8.0**, and **8.1+** (`^7.4 || ^8.0` on `symfony/*` constraints). Symfony 8 requires PHP 8.4+.
 - **Core:** Framework-agnostic domain in `lib/` (`Nowo\DeviceIntelligence\`). Symfony adapters in `src/` (`Nowo\DeviceIntelligenceBundle\`).
-- **Frontend:** TypeScript + Vite in `src/Resources/assets/`; IIFE `src/Resources/public/js/device-intelligence.min.js`.
+- **Frontend:** TypeScript + Vite + **pnpm** in `src/Resources/assets/`; published IIFE `src/Resources/public/js/device-intelligence.min.js`. The Symfony 8 demo compiles the same sources with **Pentatrion Vite** (`vite-plugin-symfony`).
 - **Language:** PHPDoc, inline comments, and user-facing docs in **English** only.
 
 ---
@@ -33,7 +33,8 @@ Follow these rules when contributing PHP, TypeScript, Twig, and documentation to
 - Route name: `nowo_device_intelligence_collect` (`POST /_device/collect`).
 - Twig namespace: `NowoDeviceIntelligenceBundle`.
 - Asset package: `nowo_device_intelligence` (`base_path: /bundles/nowodeviceintelligence`).
-- Load JS with `asset('js/device-intelligence.min.js', 'nowo_device_intelligence')`.
+- Hosts without a Vite pipeline: `asset('js/device-intelligence.min.js', 'nowo_device_intelligence')` after `assets:install`.
+- Symfony apps with Pentatrion Vite: import `src/Resources/assets` (see `demo/symfony8`).
 - Logs: hashed device/observation ids only; never full signal bags.
 - Time: inject `Psr\Clock\ClockInterface` (no `new DateTimeImmutable()` in handlers).
 

@@ -47,6 +47,7 @@ make -C demo up-symfony8
 - **Nowo Twig Inspector** and **Nowo Hot Reload** — `dev`/`test` only (Caddyfile Mercure + `hot_reload`; do not enable Hot Reload in production)
 - **Twig Extra Bundle** (`twig/extra-bundle` + `twig/string-extra`)
 - **Device Intelligence Bundle** — collect page, `POST /_device/collect`, profiler panel
+- **Pentatrion Vite + pnpm** — demo entry `assets/app.ts` compiles bundle TypeScript (`@bundle`)
 - **MySQL** — Doctrine schema for `device_intelligence_*` tables (no SQLite / `*.db`)
 
 Example `config/bundles.php`:
@@ -106,6 +107,14 @@ Use `FRANKENPHP_MODE=classic`, confirm `twig.cache: false` in `dev`, and hard-re
 ### Demo does not start
 
 Ensure Docker is running, port **8038** is free, and `make -C demo/symfony8 logs` shows FrankenPHP listening. Composer DNS: Compose sets `8.8.8.8` (REQ-DEMO-009).
+
+### Browser console: 404 on `/build/…` or missing Vite entry
+
+Pentatrion needs `public/build/entrypoints.json`. Run `make -C demo/symfony8 assets` (pnpm + `vite build`; also part of `make up` and `update-bundle`). Hard-refresh the page. Caddy serves `/build/*` as static files (no Vite dev-server proxy).
+
+### Browser console: 404 on `device-intelligence.min.js`
+
+The demo home uses Pentatrion (`vite_entry_script_tags`), not the IIFE. The IIFE is still published under `/bundles/nowodeviceintelligence/` for hosts that use `assets:install`. Run `make -C demo/symfony8 assets-install` if you need that path.
 
 ### Database empty
 

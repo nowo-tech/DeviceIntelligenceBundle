@@ -44,6 +44,7 @@ There is no separate executable spec language (for example Gherkin); Spec Kit sp
 
 - Documented integration (root `README.md` and `docs/`).
 - Configuration in [`CONFIGURATION.md`](CONFIGURATION.md) and runtime behavior in [`USAGE.md`](USAGE.md).
+- Web Profiler panel (optional i18n, domain `NowoDeviceIntelligenceBundle`).
 - Frontend entrypoint `device-intelligence.min.js` built from TypeScript via Vite.
 - Consumer-facing changes in [`CHANGELOG.md`](CHANGELOG.md) and [`UPGRADING.md`](UPGRADING.md).
 
@@ -59,7 +60,7 @@ There is no separate executable spec language (for example Gherkin); Spec Kit sp
 
 - Run **`make qa`** or **`make release-check`** as documented in [`CONTRIBUTING.md`](CONTRIBUTING.md).
 - Run **PHPUnit** and **Vitest** locally and in CI for code changes.
-- New or changed behavior should add or adjust tests under `tests/` and `src/Resources/assets/src/*.test.ts`.
+- New or changed behavior should add or adjust tests under `tests/` and `src/Resources/assets/tests/`.
 
 ---
 
@@ -82,7 +83,7 @@ When you change scripted behavior, update the existing `REQ-*` comment or add a 
 2. Implement with tests and static analysis.
 3. Anchor scripts and demos when dev UX changes.
 4. Ship integrator docs when configuration or public behavior changes.
-5. **Keep Spec Kit artifacts in sync** when production code under `src/` changes:
+5. **Keep Spec Kit artifacts in sync** when production code under `lib/` or `src/` changes:
    - Update [`specs/001-baseline/spec.md`](../specs/001-baseline/spec.md) and [`code-inventory.md`](../specs/001-baseline/code-inventory.md).
    - Follow the maintainer checklist in [`SPEC-KIT.md`](SPEC-KIT.md).
    - For **new features**, use Cursor Agent skills (`/speckit-specify`, `/speckit-plan`, `/speckit-tasks`) as documented in SPEC-KIT.

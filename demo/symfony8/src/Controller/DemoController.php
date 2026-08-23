@@ -16,7 +16,13 @@ use Symfony\Component\Routing\Attribute\Route;
  */
 final class DemoController extends AbstractController
 {
-    #[Route('/', name: 'homepage', methods: ['GET'])]
+    #[Route('/', name: 'homepage_default', methods: ['GET'])]
+    public function homeDefault(): Response
+    {
+        return $this->redirectToRoute('homepage', ['_locale' => 'en'], Response::HTTP_FOUND);
+    }
+
+    #[Route('/{_locale}', name: 'homepage', requirements: ['_locale' => 'en|es'], methods: ['GET'])]
     public function home(): Response
     {
         return $this->render('demo/home.html.twig');

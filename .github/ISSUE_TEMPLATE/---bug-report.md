@@ -11,7 +11,7 @@ assignees: ''
 - Please do not report an issue for a version of DeviceIntelligenceBundle that is no longer supported.
 - Please fill in this template according to your issue.
 - Please keep the table shown below at the top of your issue.
-- You can retrieve DeviceIntelligenceBundle version by running `composer info | grep cookie-consent`.
+- You can retrieve `DeviceIntelligenceBundle` version by running `composer info | grep "DeviceIntelligenceBundle"`.
 - You can retrieve PHP version by running `php -v`.
 - Please post code as text (using proper markup). Do not post screenshots of code.
 - Please remove this comment before submitting your issue.

@@ -8,7 +8,9 @@
 - [Security hooks](#security-hooks)
 - [Custom risk rules](#custom-risk-rules)
 - [Commands](#commands)
+- [Browser assets](#browser-assets)
 - [Profiler](#profiler)
+- [Translations](#translations)
 
 ## Collect endpoint
 
@@ -29,7 +31,7 @@ POST JSON to `/_device/collect` (route `nowo_device_intelligence_collect`):
 }
 ```
 
-The response may include `deviceId`, `confidence`, and `risk` (off by default). An HttpOnly `SameSite=Lax` cookie is set. The browser IIFE in this package builds the payload (`asset('js/device-intelligence.min.js', 'nowo_device_intelligence')`).
+The response may include `deviceId`, `confidence`, and `risk` (off by default). An HttpOnly `SameSite=Lax` cookie is set. The browser client in this package builds the payload (IIFE or Pentatrion Vite — see [Browser assets](#browser-assets)).
 
 ## Controller argument
 
@@ -46,7 +48,7 @@ public function dashboard(DeviceContext $device): void
 }
 ```
 
-`DeviceContext` is populated after collect, or on every request when `observe_on_every_request: true` (from the observation cookie — no rematch).
+`DeviceContext` is populated on `POST /_device/collect`, and on later requests from the observation cookie (`di_obs` by default — no rematch). Set `observe_on_every_request: true` to always attempt cookie hydration (the demo does this so the Web Profiler panel fills after a reload). Without a cookie, the profiler for that HTML request stays empty: reload after `collect()`, or open the collect POST in the toolbar Ajax tab.
 
 ## Events
 
@@ -91,6 +93,53 @@ php bin/console device-intelligence:stats
 php bin/console device-intelligence:recalculate
 ```
 
+## Browser assets
+
+**pnpm + Vite** live in the bundle (`packageManager: pnpm@10.32.1`). `make assets` builds the published IIFE.
+
+### IIFE (`assets:install`)
+
+The bundle registers the Symfony asset package `nowo_device_intelligence` (`base_path: /bundles/nowodeviceintelligence`). After `php bin/console assets:install`:
+
+```twig
+<script src="{{ asset('js/device-intelligence.min.js', 'nowo_device_intelligence') }}"></script>
+<script>
+  const device = new DeviceIntelligence({ endpoint: '/_device/collect' });
+  device.collect();
+</script>
+```
+
+### Pentatrion Vite (recommended in Symfony apps)
+
+Compile the TypeScript sources with `vite-plugin-symfony` + `pentatrion/vite-bundle` (the demo does this):
+
+```ts
+import { DeviceIntelligence } from '@bundle/src/index.ts';
+
+const device = new DeviceIntelligence({ endpoint: '/_device/collect' });
+device.collect();
+```
+
+```twig
+{{ vite_entry_script_tags('app') }}
+```
+
+Point the Vite alias `@bundle` at `vendor/nowo-tech/device-intelligence-bundle/src/Resources/assets` (or the path repository mount).
+
 ## Profiler
 
 Panel id: `nowo_device_intelligence`. Twig namespace: `NowoDeviceIntelligenceBundle`.
+
+## Translations
+
+Domain: **`NowoDeviceIntelligenceBundle`**. Required locales: `en`, `es`, `it`, `fr`, `pt`, `de`, `nl`.
+
+The catalogues cover the Web Profiler panel. Collect JSON, console output, and risk reason ids stay untranslated.
+
+Override keys in `translations/NowoDeviceIntelligenceBundle.<locale>.yaml` in the host app:
+
+```yaml
+# translations/NowoDeviceIntelligenceBundle.es.yaml
+profiler:
+    title: 'Inteligencia de dispositivo'
+```

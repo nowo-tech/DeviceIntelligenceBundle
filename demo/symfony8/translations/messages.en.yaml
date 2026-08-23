@@ -1,0 +1,8 @@
+demo:
+  title: 'Device Intelligence Bundle'
+  brand: 'Device Intelligence'
+  heading: 'Device Intelligence Bundle'
+  lead: 'Probabilistic device matching demo. A Device ID is not a credential.'
+  body: 'collect() POSTs to /_device/collect. This page reloads once so the Web Profiler (HTML request) can show Device Intelligence. The first toolbar token has no observation yet — that is expected.'
+  waiting: 'Waiting for collect()…'
+  language: Language

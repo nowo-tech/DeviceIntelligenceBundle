@@ -5,6 +5,7 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 ## Table of contents
 
 - [General upgrade process](#general-upgrade-process)
+- [To 1.0.1](#to-101)
 - [To 1.0.0 (initial release)](#to-100-initial-release)
 - [Future versions](#future-versions)
 - [Getting help](#getting-help)
@@ -15,8 +16,32 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 2. **Review** [CHANGELOG.md](CHANGELOG.md) for breaking changes.
 3. **Update**: `composer update nowo-tech/device-intelligence-bundle`
 4. **Clear cache**: `php bin/console cache:clear`
-5. **Rebuild assets**: `php bin/console assets:install`
+5. **Rebuild assets**: `php bin/console assets:install` (IIFE) or `pnpm run build` in a Pentatrion Vite app.
 6. **Test** collect (`POST /_device/collect`) and matching in your environments.
+
+## To 1.0.1
+
+Patch release. No required configuration changes for hosts already on **1.0.0**.
+
+```bash
+composer update nowo-tech/device-intelligence-bundle:^1.0
+php bin/console cache:clear
+php bin/console assets:install
+```
+
+### Behaviour you may notice
+
+- After `collect()`, the Web Profiler panel on the **next HTML request** can show the device when the `di_obs` cookie is present, even if `observe_on_every_request` is `false`. Set it to `true` (as the demo does) if you want hydration on every request.
+- Profiler labels are translated (domain `NowoDeviceIntelligenceBundle`). Install `symfony/translation` if the panel should not fall back to keys. Hosts that **override** the profiler Twig template must merge the `|trans` usage.
+- The published IIFE logs a one-line `script loaded` message in the browser console.
+
+### Demo only
+
+The Symfony 8 demo now uses **Pentatrion Vite** + **pnpm** (`make assets`). Integrators using `asset('js/device-intelligence.min.js', 'nowo_device_intelligence')` are unchanged.
+
+### Breaking changes
+
+None for the public PHP API or default YAML.
 
 ## To 1.0.0 (initial release)
 

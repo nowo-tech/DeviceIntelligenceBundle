@@ -5,6 +5,8 @@
 /demo/**/vendor
 /demo/**/var
 /demo/**/node_modules
+/demo/**/public/build
+/demo/**/.pnpm-store
 
 # Environment and secrets
 .env

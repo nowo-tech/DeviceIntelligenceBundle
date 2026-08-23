@@ -10,25 +10,25 @@
     {% set text %}
         {% if collector.hasContext %}
             <div class="sf-toolbar-info-piece">
-                <b>Device</b>
+                <b>{{ 'profiler.device'|trans({}, 'NowoDeviceIntelligenceBundle') }}</b>
                 <span>{{ collector.deviceId }}</span>
             </div>
             <div class="sf-toolbar-info-piece">
-                <b>New</b>
-                <span>{{ collector.new ? 'yes' : 'no' }}</span>
+                <b>{{ 'profiler.new'|trans({}, 'NowoDeviceIntelligenceBundle') }}</b>
+                <span>{{ collector.new ? 'profiler.yes'|trans({}, 'NowoDeviceIntelligenceBundle') : 'profiler.no'|trans({}, 'NowoDeviceIntelligenceBundle') }}</span>
             </div>
             <div class="sf-toolbar-info-piece">
-                <b>Risk</b>
+                <b>{{ 'profiler.risk'|trans({}, 'NowoDeviceIntelligenceBundle') }}</b>
                 <span>{{ collector.risk }} ({{ collector.riskLevel }})</span>
             </div>
             <div class="sf-toolbar-info-piece">
-                <b>Confidence</b>
+                <b>{{ 'profiler.confidence'|trans({}, 'NowoDeviceIntelligenceBundle') }}</b>
                 <span>{{ collector.confidence|number_format(2) }}</span>
             </div>
         {% else %}
             <div class="sf-toolbar-info-piece">
-                <b>Device</b>
-                <span>no observation</span>
+                <b>{{ 'profiler.device'|trans({}, 'NowoDeviceIntelligenceBundle') }}</b>
+                <span>{{ 'profiler.no_observation'|trans({}, 'NowoDeviceIntelligenceBundle') }}</span>
             </div>
         {% endif %}
     {% endset %}
@@ -38,47 +38,48 @@
 {% block menu %}
     <span class="label">
         <span class="icon">DI</span>
-        <strong>Device Intelligence</strong>
+        <strong>{{ 'profiler.menu'|trans({}, 'NowoDeviceIntelligenceBundle') }}</strong>
     </span>
 {% endblock %}
 
 {% block panel %}
-    <h2>Device Intelligence</h2>
+    <h2>{{ 'profiler.title'|trans({}, 'NowoDeviceIntelligenceBundle') }}</h2>
     {% if not collector.hasContext %}
         <div class="empty">
-            <p>No device observation on this request.</p>
+            <p>{{ 'profiler.empty'|trans({}, 'NowoDeviceIntelligenceBundle') }}</p>
+            <p>{{ 'profiler.empty_hint'|trans({}, 'NowoDeviceIntelligenceBundle') }}</p>
         </div>
     {% else %}
         <div class="metrics">
             <div class="metric">
                 <span class="value">{{ collector.deviceId }}</span>
-                <span class="label">Device ID</span>
+                <span class="label">{{ 'profiler.device_id'|trans({}, 'NowoDeviceIntelligenceBundle') }}</span>
             </div>
             <div class="metric">
-                <span class="value">{{ collector.new ? 'yes' : 'no' }}</span>
-                <span class="label">New</span>
+                <span class="value">{{ collector.new ? 'profiler.yes'|trans({}, 'NowoDeviceIntelligenceBundle') : 'profiler.no'|trans({}, 'NowoDeviceIntelligenceBundle') }}</span>
+                <span class="label">{{ 'profiler.new'|trans({}, 'NowoDeviceIntelligenceBundle') }}</span>
             </div>
             <div class="metric">
                 <span class="value">{{ collector.confidence|number_format(3) }}</span>
-                <span class="label">Confidence</span>
+                <span class="label">{{ 'profiler.confidence'|trans({}, 'NowoDeviceIntelligenceBundle') }}</span>
             </div>
             <div class="metric">
                 <span class="value">{{ collector.similarity|number_format(3) }}</span>
-                <span class="label">Similarity</span>
+                <span class="label">{{ 'profiler.similarity'|trans({}, 'NowoDeviceIntelligenceBundle') }}</span>
             </div>
             <div class="metric">
                 <span class="value">{{ collector.stability|number_format(3) }}</span>
-                <span class="label">Stability</span>
+                <span class="label">{{ 'profiler.stability'|trans({}, 'NowoDeviceIntelligenceBundle') }}</span>
             </div>
             <div class="metric">
                 <span class="value">{{ collector.risk }}</span>
-                <span class="label">Risk ({{ collector.riskLevel }})</span>
+                <span class="label">{{ 'profiler.risk'|trans({}, 'NowoDeviceIntelligenceBundle') }} ({{ collector.riskLevel }})</span>
             </div>
         </div>
 
-        <h3>Reasons</h3>
+        <h3>{{ 'profiler.reasons'|trans({}, 'NowoDeviceIntelligenceBundle') }}</h3>
         {% if collector.reasons is empty %}
-            <p>No risk reasons.</p>
+            <p>{{ 'profiler.no_reasons'|trans({}, 'NowoDeviceIntelligenceBundle') }}</p>
         {% else %}
             <ul>
                 {% for reason in collector.reasons %}
@@ -87,12 +88,12 @@
             </ul>
         {% endif %}
 
-        <h3>Signal summaries (truncated)</h3>
+        <h3>{{ 'profiler.signals'|trans({}, 'NowoDeviceIntelligenceBundle') }}</h3>
         <table>
             <thead>
                 <tr>
-                    <th>Name</th>
-                    <th>Summary</th>
+                    <th>{{ 'profiler.name'|trans({}, 'NowoDeviceIntelligenceBundle') }}</th>
+                    <th>{{ 'profiler.summary'|trans({}, 'NowoDeviceIntelligenceBundle') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -105,12 +106,12 @@
             </tbody>
         </table>
 
-        <h3>Timings (ms)</h3>
+        <h3>{{ 'profiler.timings'|trans({}, 'NowoDeviceIntelligenceBundle') }}</h3>
         <table>
             <thead>
                 <tr>
-                    <th>Phase</th>
-                    <th>ms</th>
+                    <th>{{ 'profiler.phase'|trans({}, 'NowoDeviceIntelligenceBundle') }}</th>
+                    <th>{{ 'profiler.ms'|trans({}, 'NowoDeviceIntelligenceBundle') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -122,6 +123,6 @@
                 {% endfor %}
             </tbody>
         </table>
-        <p>Observation {{ collector.observationId }}{% if collector.degraded %} — degraded{% endif %}{% if collector.trusted %} — trusted{% endif %}</p>
+        <p>{{ 'profiler.observation'|trans({}, 'NowoDeviceIntelligenceBundle') }} {{ collector.observationId }}{% if collector.degraded %} — {{ 'profiler.degraded'|trans({}, 'NowoDeviceIntelligenceBundle') }}{% endif %}{% if collector.trusted %} — {{ 'profiler.trusted'|trans({}, 'NowoDeviceIntelligenceBundle') }}{% endif %}</p>
     {% endif %}
 {% endblock %}

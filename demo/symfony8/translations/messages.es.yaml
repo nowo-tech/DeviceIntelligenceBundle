@@ -1,0 +1,8 @@
+demo:
+  title: 'Bundle de inteligencia de dispositivo'
+  brand: 'Inteligencia de dispositivo'
+  heading: 'Bundle de inteligencia de dispositivo'
+  lead: 'Demo de emparejamiento probabilístico de dispositivos. Un Device ID no es una credencial.'
+  body: 'collect() hace POST a /_device/collect. Esta página recarga una vez para que el Web Profiler (la petición HTML) muestre Device Intelligence. El primer token de la barra no tiene observación: es normal.'
+  waiting: 'Esperando collect()…'
+  language: Idioma

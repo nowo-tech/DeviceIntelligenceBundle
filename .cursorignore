@@ -11,8 +11,8 @@
 /coverage/
 /.vite/
 
-# Bundle public generated assets
-/src/Resources/public/nowo-consent-modal.js
+# Bundle public generated assets (source maps; IIFE is committed)
+/src/Resources/public/js/*.map
 
 # Caches / analysis
 /.php-cs-fixer.cache

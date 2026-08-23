@@ -16,4 +16,14 @@ use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 class Kernel extends BaseKernel
 {
     use MicroKernelTrait;
+
+    public function boot(): void
+    {
+        parent::boot();
+
+        // FrankenPHP worker reuses this kernel across requests. Symfony 8.1 only
+        // binds the synthetic "kernel" service during container init, not on the
+        // subsequent boot() that runs the services_resetter.
+        $this->container?->set('kernel', $this);
+    }
 }

@@ -6,6 +6,7 @@
 - [Validation](#validation)
 - [Persistence](#persistence)
 - [Messenger](#messenger)
+- [Translations](#translations)
 
 Alias: `nowo_device_intelligence`.
 
@@ -109,4 +110,10 @@ nowo_device_intelligence:
 
 ## Messenger
 
-Set `messenger.enabled: true` to register `CleanupMessage` and `RecalculateStabilityMessage` handlers.
+Set `messenger.enabled: true` to register `CleanupMessage` and `RecalculateStabilityMessage` handlers (`#[AsMessageHandler]`). Transport, retries, and `failure_transport` are **host-owned** (`framework.messenger`). Default Symfony retry policy applies when the host uses async transports; the demo/sync bus runs handlers inline with no retry. Handlers are idempotent: cleanup deletes observations older than the cutoff; recalculate overwrites stored stability. Failed async messages should land on the host failure transport — this bundle does not register one.
+
+## Translations
+
+Domain: **`NowoDeviceIntelligenceBundle`**. Required locales: `en`, `es`, `it`, `fr`, `pt`, `de`, `nl`.
+
+Catalogues live in `src/Resources/translations/`. Host apps override keys in `translations/NowoDeviceIntelligenceBundle.<locale>.yaml`. The Web Profiler panel uses this domain; collect JSON, console commands, and risk reason ids stay untranslated.

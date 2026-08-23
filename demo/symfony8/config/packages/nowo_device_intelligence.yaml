@@ -1,5 +1,11 @@
 nowo_device_intelligence:
     enabled: true
+    observe_on_every_request: true
+    endpoint:
+        response:
+            device_id: true
+            confidence: true
+            risk: true
     doctrine:
         enabled: true
         table_prefix: device_intelligence_

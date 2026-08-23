@@ -10,7 +10,7 @@ export DOCKER_CONFIG := $(BUNDLE_ROOT)/.docker
 .PHONY: help ensure-up up down down-dev build shell install assets assets-test test-ts test test-coverage \
 	check-twig-extra test-with-db test-coverage-with-db coverage-check test-coverage-100 cs-check cs-fix \
 	rector rector-dry phpstan validate-phpdoc qa release-check release-check-demos demo-smoke composer-sync \
-	clean update update-deps validate setup-hooks check-no-cursor-coauthor check-open-prs \
+	clean update update-deps validate validate-translations setup-hooks check-no-cursor-coauthor check-open-prs \
 	strip-cursor-coauthor-from-history
 
 help:
@@ -21,7 +21,7 @@ help:
 	@echo "Container: up down down-dev build shell"
 	@echo "Dependencies: install assets"
 	@echo "Tests: test test-coverage test-with-db test-coverage-with-db test-ts"
-	@echo "Quality: cs-check cs-fix rector rector-dry phpstan qa"
+	@echo "Quality: cs-check cs-fix rector rector-dry phpstan qa validate-translations"
 	@echo "Release: release-check demo-smoke composer-sync"
 	@echo "Cleanup: clean"
 	@echo "Composer: update update-deps validate"
@@ -105,7 +105,7 @@ check-twig-extra:
 	@chmod +x .scripts/check-twig-extra.sh
 	@./.scripts/check-twig-extra.sh
 
-release-check: check-no-cursor-coauthor check-open-prs check-twig-extra ensure-up assets composer-sync cs-fix cs-check rector-dry phpstan validate-phpdoc coverage-check test-ts release-check-demos
+release-check: check-no-cursor-coauthor check-open-prs check-twig-extra ensure-up assets composer-sync cs-fix cs-check rector-dry phpstan validate-phpdoc coverage-check test-ts validate-translations release-check-demos
 
 release-check-demos:
 	@if [ -f demo/Makefile ]; then $(MAKE) -C demo release-check; else true; fi
@@ -125,6 +125,10 @@ update: ensure-up
 
 validate: ensure-up
 	@$(COMPOSE) exec -T $(SERVICE_PHP) composer validate --strict
+
+validate-translations: ensure-up
+	@python3 .scripts/check-translation-key-parity.py
+	@$(COMPOSE) exec -T $(SERVICE_PHP) php -r 'require "vendor/autoload.php"; foreach (glob("src/Resources/translations/*.yaml") as $$f) { Symfony\Component\Yaml\Yaml::parseFile($$f); } echo "YAML parse OK\n";'
 
 setup-hooks:
 	@chmod +x .githooks/pre-commit 2>/dev/null || true

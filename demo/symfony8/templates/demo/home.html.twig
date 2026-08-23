@@ -1,24 +1,10 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Device Intelligence Bundle{% endblock %}
-
 {% block body %}
 <div class="container py-5">
-    <h1>Device Intelligence Bundle</h1>
-    <p class="lead">Probabilistic device matching demo. A Device ID is not a credential.</p>
-    <p>Open the Web Profiler after collect to inspect match, risk, and timings.</p>
-    <pre id="collect-result" class="bg-white border p-3">Waiting for collect()…</pre>
+    <h1>{{ 'demo.heading'|trans }}</h1>
+    <p class="lead">{{ 'demo.lead'|trans }}</p>
+    <p>{{ 'demo.body'|trans }}</p>
+    <pre id="collect-result" class="bg-white border p-3">{{ 'demo.waiting'|trans }}</pre>
 </div>
-{% endblock %}
-
-{% block javascripts %}
-    {{ parent() }}
-    <script src="{{ asset('js/device-intelligence.min.js', 'nowo_device_intelligence') }}"></script>
-    <script>
-        const el = document.getElementById('collect-result');
-        const device = new DeviceIntelligence({ endpoint: '/_device/collect' });
-        device.collect().then((result) => {
-            el.textContent = JSON.stringify(result, null, 2);
-        });
-    </script>
 {% endblock %}

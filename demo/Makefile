@@ -48,15 +48,17 @@ release-verify:
 	@PORT=$$(grep '^PORT=' symfony8/.env 2>/dev/null | cut -d= -f2 | tr -d '\r'); \
 	[ -z "$$PORT" ] && PORT=$$(grep '^PORT=' symfony8/.env.example | cut -d= -f2 | tr -d '\r'); \
 	code=$$(curl -sL -o /dev/null -w "%{http_code}" http://127.0.0.1:$$PORT 2>/dev/null || echo "000"); \
+	js=$$(curl -sS -o /dev/null -w "%{http_code}" http://127.0.0.1:$$PORT/build/entrypoints.json 2>/dev/null || echo "000"); \
 	$(MAKE) down-symfony8; \
 	if [ "$$code" != "200" ]; then echo "Demo healthcheck failed (HTTP $$code)"; exit 1; fi; \
-	echo "Symfony 8 demo OK (HTTP $$code)"
+	if [ "$$js" != "200" ]; then echo "Demo Vite asset healthcheck failed (HTTP $$js)"; exit 1; fi; \
+	echo "Symfony 8 demo OK (HTTP $$code, Vite entrypoints HTTP $$js)"
 
 release-check: test-all release-verify
 	@echo "All demo checks passed."
 
 clean:
-	rm -rf symfony8/vendor symfony8/var symfony8/.phpunit.cache
+	rm -rf symfony8/vendor symfony8/var symfony8/.phpunit.cache symfony8/node_modules symfony8/public/build
 
 BUNDLE_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST)))/..)
 # REQ-MAKE-008: update-deps-all

@@ -83,7 +83,8 @@ return static function (ContainerConfigurator $container): void {
         ->arg('$cache', service('nowo_device_intelligence.simple_cache'));
     $services->alias(DeviceRateLimiterInterface::class, SymfonyDeviceRateLimiter::class);
 
-    $services->set(DeviceIntelligenceDataCollector::class);
+    $services->set(DeviceIntelligenceDataCollector::class)
+        ->tag('kernel.reset', ['method' => 'reset']);
 
     $services->set(CleanupHandler::class);
     $services->set(RecalculateStabilityHandler::class);

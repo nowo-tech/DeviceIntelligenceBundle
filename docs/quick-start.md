@@ -17,7 +17,7 @@
 
 3. **Schema** — update Doctrine so `device_intelligence_*` tables exist.
 
-4. **Collect** — include the IIFE (`src/Resources/public/js/device-intelligence.min.js`, published by `assets:install`) and POST to `/_device/collect` with `v`, `timestamp`, `nonce`, and `signals`.
+4. **Collect** — include the browser client (IIFE via `assets:install`, or Pentatrion Vite compiling `src/Resources/assets`) and POST to `/_device/collect` with `v`, `timestamp`, `nonce`, and `signals`.
 
 5. **Use risk** in a controller:
 

@@ -8,15 +8,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.0.1] - 2026-08-23](#101---2026-08-23)
 - [[1.0.0] - 2026-08-23](#100---2026-08-23)
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-08-23
+
+Profiler i18n, observation-cookie hydration, Pentatrion Vite demo, Spec Kit inventory, and Nowo checklist alignment.
+
+### Added
+
+- Web Profiler catalogues in domain `NowoDeviceIntelligenceBundle` (`en`, `es`, `it`, `fr`, `pt`, `de`, `nl`) with key-parity check (`make validate-translations`).
+- Browser client console logger (`📦 [device-intelligence] script loaded, build time: …`).
+- Symfony 8 demo compiles collectors with **Pentatrion Vite** + **pnpm** (`vite_entry_script_tags`). Hosts can still use the published IIFE via `assets:install`.
+- Spec Kit baseline inventory **204/204** (`lib/` + `src/`) with semantic `FR-*`; bundle constitution (Device ID is not a credential).
+- AI security audit record (REQ-SEC-004): **Pass (conditional)** / Medium in `docs/SECURITY.md`.
+
+### Changed
+
+- Demo FrankenPHP image: `dunglas/frankenphp:1-php8.5-alpine` (`FRANKENPHP_MODE` still in `.env`).
+- Data collector tagged `kernel.reset`; translator paths prepended for the profiler domain.
+- Messenger: document host-owned retry / `failure_transport`; handlers stay idempotent.
+- `composer.json` suggests `symfony/translation` for the profiler panel.
+
 ### Fixed
 
-- Demo path repository: require `@dev` instead of `dev-master as 1.0.99`, and drop the hardcoded `version` field from the bundle `composer.json` so Composer uses the VCS tag (Packagist) and local path installs resolve.
-- GitHub CI: `composer validate --strict` no longer fails on a hardcoded package version; the test matrix uses a full `composer update`; code-style and coverage install from the lockfile on PHP 8.4.
-- PHP floor is **8.3** (`@PHP83Migration` / typed class constants). CI tests PHP 8.3–8.5.
+- `DeviceRequestSubscriber` hydrates `_device` from the `di_obs` cookie even when `observe_on_every_request` is `false`, so the Web Profiler panel fills on the next HTML request after collect.
+- Demo path repository: require `@dev` instead of `dev-master as 1.0.99`; drop hardcoded package `version` so Composer uses the VCS tag.
+- GitHub CI: `composer validate --strict` without a hardcoded version; PHP 8.3–8.5 matrix; Scrutinizer PHP **8.3**.
+- Demo Doctrine: drop `auto_generate_proxy_classes` (DoctrineBundle 3.3).
+- Demo `make up`: `sleep 5` and Packagist/WSL DNS comment on Compose `dns:`.
+- Bug report template grep string (`DeviceIntelligenceBundle`).
+
+### Documentation
+
+- USAGE / INSTALLATION / CONFIGURATION: Pentatrion vs IIFE, profiler cookie hydration, translation overrides, messenger retries.
+- Spec Kit manual inventory count **204/204**; SECURITY 12.4.1 + dated AI audit table.
 
 ## [1.0.0] - 2026-08-23
 
@@ -42,5 +70,6 @@ First stable release of **Device Intelligence Bundle**.
 - README: canonical badges, FrankenPHP banner, `## Documentation`, `## Tests and coverage`
 - Integrator docs: INSTALLATION, CONFIGURATION, USAGE, SECURITY, CONTRIBUTING, RELEASE, UPGRADING, GITHUB (REQ-DOCS-018)
 
-[Unreleased]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/nowo-tech/DeviceIntelligenceBundle/releases/tag/v1.0.1
 [1.0.0]: https://github.com/nowo-tech/DeviceIntelligenceBundle/releases/tag/v1.0.0

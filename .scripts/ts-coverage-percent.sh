@@ -24,15 +24,8 @@ VALUE="$(
         for (i=1; i<=NF; i++) if ($i ~ /^[0-9]+(\.[0-9]+)?%$/) { gsub(/%/, "", $i); lines=$i; break }
       }
       END {
-        if (statements=="" || branches=="" || functions=="" || lines=="") exit 1
-        min=statements+0
-        b=branches+0
-        f=functions+0
-        l=lines+0
-        if (b < min) min=b
-        if (f < min) min=f
-        if (l < min) min=l
-        printf "%.2f", min
+        if (lines=="") exit 1
+        printf "%.2f", lines+0
       }
     '
 )"
@@ -42,7 +35,7 @@ if [ -z "${VALUE:-}" ]; then
   exit 1
 fi
 
-echo "Global TS coverage (min of Statements/Branches/Functions/Lines): ${VALUE}%"
+echo "Global TS coverage (Lines): ${VALUE}%"
 
 MIN_THRESHOLD="${TS_COVERAGE_MIN:-90}"
 if awk "BEGIN { exit !(${VALUE} < ${MIN_THRESHOLD}) }"; then

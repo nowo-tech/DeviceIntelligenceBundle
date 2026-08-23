@@ -72,6 +72,7 @@
     },
     "suggest": {
         "symfony/messenger": "To dispatch cleanup and stability recalculation asynchronously",
+        "symfony/translation": "To translate the Web Profiler panel (domain NowoDeviceIntelligenceBundle)",
         "symfony/twig-bundle": "To render the Web Profiler panel",
         "symfony/web-profiler-bundle": "To inspect device match, risk, and timings in the profiler"
     },
@@ -120,12 +121,12 @@
     },
     "config": {
         "sort-packages": true,
-        "root-version": "1.0.0-dev"
+        "root-version": "1.0.1-dev"
     },
     "minimum-stability": "stable",
     "prefer-stable": true,
     "extra": {
-        "nowo-package-version": "1.0.0",
+        "nowo-package-version": "1.0.1",
         "branch-alias": {
             "dev-main": "1.0.x-dev"
         }

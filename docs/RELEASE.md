@@ -74,4 +74,5 @@ Update README **Tests and coverage** percentages after each release when coverag
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| [1.0.1](CHANGELOG.md#101---2026-08-23) | 2026-08-23 | Profiler i18n, cookie hydration, Pentatrion demo, Spec Kit 204/204, SEC-004 |
 | [1.0.0](CHANGELOG.md#100---2026-08-23) | 2026-08-23 | First stable release: matching, collect, Doctrine, profiler, Vite collectors, FrankenPHP demo |

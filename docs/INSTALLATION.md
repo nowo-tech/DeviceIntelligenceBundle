@@ -84,9 +84,11 @@ php bin/console doctrine:schema:update --dump-sql
 
 ## Client assets
 
-Browser collectors live in `src/Resources/assets` (Vite). The published IIFE is `src/Resources/public/js/device-intelligence.min.js`.
+Browser collectors live in `src/Resources/assets` (TypeScript, **pnpm** + Vite). Rebuild in this repository with `make assets`. There is no public npm package.
 
-The bundle registers the Symfony asset package `nowo_device_intelligence` with `base_path: /bundles/nowodeviceintelligence` (REQ-ASSETS-004).
+### IIFE (any host)
+
+The published file is `src/Resources/public/js/device-intelligence.min.js`. The bundle registers the Symfony asset package `nowo_device_intelligence` with `base_path: /bundles/nowodeviceintelligence` (REQ-ASSETS-004).
 
 After `php bin/console assets:install`:
 
@@ -94,7 +96,9 @@ After `php bin/console assets:install`:
 <script src="{{ asset('js/device-intelligence.min.js', 'nowo_device_intelligence') }}"></script>
 ```
 
-Rebuild in this repository with `make assets` (`pnpm build`). There is no public npm package.
+### Pentatrion Vite (Symfony apps)
+
+Install `pentatrion/vite-bundle` and `vite-plugin-symfony`, then import the sources from `src/Resources/assets` in your Vite entry (see `demo/symfony8/`). Use `vite_entry_script_tags('app')` in Twig. `pnpm` is required (`packageManager` in the demo `package.json`).
 
 ## Twig template overrides
 
@@ -115,3 +119,4 @@ Logical names: `@NowoDeviceIntelligenceBundle/Collector/device_intelligence.html
 | Package | Purpose |
 | --- | --- |
 | `symfony/twig-bundle` + `symfony/web-profiler-bundle` | Profiler panel `nowo_device_intelligence` |
+| `symfony/translation` | Profiler UI strings (domain `NowoDeviceIntelligenceBundle`, 7 locales) |

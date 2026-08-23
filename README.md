@@ -21,6 +21,7 @@ This bundle is **FrankenPHP worker mode friendly**.
 - Doctrine tables with a configurable prefix
 - Controller attributes for risk, rate limits, and trusted devices
 - Web Profiler panel `nowo_device_intelligence`
+- Browser collectors: **pnpm** + Vite (IIFE for any host; **Pentatrion Vite** in the Symfony demo)
 
 ## Installation
 
@@ -87,7 +88,7 @@ return [
 
 ## Tests and coverage
 
-PHP line coverage target: **99.75%** of includable `src/` and `lib/` (gate **≥ 99%**). TypeScript line coverage: **95.28%** (gate **≥ 90%**).
+PHP line coverage target: **99.75%** of includable `src/` and `lib/` (gate **≥ 99%**). TypeScript line coverage: **95.60%** (gate **≥ 90%**).
 
 ```bash
 make test
@@ -99,7 +100,7 @@ make qa
 | Language | Latest reported |
 | --- | --- |
 | PHP | 99.75% lines (Clover `coverage.xml`, CI) |
-| TypeScript | 95.28% lines (`pnpm run test:coverage`) |
+| TypeScript | 95.60% lines (`pnpm run test:coverage`) |
 
 ## License
 

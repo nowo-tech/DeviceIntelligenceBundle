@@ -19,7 +19,8 @@ use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 /**
- * Sets the `_device` request attribute after collect or when observe_on_every_request.
+ * Sets `_device` from the observation cookie after collect (and whenever
+ * observe_on_every_request is true). Does not rematch.
  *
  * @author Héctor Franco Aceituno <hectorfranco@nowo.tech>
  * @copyright 2026 Nowo.tech
@@ -54,10 +55,9 @@ final class DeviceRequestSubscriber implements EventSubscriberInterface
         if ($request->attributes->get('_device') instanceof DeviceContext) {
             return;
         }
-        if (!$this->config->observeOnEveryRequest() && !$request->cookies->has((string) $this->config->tokenCookie()['name'])) {
-            return;
-        }
-        if (!$this->config->observeOnEveryRequest()) {
+
+        $cookieName = (string) $this->config->tokenCookie()['name'];
+        if (!$this->config->observeOnEveryRequest() && !$request->cookies->has($cookieName)) {
             return;
         }
 

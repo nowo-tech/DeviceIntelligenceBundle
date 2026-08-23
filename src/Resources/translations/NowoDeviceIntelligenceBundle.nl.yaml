@@ -1,0 +1,26 @@
+profiler:
+  menu: 'Device Intelligence'
+  title: 'Device Intelligence'
+  device: Apparaat
+  device_id: 'Apparaat-ID'
+  new: Nieuw
+  'yes': ja
+  'no': nee
+  risk: Risico
+  confidence: Vertrouwen
+  similarity: Gelijkenis
+  stability: Stabiliteit
+  no_observation: 'geen observatie'
+  empty: 'Geen apparaatobservatie bij dit verzoek.'
+  empty_hint: 'Herlaad na collect(), of open POST /_device/collect in het Ajax-tabblad van deze balk.'
+  reasons: Redenen
+  no_reasons: 'Geen risicoredenen.'
+  signals: 'Signaalsamenvattingen (afgekapt)'
+  name: Naam
+  summary: Samenvatting
+  timings: 'Tijden (ms)'
+  phase: Fase
+  ms: ms
+  observation: Observatie
+  degraded: beperkt
+  trusted: vertrouwd

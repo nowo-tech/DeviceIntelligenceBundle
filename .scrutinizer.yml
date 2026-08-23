@@ -13,7 +13,7 @@ filter:
 build:
   environment:
     php:
-      version: 8.2
+      version: 8.3
       ini:
         memory_limit: -1
         # PHPUnit needs a coverage driver: Xdebug 3 must run in coverage mode, or use PCOV (see GitHub CI).

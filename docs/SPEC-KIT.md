@@ -27,7 +27,7 @@ This manual explains how **GitHub Spec Kit** is set up and used in this reposito
 GitHub Spec Kit is a **spec-driven development toolkit**. In Nowo bundles it provides:
 
 1. **Versioned scaffolding** (`.specify/`, Cursor skills) so every repo uses the same workflow.
-2. **Baseline specifications** (`specs/001-baseline/`) that document **100% of production code** under `src/`.
+2. **Baseline specifications** (`specs/001-baseline/`) that document **100% of production code** under `lib/` and `src/`.
 3. **Cursor Agent skills** (`/speckit-specify`, `/speckit-plan`, …) to author new feature specs, plans, and tasks consistently.
 
 Spec Kit does **not** replace PHPUnit, PHPStan, or integrator docs — it **anchors** them.
@@ -122,7 +122,7 @@ Repository root/
 ├── specs/                       # Written specifications (product content)
 │   ├── 001-baseline/
 │   │   ├── spec.md              # Full-product baseline spec
-│   │   └── code-inventory.md    # 100% src/ file → FR-* mapping
+│   │   └── code-inventory.md    # 100% lib/ + src/ file → FR-* mapping
 │   ├── 002-my-feature/          # (future) incremental feature specs
 │   │   ├── spec.md
 │   │   ├── plan.md
@@ -189,19 +189,24 @@ Every Nowo bundle with Spec Kit must ship:
 | File | Content |
 | --- | --- |
 | `spec.md` | User scenarios, `FR-*` requirements, success criteria (`SC-*`), non-goals, validation commands |
-| `code-inventory.md` | Table mapping **every production file** under `src/` to spec sections and `FR-*` IDs |
+| `code-inventory.md` | Table mapping **every production file** under `lib/` and `src/` to spec sections and `FR-*` IDs |
 
 **Production code scope:** all files under `src/` that ship with the package (PHP, TS/JS, SCSS, YAML config, Twig views, translations). Exclude `tests/`, `demo/`, `*.test.ts`, and generated caches. Build artifacts (`dist/`) are documented as **outputs** of named sources.
 
 **Audit command (maintainers):**
 
 ```bash
-find src -type f ! -path '*/assets/dist/*' ! -name '*.test.ts' | wc -l
+# Production units = lib PHP + src PHP + Twig + translation YAML + TS sources (not Vitest, not Vite IIFE).
+find lib -name '*.php' | wc -l
+find src -name '*.php' | wc -l
+find src -name '*.twig' | wc -l
+find src/Resources/translations -name '*.yaml' | wc -l
+find src/Resources/assets/src -name '*.ts' | wc -l
 ```
 
-The **Total production sources** row in `code-inventory.md` must match this count.
+The **Total production sources** row in `code-inventory.md` must match this count (**204** = 115 + 61 + 1 + 7 + 20).
 
-In **DeviceIntelligenceBundle**, the baseline inventory covers **98/98** files — see [`specs/001-baseline/code-inventory.md`](../specs/001-baseline/code-inventory.md).
+In **DeviceIntelligenceBundle**, the baseline inventory covers **204/204** files — see [`specs/001-baseline/code-inventory.md`](../specs/001-baseline/code-inventory.md). Vite `device-intelligence.min.js` (+ `.map`) is `FR-BUILD-001` output, not an extra row.
 
 ---
 
