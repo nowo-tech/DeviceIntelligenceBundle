@@ -1,0 +1,23 @@
+---
+description: Frontend rules for bundle assets with TypeScript and Vite
+globs:
+  - "src/Resources/assets/**/*.ts"
+  - "src/Resources/assets/**/*.tsx"
+  - "src/Resources/assets/**/*.js"
+  - "vite.config.ts"
+  - "vitest.config.ts"
+alwaysApply: false
+---
+
+Work only on the requested entrypoint, module, or stylesheet.
+
+Prefer:
+- strict TypeScript typing
+- small modules and focused edits
+- preserving the current Vite entrypoint strategy
+- editing existing initialization code instead of creating parallel bootstraps
+- JSDoc in English for exported APIs and non-obvious functions
+
+Do not inspect minified or generated assets.
+Do not add JSDoc in Spanish.
+Do not rewrite the whole frontend architecture unless explicitly requested.

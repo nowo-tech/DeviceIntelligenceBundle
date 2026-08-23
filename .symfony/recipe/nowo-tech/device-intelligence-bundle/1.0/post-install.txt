@@ -1,0 +1,14 @@
+Device Intelligence Bundle has been installed!
+
+The following files have been created:
+  - config/packages/nowo_device_intelligence.yaml (configuration)
+  - config/routes/nowo_device_intelligence.yaml (attribute route import)
+
+Next steps:
+1. Publish assets: php bin/console assets:install
+2. When doctrine.enabled is true, create tables (migration or doctrine:schema:update)
+3. Load the browser client:
+   <script src="{{ asset('js/device-intelligence.min.js', 'nowo_device_intelligence') }}"></script>
+4. Collect: POST /_device/collect (route nowo_device_intelligence_collect)
+
+A Device ID is not a credential. See docs/INSTALLATION.md, docs/CONFIGURATION.md, and docs/SECURITY.md.

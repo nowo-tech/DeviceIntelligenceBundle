@@ -1,0 +1,23 @@
+{
+	order mercure after encode
+	skip_install_trust
+}
+
+# Worker mode: app boots once, handles requests in memory. DeviceIntelligenceBundle is compatible
+# (no extra config). For production, consider limiting requests per worker when possible; see
+# docs/INSTALLATION.md § FrankenPHP.
+:80 {
+	root * /app/public
+	encode zstd br gzip
+	mercure {
+		anonymous
+	}
+
+	php_server {
+		hot_reload
+		worker {
+			file /app/public/index.php
+			watch
+		}
+	}
+}

@@ -1,0 +1,16 @@
+# CODEOWNERS for DeviceIntelligenceBundle
+# Default owner for everything in the repository
+* @HecFranco
+
+# GitHub metadata and workflows
+/.github/ @HecFranco
+
+# Source code
+/src/ @HecFranco
+/lib/ @HecFranco
+
+# Tests
+/tests/ @HecFranco
+
+# Optional: scripts / tooling
+/.scripts/ @HecFranco

@@ -1,0 +1,8 @@
+# Device Intelligence Bundle — default configuration
+# See docs/CONFIGURATION.md for all options.
+
+nowo_device_intelligence:
+    enabled: true
+    doctrine:
+        enabled: true
+        table_prefix: device_intelligence_

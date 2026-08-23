@@ -1,0 +1,134 @@
+{
+    "name": "nowo-tech/device-intelligence-bundle",
+    "description": "Symfony Device Intelligence: probabilistic device matching, risk scoring, collect endpoint, Doctrine, Security, and browser assets. Device IDs are not credentials.",
+    "type": "symfony-bundle",
+    "keywords": [
+        "symfony",
+        "symfony-bundle",
+        "bundle",
+        "device-intelligence",
+        "fingerprint",
+        "antifraud",
+        "risk",
+        "nowo",
+        "frankenphp"
+    ],
+    "homepage": "https://github.com/nowo-tech/DeviceIntelligenceBundle",
+    "version": "1.0.0",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Héctor Franco Aceituno",
+            "email": "hectorfranco@nowo.tech",
+            "homepage": "https://github.com/HecFranco",
+            "role": "Maintainer"
+        },
+        {
+            "name": "Nowo.tech",
+            "homepage": "https://nowo.tech"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/nowo-tech/DeviceIntelligenceBundle/issues",
+        "source": "https://github.com/nowo-tech/DeviceIntelligenceBundle",
+        "docs": "https://github.com/nowo-tech/DeviceIntelligenceBundle/tree/main/docs",
+        "changelog": "https://github.com/nowo-tech/DeviceIntelligenceBundle/blob/main/docs/CHANGELOG.md"
+    },
+    "require": {
+        "php": ">=8.1 <8.6",
+        "doctrine/doctrine-bundle": "^2.12 || ^3.0",
+        "doctrine/orm": "^2.19 || ^3.0",
+        "psr/clock": "^1.0",
+        "psr/log": "^1.0 || ^2 || ^3",
+        "psr/simple-cache": "^1.0 || ^2.0 || ^3.0",
+        "symfony/cache": "^7.4 || ^8.0",
+        "symfony/config": "^7.4 || ^8.0",
+        "symfony/dependency-injection": "^7.4 || ^8.0",
+        "symfony/framework-bundle": "^7.4 || ^8.0",
+        "symfony/http-foundation": "^7.4 || ^8.0",
+        "symfony/http-kernel": "^7.4 || ^8.0",
+        "symfony/messenger": "^7.4 || ^8.0",
+        "symfony/rate-limiter": "^7.4 || ^8.0",
+        "symfony/routing": "^7.4 || ^8.0",
+        "symfony/security-bundle": "^7.4 || ^8.0",
+        "symfony/serializer": "^7.4 || ^8.0",
+        "symfony/uid": "^7.4 || ^8.0",
+        "symfony/validator": "^7.4 || ^8.0",
+        "twig/extra-bundle": "^3.12",
+        "twig/string-extra": "^3.12"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.64",
+        "nowo-tech/phpstan-frankenphp": "^1.1",
+        "phpstan/phpstan": "^2.1",
+        "phpstan/phpstan-phpunit": "^2.0",
+        "phpstan/phpstan-symfony": "^2.0",
+        "phpunit/phpunit": "^10.5 || ^11.5",
+        "vincentlanglet/twig-cs-fixer": "^3.0",
+        "rector/rector": "^2.0",
+        "symfony/twig-bundle": "^7.4 || ^8.0",
+        "symfony/web-profiler-bundle": "^7.4 || ^8.0",
+        "symfony/yaml": "^7.4 || ^8.0",
+        "twig/twig": "^3.12"
+    },
+    "suggest": {
+        "symfony/messenger": "To dispatch cleanup and stability recalculation asynchronously",
+        "symfony/twig-bundle": "To render the Web Profiler panel",
+        "symfony/web-profiler-bundle": "To inspect device match, risk, and timings in the profiler"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nowo\\DeviceIntelligence\\": "lib/",
+            "Nowo\\DeviceIntelligenceBundle\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nowo\\DeviceIntelligence\\Tests\\": "tests/Core/",
+            "Nowo\\DeviceIntelligenceBundle\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --color=always",
+        "test-coverage": "phpunit --color=always --coverage-html coverage --coverage-clover coverage.xml --coverage-text",
+        "coverage-check": "phpunit --color=always --coverage-text --coverage-clover=coverage.xml",
+        "cs-check": "php-cs-fixer fix --dry-run --diff --config=.php-cs-fixer.dist.php",
+        "cs-fix": "php-cs-fixer fix --config=.php-cs-fixer.dist.php",
+        "rector": "rector process",
+        "rector-dry": "rector process --dry-run --no-progress-bar",
+        "phpstan": "phpstan analyse --memory-limit=1G",
+        "twig:lint": "twig-cs-fixer lint --config=.twig-cs-fixer.php",
+        "twig:fix": "twig-cs-fixer fix --config=.twig-cs-fixer.php",
+        "composer-validate": "composer validate --strict",
+        "qa": ["@cs-check", "@phpstan", "@test"]
+    },
+    "scripts-descriptions": {
+        "test": "Run PHPUnit tests",
+        "test-coverage": "Run PHPUnit tests with code coverage",
+        "coverage-check": "Run PHPUnit with coverage text (CI gate)",
+        "cs-check": "Check code style with PHP-CS-Fixer",
+        "cs-fix": "Fix code style with PHP-CS-Fixer",
+        "rector": "Apply Rector refactoring",
+        "rector-dry": "Run Rector in dry-run mode",
+        "phpstan": "Run PHPStan static analysis",
+        "twig:lint": "Lint Twig templates (Twig-CS-Fixer)",
+        "twig:fix": "Fix Twig templates (Twig-CS-Fixer)",
+        "composer-validate": "Validate composer.json (composer validate --strict)",
+        "qa": "Run all quality assurance checks"
+    },
+    "archive": {
+        "exclude": ["/demo", "/.cursor"]
+    },
+    "config": {
+        "sort-packages": true,
+        "root-version": "1.0.0-dev"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "extra": {
+        "nowo-package-version": "1.0.0",
+        "branch-alias": {
+            "dev-main": "1.0.x-dev"
+        }
+    }
+}

@@ -1,0 +1,2 @@
+nowo_device_intelligence:
+    resource: '@NowoDeviceIntelligenceBundle/Resources/config/routes.php'

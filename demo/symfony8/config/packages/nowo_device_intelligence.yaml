@@ -1,0 +1,5 @@
+nowo_device_intelligence:
+    enabled: true
+    doctrine:
+        enabled: true
+        table_prefix: device_intelligence_

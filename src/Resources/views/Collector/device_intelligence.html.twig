@@ -1,0 +1,127 @@
+{% extends '@WebProfiler/Profiler/layout.html.twig' %}
+
+{% block toolbar %}
+    {% set icon %}
+        <span class="sf-toolbar-value">DI</span>
+        {% if collector.hasContext %}
+            <span class="sf-toolbar-label">{{ collector.risk }}</span>
+        {% endif %}
+    {% endset %}
+    {% set text %}
+        {% if collector.hasContext %}
+            <div class="sf-toolbar-info-piece">
+                <b>Device</b>
+                <span>{{ collector.deviceId }}</span>
+            </div>
+            <div class="sf-toolbar-info-piece">
+                <b>New</b>
+                <span>{{ collector.new ? 'yes' : 'no' }}</span>
+            </div>
+            <div class="sf-toolbar-info-piece">
+                <b>Risk</b>
+                <span>{{ collector.risk }} ({{ collector.riskLevel }})</span>
+            </div>
+            <div class="sf-toolbar-info-piece">
+                <b>Confidence</b>
+                <span>{{ collector.confidence|number_format(2) }}</span>
+            </div>
+        {% else %}
+            <div class="sf-toolbar-info-piece">
+                <b>Device</b>
+                <span>no observation</span>
+            </div>
+        {% endif %}
+    {% endset %}
+    {{ include('@WebProfiler/Profiler/toolbar_item.html.twig', { link: true }) }}
+{% endblock %}
+
+{% block menu %}
+    <span class="label">
+        <span class="icon">DI</span>
+        <strong>Device Intelligence</strong>
+    </span>
+{% endblock %}
+
+{% block panel %}
+    <h2>Device Intelligence</h2>
+    {% if not collector.hasContext %}
+        <div class="empty">
+            <p>No device observation on this request.</p>
+        </div>
+    {% else %}
+        <div class="metrics">
+            <div class="metric">
+                <span class="value">{{ collector.deviceId }}</span>
+                <span class="label">Device ID</span>
+            </div>
+            <div class="metric">
+                <span class="value">{{ collector.new ? 'yes' : 'no' }}</span>
+                <span class="label">New</span>
+            </div>
+            <div class="metric">
+                <span class="value">{{ collector.confidence|number_format(3) }}</span>
+                <span class="label">Confidence</span>
+            </div>
+            <div class="metric">
+                <span class="value">{{ collector.similarity|number_format(3) }}</span>
+                <span class="label">Similarity</span>
+            </div>
+            <div class="metric">
+                <span class="value">{{ collector.stability|number_format(3) }}</span>
+                <span class="label">Stability</span>
+            </div>
+            <div class="metric">
+                <span class="value">{{ collector.risk }}</span>
+                <span class="label">Risk ({{ collector.riskLevel }})</span>
+            </div>
+        </div>
+
+        <h3>Reasons</h3>
+        {% if collector.reasons is empty %}
+            <p>No risk reasons.</p>
+        {% else %}
+            <ul>
+                {% for reason in collector.reasons %}
+                    <li>{{ reason }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <h3>Signal summaries (truncated)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Summary</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for name, summary in collector.signals %}
+                    <tr>
+                        <td>{{ name }}</td>
+                        <td>{{ summary }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h3>Timings (ms)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Phase</th>
+                    <th>ms</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for phase, ms in collector.timings %}
+                    <tr>
+                        <td>{{ phase }}</td>
+                        <td>{{ ms|number_format(2) }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <p>Observation {{ collector.observationId }}{% if collector.degraded %} — degraded{% endif %}{% if collector.trusted %} — trusted{% endif %}</p>
+    {% endif %}
+{% endblock %}
