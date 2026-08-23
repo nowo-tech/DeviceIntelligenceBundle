@@ -7,7 +7,7 @@ Follow these rules when contributing PHP, TypeScript, Twig, and documentation to
 ## Project scope
 
 - **Type:** Standalone Symfony bundle (`nowo-tech/device-intelligence-bundle`).
-- **PHP:** `>=8.1 <8.6` with `declare(strict_types=1);` in every PHP file.
+- **PHP:** `>=8.3 <8.6` with `declare(strict_types=1);` in every PHP file.
 - **Symfony:** **7.4**, **8.0**, and **8.1+** (`^7.4 || ^8.0` on `symfony/*` constraints). Symfony 8 requires PHP 8.4+.
 - **Core:** Framework-agnostic domain in `lib/` (`Nowo\DeviceIntelligence\`). Symfony adapters in `src/` (`Nowo\DeviceIntelligenceBundle\`).
 - **Frontend:** TypeScript + Vite in `src/Resources/assets/`; IIFE `src/Resources/public/js/device-intelligence.min.js`.

@@ -34,7 +34,7 @@
         "changelog": "https://github.com/nowo-tech/DeviceIntelligenceBundle/blob/main/docs/CHANGELOG.md"
     },
     "require": {
-        "php": ">=8.1 <8.6",
+        "php": ">=8.3 <8.6",
         "doctrine/doctrine-bundle": "^2.12 || ^3.0",
         "doctrine/orm": "^2.19 || ^3.0",
         "psr/clock": "^1.0",

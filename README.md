@@ -1,12 +1,12 @@
 # Device Intelligence Bundle
 
-[![CI](https://github.com/nowo-tech/DeviceIntelligenceBundle/actions/workflows/ci.yml/badge.svg)](https://github.com/nowo-tech/DeviceIntelligenceBundle/actions/workflows/ci.yml) [![Packagist Version](https://img.shields.io/packagist/v/nowo-tech/device-intelligence-bundle.svg?style=flat)](https://packagist.org/packages/nowo-tech/device-intelligence-bundle) [![Packagist Downloads](https://img.shields.io/packagist/dt/nowo-tech/device-intelligence-bundle.svg)](https://packagist.org/packages/nowo-tech/device-intelligence-bundle) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![PHP](https://img.shields.io/badge/PHP-8.1%2B-777BB4?logo=php)](https://php.net) [![Symfony](https://img.shields.io/badge/Symfony-7.4%20%7C%208.0%20%7C%208.1%2B-000000?logo=symfony)](https://symfony.com) [![GitHub stars](https://img.shields.io/github/stars/nowo-tech/device-intelligence-bundle.svg?style=social&label=Star)](https://github.com/nowo-tech/DeviceIntelligenceBundle) [![Coverage](https://img.shields.io/badge/Coverage-99.75%25-brightgreen)](#tests-and-coverage)
+[![CI](https://github.com/nowo-tech/DeviceIntelligenceBundle/actions/workflows/ci.yml/badge.svg)](https://github.com/nowo-tech/DeviceIntelligenceBundle/actions/workflows/ci.yml) [![Packagist Version](https://img.shields.io/packagist/v/nowo-tech/device-intelligence-bundle.svg?style=flat)](https://packagist.org/packages/nowo-tech/device-intelligence-bundle) [![Packagist Downloads](https://img.shields.io/packagist/dt/nowo-tech/device-intelligence-bundle.svg)](https://packagist.org/packages/nowo-tech/device-intelligence-bundle) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![PHP](https://img.shields.io/badge/PHP-8.3%2B-777BB4?logo=php)](https://php.net) [![Symfony](https://img.shields.io/badge/Symfony-7.4%20%7C%208.0%20%7C%208.1%2B-000000?logo=symfony)](https://symfony.com) [![GitHub stars](https://img.shields.io/github/stars/nowo-tech/device-intelligence-bundle.svg?style=social&label=Star)](https://github.com/nowo-tech/DeviceIntelligenceBundle) [![Coverage](https://img.shields.io/badge/Coverage-99.75%25-brightgreen)](#tests-and-coverage)
 
 > ⭐ **Found this useful?** [Install from Packagist](https://packagist.org/packages/nowo-tech/device-intelligence-bundle) · Give it a **star** on [GitHub](https://github.com/nowo-tech/DeviceIntelligenceBundle) so more developers can find it.
 
 **Device Intelligence Bundle** — probabilistic device matching, risk scoring, a collect endpoint, Doctrine persistence, Security integration, and first-party browser collectors for Symfony. A Device ID is not a credential.
 
-> 📋 **Compatible with Symfony 7.4+ and 8.0–8.1+** — PHP 8.1+ (Symfony 8.x requires PHP 8.4+).
+> 📋 **Compatible with Symfony 7.4+ and 8.0–8.1+** — PHP 8.3+ (Symfony 8.x requires PHP 8.4+).
 
 ![FrankenPHP Friendly Worker Mode](docs/images/frankenphp-friendly.png)
 
@@ -47,7 +47,7 @@ return [
 
 ## Requirements
 
-- PHP `>=8.1 <8.6`
+- PHP `>=8.3 <8.6`
 - Symfony 7.4, 8.0, and 8.1+
 - Optional: Doctrine ORM (default persistence), Messenger, Twig / Web Profiler
 

@@ -34,15 +34,9 @@ jobs:
       fail-fast: false
       max-parallel: 4
       matrix:
-        php: ['8.2', '8.3', '8.4', '8.5']
+        php: ['8.3', '8.4', '8.5']
         symfony: ['7.4', '8.0', '8.1', '8.2']
         exclude:
-          - php: '8.2'
-            symfony: '8.0'
-          - php: '8.2'
-            symfony: '8.1'
-          - php: '8.2'
-            symfony: '8.2'
           - php: '8.3'
             symfony: '8.0'
           - php: '8.3'
@@ -123,8 +117,8 @@ jobs:
           SYMFONY_DEPRECATIONS_HELPER: max[direct]=0
         run: composer test
 
-      - name: Run tests with coverage (PHP 8.2 + Symfony 7.4 only)
-        if: matrix.php == '8.2' && matrix.symfony == '7.4'
+      - name: Run tests with coverage (PHP 8.3 + Symfony 7.4 only)
+        if: matrix.php == '8.3' && matrix.symfony == '7.4'
         env:
           SYMFONY_DEPRECATIONS_HELPER: max[direct]=0
         run: composer test-coverage

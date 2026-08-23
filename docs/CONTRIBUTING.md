@@ -45,7 +45,7 @@ make install
 #### Code standards
 
 - PSR-12 via PHP-CS-Fixer
-- PHP 8.1+ with `declare(strict_types=1);`
+- PHP 8.3+ with `declare(strict_types=1);`
 - PHPDoc in English for public classes and methods
 
 ```bash

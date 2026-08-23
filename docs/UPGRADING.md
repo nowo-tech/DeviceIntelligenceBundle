@@ -28,7 +28,7 @@ composer require nowo-tech/device-intelligence-bundle:^1.0
 
 ### Requirements
 
-- PHP `>=8.1` (`<8.6`). Symfony **8.0** and **8.1+** require **PHP 8.4+**.
+- PHP `>=8.3` (`<8.6`). Symfony **8.0** and **8.1+** require **PHP 8.4+**.
 - Symfony **7.4**, **8.0**, or **8.1+**.
 - Doctrine ORM when `doctrine.enabled: true` (the default).
 

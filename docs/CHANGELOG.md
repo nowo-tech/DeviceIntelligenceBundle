@@ -15,7 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Demo path repository: require `@dev` instead of `dev-master as 1.0.99`, and drop the hardcoded `version` field from the bundle `composer.json` so Composer uses the VCS tag (Packagist) and local path installs resolve.
-- GitHub CI: `composer validate --strict` no longer fails on a hardcoded package version; PHP 8.2 jobs resolve Doctrine 2.x via a full `composer update`; code-style and coverage install from the lockfile on PHP 8.4.
+- GitHub CI: `composer validate --strict` no longer fails on a hardcoded package version; the test matrix uses a full `composer update`; code-style and coverage install from the lockfile on PHP 8.4.
+- PHP floor is **8.3** (`@PHP83Migration` / typed class constants). CI tests PHP 8.3–8.5.
 
 ## [1.0.0] - 2026-08-23
 
