@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { compactDigest, sha256Hex } from '../src/crypto/digest';
 import { clamp01, createSignal, raceAbort, throwIfAborted } from '../src/collectors/collector';
-import { postCollect } from '../src/transport/fetch-transport';
+import { postCollect, readProfilerPreviousToken } from '../src/transport/fetch-transport';
 import { MemoryCache } from '../src/cache/memory-cache';
 import {
   DeviceIntelligence,
@@ -94,7 +94,40 @@ describe('digest and collector helpers', () => {
 
 describe('postCollect', () => {
   afterEach(() => {
+    document.getElementById('sfwdt48ea71')?.remove();
     vi.unstubAllGlobals();
+  });
+
+  it('reads the Web Debug Toolbar token from the sfwdt node', () => {
+    expect(readProfilerPreviousToken()).toBeUndefined();
+    const bar = document.createElement('div');
+    bar.id = 'sfwdt48ea71';
+    document.body.appendChild(bar);
+    expect(readProfilerPreviousToken()).toBe('48ea71');
+  });
+
+  it('sends X-Previous-Debug-Token when the toolbar is present', async () => {
+    const bar = document.createElement('div');
+    bar.id = 'sfwdt48ea71';
+    document.body.appendChild(bar);
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, text: async () => '  ' });
+    vi.stubGlobal('fetch', fetchMock);
+    await postCollect('/_device/collect', {
+      v: 1,
+      sdkVersion: '1',
+      timestamp: 1,
+      nonce: 'n',
+      consent: { highEntropy: true },
+      signals: {},
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/_device/collect',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          'X-Previous-Debug-Token': '48ea71',
+        }),
+      }),
+    );
   });
 
   it('returns null on HTTP errors and network failures', async () => {

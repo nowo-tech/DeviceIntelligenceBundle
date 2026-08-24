@@ -57,6 +57,7 @@ return [
 - [Installation](docs/INSTALLATION.md)
 - [Configuration](docs/CONFIGURATION.md)
 - [Usage](docs/USAGE.md)
+- [Use cases](docs/USE-CASES.md)
 - [Contributing](docs/CONTRIBUTING.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
 - [Changelog](docs/CHANGELOG.md)
@@ -70,6 +71,7 @@ return [
 ### Additional documentation
 
 - [Quick start](docs/quick-start.md)
+- [Use cases](docs/USE-CASES.md)
 - [Collectors](docs/collectors.md)
 - [Matching](docs/matching.md)
 - [Risk engine](docs/risk-engine.md)
