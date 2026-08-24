@@ -13,6 +13,12 @@ profiler:
   no_observation: 'geen observatie'
   empty: 'Geen apparaatobservatie bij dit verzoek.'
   empty_hint: 'Herlaad na collect(), of open POST /_device/collect in het Ajax-tabblad van deze balk.'
+  empty_steps: 'Wacht tot collect() klaar is en open dit paneel opnieuw (de collect-POST is als Ajax gekoppeld). Herlaad de pagina zodat de observatiecookie het volgende HTML-verzoek vult.'
+  from_ajax: 'Weergave van de AJAX-collect() van deze pagina.'
+  from_ajax_link: 'Collect-verzoek openen'
+  cookie: Cookie
+  cookie_present: aanwezig
+  cookie_missing: ontbreekt
   reasons: Redenen
   no_reasons: 'Geen risicoredenen.'
   signals: 'Signaalsamenvattingen (afgekapt)'

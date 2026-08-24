@@ -13,6 +13,12 @@ profiler:
   no_observation: 'sin observación'
   empty: 'No hay observación de dispositivo en esta petición.'
   empty_hint: 'Recarga tras collect(), o abre POST /_device/collect en la pestaña Ajax de esta barra.'
+  empty_steps: 'Espera a que termine collect() y vuelve a abrir este panel (el POST collect queda enlazado como Ajax). Recarga la página para hidratar la siguiente petición HTML con la cookie de observación.'
+  from_ajax: 'Mostrando el collect() AJAX de esta página.'
+  from_ajax_link: 'Abrir la petición collect'
+  cookie: Cookie
+  cookie_present: presente
+  cookie_missing: ausente
   reasons: Motivos
   no_reasons: 'Sin motivos de riesgo.'
   signals: 'Resúmenes de señales (truncados)'
