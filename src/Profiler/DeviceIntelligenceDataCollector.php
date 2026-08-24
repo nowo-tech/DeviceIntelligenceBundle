@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\DeviceIntelligenceBundle\Profiler;
 
 use Nowo\DeviceIntelligence\Analysis;
+use Nowo\DeviceIntelligenceBundle\Config\DeviceIntelligenceConfig;
 use Nowo\DeviceIntelligenceBundle\Request\DeviceContext;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,17 +19,28 @@ use Symfony\Component\HttpKernel\DataCollector\DataCollector;
  */
 final class DeviceIntelligenceDataCollector extends DataCollector
 {
+    public function __construct(private ?DeviceIntelligenceConfig $config = null)
+    {
+    }
+
     public function collect(Request $request, Response $response, ?\Throwable $exception = null): void
     {
         unset($response, $exception);
+        $cookieName = $this->cookieName();
         $context = $request->attributes->get('_device');
         if ($context instanceof DeviceContext) {
             $this->collectAnalysis($context->analysis(), $context->isTrusted());
+        } else {
+            $this->data['has_context'] ??= false;
         }
-        $this->data['has_context'] ??= false;
+
+        $this->data['cookie_present'] = $request->cookies->has($cookieName);
+        $this->data['cookie_name'] = $cookieName;
+        $this->data['request_method'] = $request->getMethod();
+        $this->data['request_path'] = $request->getPathInfo();
     }
 
-    public function collectAnalysis(Analysis $analysis, bool $trusted = false): void
+    public function collectAnalysis(Analysis $analysis, bool $trusted = false, string $source = 'request'): void
     {
         $summaries = [];
         foreach ($analysis->signals() as $name => $signal) {
@@ -50,6 +62,11 @@ final class DeviceIntelligenceDataCollector extends DataCollector
             'timings' => $analysis->timings,
             'degraded' => $analysis->degraded(),
             'observation_id' => $analysis->observation()->id->value,
+            'source' => $source,
+            'cookie_present' => (bool) ($this->data['cookie_present'] ?? false),
+            'cookie_name' => (string) ($this->data['cookie_name'] ?? $this->cookieName()),
+            'request_method' => (string) ($this->data['request_method'] ?? ''),
+            'request_path' => (string) ($this->data['request_path'] ?? ''),
         ];
     }
 
@@ -66,6 +83,31 @@ final class DeviceIntelligenceDataCollector extends DataCollector
     public function hasContext(): bool
     {
         return (bool) ($this->data['has_context'] ?? false);
+    }
+
+    public function isFromAjax(): bool
+    {
+        return 'ajax' === ($this->data['source'] ?? '');
+    }
+
+    public function isCookiePresent(): bool
+    {
+        return (bool) ($this->data['cookie_present'] ?? false);
+    }
+
+    public function getCookieName(): string
+    {
+        return (string) ($this->data['cookie_name'] ?? $this->cookieName());
+    }
+
+    public function getRequestMethod(): string
+    {
+        return (string) ($this->data['request_method'] ?? '');
+    }
+
+    public function getRequestPath(): string
+    {
+        return (string) ($this->data['request_path'] ?? '');
     }
 
     public function getDeviceId(): string
@@ -146,5 +188,12 @@ final class DeviceIntelligenceDataCollector extends DataCollector
     public function getObservationId(): string
     {
         return (string) ($this->data['observation_id'] ?? '');
+    }
+
+    private function cookieName(): string
+    {
+        $name = $this->config?->tokenCookie()['name'] ?? 'di_obs';
+
+        return \is_string($name) && '' !== $name ? $name : 'di_obs';
     }
 }

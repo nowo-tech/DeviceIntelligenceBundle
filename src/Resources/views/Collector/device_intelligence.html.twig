@@ -2,9 +2,10 @@
 
 {% block toolbar %}
     {% set icon %}
-        <span class="sf-toolbar-value">DI</span>
+        <span class="icon">{{ source('@NowoDeviceIntelligenceBundle/Icon/device-intelligence.svg') }}</span>
         {% if collector.hasContext %}
-            <span class="sf-toolbar-label">{{ collector.risk }}</span>
+            <span class="sf-toolbar-value">{{ collector.risk }}</span>
+            <span class="sf-toolbar-label">{{ collector.riskLevel }}</span>
         {% endif %}
     {% endset %}
     {% set text %}
@@ -30,24 +31,43 @@
                 <b>{{ 'profiler.device'|trans({}, 'NowoDeviceIntelligenceBundle') }}</b>
                 <span>{{ 'profiler.no_observation'|trans({}, 'NowoDeviceIntelligenceBundle') }}</span>
             </div>
+            <div class="sf-toolbar-info-piece">
+                <b>{{ 'profiler.cookie'|trans({}, 'NowoDeviceIntelligenceBundle') }}</b>
+                <span>{{ collector.cookieName }} — {{ collector.cookiePresent ? 'profiler.cookie_present'|trans({}, 'NowoDeviceIntelligenceBundle') : 'profiler.cookie_missing'|trans({}, 'NowoDeviceIntelligenceBundle') }}</span>
+            </div>
         {% endif %}
     {% endset %}
-    {{ include('@WebProfiler/Profiler/toolbar_item.html.twig', { link: true }) }}
+    {{ include('@WebProfiler/Profiler/toolbar_item.html.twig', {link: true, status: collector.hasContext ? 'green' : 'yellow'}) }}
 {% endblock %}
 
 {% block menu %}
     <span class="label">
-        <span class="icon">DI</span>
+        <span class="icon">{{ source('@NowoDeviceIntelligenceBundle/Icon/device-intelligence.svg') }}</span>
         <strong>{{ 'profiler.menu'|trans({}, 'NowoDeviceIntelligenceBundle') }}</strong>
     </span>
 {% endblock %}
 
 {% block panel %}
     <h2>{{ 'profiler.title'|trans({}, 'NowoDeviceIntelligenceBundle') }}</h2>
+
+    {% if collector.fromAjax %}
+        <p>{{ 'profiler.from_ajax'|trans({}, 'NowoDeviceIntelligenceBundle') }}</p>
+    {% endif %}
+
     {% if not collector.hasContext %}
         <div class="empty">
             <p>{{ 'profiler.empty'|trans({}, 'NowoDeviceIntelligenceBundle') }}</p>
             <p>{{ 'profiler.empty_hint'|trans({}, 'NowoDeviceIntelligenceBundle') }}</p>
+            <p>{{ 'profiler.empty_steps'|trans({}, 'NowoDeviceIntelligenceBundle') }}</p>
+            <p>
+                {{ 'profiler.cookie'|trans({}, 'NowoDeviceIntelligenceBundle') }}
+                <code>{{ collector.cookieName }}</code>
+                —
+                {{ collector.cookiePresent ? 'profiler.cookie_present'|trans({}, 'NowoDeviceIntelligenceBundle') : 'profiler.cookie_missing'|trans({}, 'NowoDeviceIntelligenceBundle') }}
+                {% if collector.requestMethod %}
+                    — {{ collector.requestMethod }} {{ collector.requestPath }}
+                {% endif %}
+            </p>
         </div>
     {% else %}
         <div class="metrics">

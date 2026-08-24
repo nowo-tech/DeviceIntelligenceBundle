@@ -50,7 +50,7 @@ final class SymfonyDeviceRateLimiter implements DeviceRateLimiterInterface
         $max = $limit ?? (int) ($cfg['limit'] ?? 60);
         $window = $interval ?? (string) ($cfg['interval'] ?? '1 minute');
         $seconds = $this->intervalSeconds($window);
-        $bucket = 'di.rl.'.$policy.'.'.$compound;
+        $bucket = $this->cacheKey($policy, $compound);
         $now = time();
 
         try {
@@ -74,6 +74,14 @@ final class SymfonyDeviceRateLimiter implements DeviceRateLimiterInterface
         }
 
         return true;
+    }
+
+    /**
+     * PSR-16 forbids {}()/\@: in keys. Compound keys include ":" and user ids may include "@".
+     */
+    private function cacheKey(string $policy, string $compound): string
+    {
+        return 'dirl_'.hash('sha256', $policy."\n".$compound);
     }
 
     private function compoundKey(string $key, ?string $ipHash, ?string $userId, ?string $deviceId): string

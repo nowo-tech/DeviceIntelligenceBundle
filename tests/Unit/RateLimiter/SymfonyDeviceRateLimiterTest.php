@@ -41,4 +41,15 @@ final class SymfonyDeviceRateLimiterTest extends TestCase
         self::assertTrue($limiter->consume('login', 'user_device', 'ip', 'u1', 'd1', 5, 'PT5M'));
         self::assertTrue($limiter->consume('login', 'ip', 'ip', null, null, 5, 'weird'));
     }
+
+    public function testConsumePersistsAcrossLimiterInstances(): void
+    {
+        $cache = new Psr16Cache(new ArrayAdapter());
+        $first = new SymfonyDeviceRateLimiter(ProcessedConfig::object(), $cache);
+        self::assertTrue($first->consume('coupon', 'device', 'ip', 'user@host', 'd1', 2, '60 seconds'));
+        self::assertTrue($first->consume('coupon', 'device', 'ip', 'user@host', 'd1', 2, '60 seconds'));
+
+        $rebooted = new SymfonyDeviceRateLimiter(ProcessedConfig::object(), $cache);
+        self::assertFalse($rebooted->consume('coupon', 'device', 'ip', 'user@host', 'd1', 2, '60 seconds'));
+    }
 }

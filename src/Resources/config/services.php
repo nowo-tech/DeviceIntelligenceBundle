@@ -20,6 +20,7 @@ use Nowo\DeviceIntelligenceBundle\Event\AnalyzeService;
 use Nowo\DeviceIntelligenceBundle\EventSubscriber\AnalyzeSubscriber;
 use Nowo\DeviceIntelligenceBundle\EventSubscriber\ControllerAttributeSubscriber;
 use Nowo\DeviceIntelligenceBundle\EventSubscriber\DeviceRequestSubscriber;
+use Nowo\DeviceIntelligenceBundle\EventSubscriber\ProfilerAjaxBridgeSubscriber;
 use Nowo\DeviceIntelligenceBundle\EventSubscriber\SecurityDeviceSubscriber;
 use Nowo\DeviceIntelligenceBundle\Http\AnalysisInputFactory;
 use Nowo\DeviceIntelligenceBundle\Http\CollectRequestValidator;
@@ -73,6 +74,9 @@ return static function (ContainerConfigurator $container): void {
     $services->set(DeviceContextValueResolver::class)
         ->tag('controller.argument_value_resolver');
     $services->set(DeviceRequestSubscriber::class);
+    $services->set(ProfilerAjaxBridgeSubscriber::class)
+        ->arg('$profiler', service('profiler')->nullOnInvalid())
+        ->arg('$storage', service('profiler.storage')->nullOnInvalid());
     $services->set(SecurityDeviceSubscriber::class);
     $services->set(ControllerAttributeSubscriber::class);
     $services->set(AnalyzeSubscriber::class);

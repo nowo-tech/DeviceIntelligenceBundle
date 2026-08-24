@@ -46,9 +46,15 @@ final class DeviceContextAndCollectorTest extends TestCase
         $collector = new DeviceIntelligenceDataCollector();
         $request = Request::create('/');
         $request->attributes->set('_device', $trusted);
+        $request->cookies->set('di_obs', 'token');
         $collector->collect($request, new Response());
 
+        self::assertFalse($collector->isFromAjax());
         self::assertTrue($collector->hasContext());
+        self::assertTrue($collector->isCookiePresent());
+        self::assertSame('di_obs', $collector->getCookieName());
+        self::assertSame('GET', $collector->getRequestMethod());
+        self::assertSame('/', $collector->getRequestPath());
         self::assertSame($analysis->device()->id->value, $collector->getDeviceId());
         self::assertSame($analysis->match()->isNewDevice(), $collector->isNew());
         self::assertTrue($collector->isTrusted());
@@ -59,8 +65,29 @@ final class DeviceContextAndCollectorTest extends TestCase
         self::assertIsArray($collector->getReasons());
         self::assertIsArray($collector->getSignals());
         self::assertIsArray($collector->getTimings());
+
+        $empty = new DeviceIntelligenceDataCollector();
+        $empty->collect(Request::create('/es'), new Response());
+        self::assertFalse($empty->hasContext());
+        self::assertFalse($empty->isCookiePresent());
+        self::assertSame('/es', $empty->getRequestPath());
+
+        $hydrated = new DeviceIntelligenceDataCollector();
+        $hydrated->collectAnalysis($analysis);
+        $later = Request::create('/es');
+        $later->cookies->set('di_obs', 'token');
+        $hydrated->collect($later, new Response());
+        self::assertTrue($hydrated->hasContext());
+        self::assertSame($analysis->device()->id->value, $hydrated->getDeviceId());
+        self::assertTrue($hydrated->isCookiePresent());
+
+        $ajax = new DeviceIntelligenceDataCollector();
+        $ajax->collectAnalysis($analysis, false, 'ajax');
+        self::assertTrue($ajax->isFromAjax());
+
         $collector->reset();
         self::assertFalse($collector->hasContext());
+        self::assertFalse($collector->isCookiePresent());
         self::assertSame('', $collector->getDeviceId());
         self::assertFalse($collector->isNew());
         self::assertFalse($collector->isTrusted());
@@ -73,6 +100,7 @@ final class DeviceContextAndCollectorTest extends TestCase
         self::assertSame([], $collector->getSignals());
         self::assertSame([], $collector->getTimings());
         self::assertFalse($collector->isDegraded());
+        self::assertFalse($collector->isFromAjax());
         self::assertSame('', $collector->getObservationId());
     }
 }
