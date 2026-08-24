@@ -13,6 +13,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [1.1.0] - 2026-08-24
+
+### Added
+
+- profiler AJAX bridge, rate limiter tweaks, and collector UI icons.
+
+### Changed
+
+- **Dependencies:** routine Composer/npm bumps (Dependabot).
+- **CI:** git hooks and release hygiene (REQ-GIT-001).
+- **Docs:** Spec Kit baseline refresh.
+- **Style:** PHP CS Fixer alignment.
+
+### Notes
+
+- **No API or configuration changes** for integrators unless noted above.
+
 ### Added
 
 - Web Profiler fingerprint icon (`Icon/device-intelligence.svg`) in the toolbar and sidebar.
@@ -31,6 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Demo Doctrine `DATABASE_URL` uses a three-part `serverVersion=8.0.0` so DBAL 4 does not treat MySQL 8 as older than 8.0.0.
 - Demo Web Profiler: drop deprecated `framework.profiler.collect_serializer_data` (removed in Symfony 9).
 - Empty Device Intelligence panel: cookie/path diagnostics and clearer empty-state copy.
+[1.1.0]: https://github.com/nowo-tech/DeviceIntelligenceBundle/releases/tag/v1.1.0
+
 
 ## [1.0.1] - 2026-08-23
 
