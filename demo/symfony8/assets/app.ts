@@ -18,6 +18,14 @@ function publicResult(result: CollectResult): Record<string, unknown> {
   };
 }
 
+function whenDocumentReady(run: () => void): void {
+  if (document.readyState === 'complete' || document.querySelector('[id^="sfwdt"]')) {
+    run();
+    return;
+  }
+  window.addEventListener('load', run, { once: true });
+}
+
 const el = document.getElementById('collect-result');
 if (el instanceof HTMLElement) {
   const device = new DeviceIntelligence({
@@ -25,17 +33,19 @@ if (el instanceof HTMLElement) {
     timeout: 8000,
     cache: { enabled: false },
   });
-  device.collect().then((result) => {
-    const summary = publicResult(result);
-    el.textContent = JSON.stringify(summary, null, 2);
-    if (!result.ok) {
-      return;
-    }
-    if (sessionStorage.getItem(RELOAD_KEY) === '1') {
-      return;
-    }
-    sessionStorage.setItem(RELOAD_KEY, '1');
-    el.textContent = JSON.stringify({ ...summary, reloading: true }, null, 2);
-    globalThis.location.reload();
+  whenDocumentReady(() => {
+    device.collect().then((result) => {
+      const summary = publicResult(result);
+      el.textContent = JSON.stringify(summary, null, 2);
+      if (!result.ok) {
+        return;
+      }
+      if (sessionStorage.getItem(RELOAD_KEY) === '1') {
+        return;
+      }
+      sessionStorage.setItem(RELOAD_KEY, '1');
+      el.textContent = JSON.stringify({ ...summary, reloading: true }, null, 2);
+      globalThis.location.reload();
+    });
   });
 }

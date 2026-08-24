@@ -1,0 +1,55 @@
+{% if device %}
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-muted small">{{ 'demo.panel.device_id'|trans }}</div>
+                    <div class="font-monospace small text-break">{{ device.device.id.value }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-muted small">{{ 'demo.panel.risk'|trans }}</div>
+                    <div class="fs-4">{{ device.risk.score.value }}</div>
+                    <div class="small">{{ device.risk.level.value }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-muted small">{{ 'demo.panel.confidence'|trans }}</div>
+                    <div class="fs-4">{{ device.match.confidence|number_format(2) }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-muted small">{{ 'demo.panel.new'|trans }}</div>
+                    <div>{{ device.new ? 'demo.yes'|trans : 'demo.no'|trans }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-muted small">{{ 'demo.panel.trusted'|trans }}</div>
+                    <div>{{ device.trusted ? 'demo.yes'|trans : 'demo.no'|trans }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% if device.risk.reasons is not empty %}
+        <p class="small text-muted mb-4">
+            {{ 'demo.panel.reasons'|trans }}:
+            {% for reason in device.risk.reasons %}
+                {{ reason.label }}{% if not loop.last %}, {% endif %}
+            {% endfor %}
+        </p>
+    {% endif %}
+{% else %}
+    <div class="alert alert-info">{{ 'demo.panel.missing'|trans }}</div>
+{% endif %}

@@ -1,0 +1,6 @@
+<p class="small text-muted">{{ 'demo.case.overview.hint'|trans }}</p>
+<p class="mb-0">
+    <a class="btn btn-outline-primary btn-sm" href="{{ path('demo_case', { _locale: app.request.locale, case: 'checkout' }) }}">{{ 'demo.case.checkout.nav'|trans }}</a>
+    <a class="btn btn-outline-primary btn-sm" href="{{ path('demo_login', { _locale: app.request.locale }) }}">{{ 'demo.case.login.nav'|trans }}</a>
+    <a class="btn btn-outline-primary btn-sm" href="{{ path('demo_case', { _locale: app.request.locale, case: 'trust' }) }}">{{ 'demo.case.trust.nav'|trans }}</a>
+</p>

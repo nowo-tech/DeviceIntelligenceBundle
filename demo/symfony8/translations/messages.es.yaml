@@ -3,6 +3,92 @@ demo:
   brand: 'Inteligencia de dispositivo'
   heading: 'Bundle de inteligencia de dispositivo'
   lead: 'Demo de emparejamiento probabilístico de dispositivos. Un Device ID no es una credencial.'
-  body: 'collect() hace POST a /_device/collect. Esta página recarga una vez para que el Web Profiler (la petición HTML) muestre Device Intelligence. El primer token de la barra no tiene observación: es normal.'
+  body: 'collect() hace POST a /_device/collect. Esta página recarga una vez para que la petición HTML lleve la cookie de observación. Cada ejemplo tiene su propia URL: usa las pastillas o abre /es/checkout, /es/login, /es/trust, …'
   waiting: 'Esperando collect()…'
   language: Idioma
+  close: Cerrar
+  yes: sí
+  no: 'no'
+  logout: 'Cerrar sesión'
+  collect_heading: 'collect() del navegador'
+  docs_hint: 'Ejemplos para copiar: docs/USE-CASES.md en el repositorio del bundle.'
+  login:
+    nav: Entrar
+    hint: 'Usuarios en memoria alice / vip, contraseña “password”. El login asocia el dispositivo actual; no lo marca como de confianza.'
+    username: Usuario
+    password: Contraseña
+    submit: Entrar
+    signed_in: 'Sesión iniciada como %user%.'
+  panel:
+    device_id: 'ID de dispositivo'
+    risk: Riesgo
+    confidence: Confianza
+    new: Nuevo
+    trusted: De confianza
+    reasons: Motivos
+    missing: 'Aún no hay DeviceContext en esta petición HTML. Espera a collect() (y la recarga única) y vuelve a abrir el ejemplo.'
+  flash:
+    checkout_blocked: 'Pago bloqueado (riesgo ≥ 90). El Device ID no es un rechazo de tarjeta: esta demo se detiene aquí.'
+    checkout_step_up: 'Hace falta un step-up (dispositivo nuevo, sin observación, o riesgo ≥ 70). El host enviaría a MFA / 3-D Secure.'
+    checkout_ok: 'Pago permitido para este clúster (riesgo bajo, dispositivo conocido).'
+    need_login: 'Entra primero (alice o vip).'
+    need_collect: 'Aún no hay cookie de observación. Espera a collect() y recarga.'
+    trusted: 'Este navegador queda de confianza 90 días para el usuario actual.'
+    revoked: 'Confianza revocada para este navegador y usuario.'
+    need_trust: 'Hace falta un dispositivo de confianza. Usa el ejemplo Trust después de entrar.'
+    privileged_risk: 'Acción privilegiada denegada (puntuación de riesgo > 70).'
+    privileged_ok: 'Token de API creado (demo). Dispositivo de confianza y riesgo ≤ 70.'
+    coupon_ok: 'Cupón canjeado (límite por dispositivo aceptado).'
+    coupon_blocked: 'Límite de cupones superado (3 por dispositivo / 24 h).'
+    export_blocked: 'Exportación bloqueada (riesgo > 89), misma idea que #[DeviceRisk(max: 89)].'
+    export_ok: 'Exportación permitida para esta puntuación de riesgo.'
+    login_ok: 'Sesión iniciada. No había observación en el login: collect() en la página siguiente.'
+    login_new_device: 'Sesión iniciada desde un clúster nuevo. Las apps suelen avisar por email al titular.'
+    login_known_device: 'Sesión iniciada desde un clúster conocido.'
+  case:
+    overview:
+      nav: Resumen
+      title: 'Observación en vivo'
+      body: 'Device ID, riesgo, confianza y confianza explícita de este navegador tras collect(). No es un factor de login.'
+      hint: 'Abre Checkout, Entrar o Trust para ejecutar los flujos. El panel Device Intelligence del profiler se rellena en esta petición HTML tras collect + cookie.'
+    checkout:
+      nav: Checkout
+      title: 'Step-up del pago'
+      body: 'MFA a cargo del host si el clúster es nuevo o el riesgo ≥ 70; parada dura a ≥ 90.'
+      logic: 'Equivale a USE-CASES §1. Sin DeviceContext se trata como step-up.'
+      action: 'Pagar 42 €'
+    login:
+      nav: Entrar
+      title: 'Login y asociación de dispositivo'
+      body: 'La contraseña la valida Symfony Security. Si acierta, el bundle asocia el usuario a este dispositivo y anota velocidad de login. La confianza nunca es automática.'
+    trust:
+      nav: Trust
+      title: 'Recordar este navegador'
+      body: 'Concesión explícita después de un MFA. El login no llama a trust().'
+      logic: 'DeviceTrustService::trust() / revoke() durante 90 días, con etiqueta del usuario.'
+      action: 'Confiar en este navegador'
+      revoke: Revocar
+    privileged:
+      nav: Privilegiado
+      title: 'Crear token de API'
+      body: 'Exige usuario autenticado, dispositivo de confianza y riesgo ≤ 70 (misma idea que #[RequireTrustedDevice] + #[DeviceRisk(max: 70)]).'
+      logic: 'Entra, confía el navegador y reintenta. Sin trust la acción se deniega.'
+      action: 'Crear token'
+    coupon:
+      nav: Cupón
+      title: 'Límite de abuso de promo'
+      body: 'Política YAML coupon: 3 canjes por dispositivo cada 24 h (si no hay dispositivo, IP hasheada).'
+      logic: 'DeviceRateLimiterInterface::consume("coupon", "device", …). Pulsa varias veces para llegar al límite.'
+      action: 'Canjear cupón'
+    export:
+      nav: Exportar
+      title: 'Denegación dura por riesgo extremo'
+      body: 'Red de seguridad para una exportación sensible. Puntuación 0 (sin observación) se permite; > 89 se bloquea.'
+      logic: 'Mismo umbral que #[DeviceRisk(max: 89)]. Para dinero, mejor el step-up de checkout.'
+      action: 'Exportar datos de la cuenta'
+    alerts:
+      nav: Alertas
+      title: 'Listener de dispositivo sospechoso'
+      body: 'SuspiciousDeviceEvent se dispara si la evaluación es high o critical. Aquí se muestra el último evento en sesión (sustituto de Slack / email).'
+      empty: 'Aún no hay evaluación high/critical en esta sesión. Haz collect con un perfil ruidoso o espera una puntuación alta.'
+      at: Cuándo

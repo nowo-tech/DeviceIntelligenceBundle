@@ -1,0 +1,10 @@
+{% if app.user %}
+    <p>{{ 'demo.login.signed_in'|trans({ '%user%': app.user.userIdentifier }) }}</p>
+    <a class="btn btn-outline-secondary" href="{{ path('demo_logout') }}">{{ 'demo.logout'|trans }}</a>
+{% else %}
+    <p class="small text-muted">{{ 'demo.login.hint'|trans }}</p>
+    {% if login_error is defined and login_error %}
+        <div class="alert alert-danger">{{ login_error.messageKey|trans(login_error.messageData, 'security') }}</div>
+    {% endif %}
+    {{ include('demo/_form.html.twig', { form: login_form }) }}
+{% endif %}

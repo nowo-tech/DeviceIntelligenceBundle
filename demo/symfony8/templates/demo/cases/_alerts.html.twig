@@ -1,0 +1,14 @@
+{% if suspicious %}
+    <dl class="row mb-0">
+        <dt class="col-sm-4">{{ 'demo.panel.device_id'|trans }}</dt>
+        <dd class="col-sm-8 font-monospace small">{{ suspicious.device_id }}</dd>
+        <dt class="col-sm-4">{{ 'demo.panel.risk'|trans }}</dt>
+        <dd class="col-sm-8">{{ suspicious.score }} ({{ suspicious.level }})</dd>
+        <dt class="col-sm-4">{{ 'demo.panel.reasons'|trans }}</dt>
+        <dd class="col-sm-8">{{ suspicious.reasons|join(', ') }}</dd>
+        <dt class="col-sm-4">{{ 'demo.case.alerts.at'|trans }}</dt>
+        <dd class="col-sm-8">{{ suspicious.at }}</dd>
+    </dl>
+{% else %}
+    <p class="text-muted mb-0">{{ 'demo.case.alerts.empty'|trans }}</p>
+{% endif %}

@@ -9,3 +9,13 @@ nowo_device_intelligence:
     doctrine:
         enabled: true
         table_prefix: device_intelligence_
+    profiles:
+        default:
+            rate_limit:
+                policies:
+                    collect:
+                        limit: 60
+                        interval: '1 minute'
+                    coupon:
+                        limit: 3
+                        interval: '24 hours'

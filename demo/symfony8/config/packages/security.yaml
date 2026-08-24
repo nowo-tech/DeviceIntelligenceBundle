@@ -1,8 +1,12 @@
 security:
     password_hashers:
-        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: auto
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: plaintext
     providers:
-        users_in_memory: { memory: null }
+        users_in_memory:
+            memory:
+                users:
+                    alice: { password: 'password', roles: ['ROLE_USER'] }
+                    vip: { password: 'password', roles: ['ROLE_USER'] }
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
@@ -10,5 +14,13 @@ security:
         main:
             lazy: true
             provider: users_in_memory
+            form_login:
+                login_path: demo_login
+                check_path: demo_login
+                enable_csrf: true
+                default_target_path: /en/login
+            logout:
+                path: demo_logout
+                target: /en
     access_control:
         - { path: ^/, roles: PUBLIC_ACCESS }

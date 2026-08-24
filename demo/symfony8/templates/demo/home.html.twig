@@ -1,10 +1,53 @@
 {% extends 'base.html.twig' %}
 
+{% block title %}{{ 'demo.title'|trans }} – {{ ('demo.case.' ~ case ~ '.nav')|trans }}{% endblock %}
+
 {% block body %}
-<div class="container py-5">
-    <h1>{{ 'demo.heading'|trans }}</h1>
+<div class="container py-4">
+    <h1 class="h3 mb-2">{{ 'demo.heading'|trans }}</h1>
     <p class="lead">{{ 'demo.lead'|trans }}</p>
-    <p>{{ 'demo.body'|trans }}</p>
-    <pre id="collect-result" class="bg-white border p-3">{{ 'demo.waiting'|trans }}</pre>
+    <p class="text-muted">{{ 'demo.body'|trans }}</p>
+
+    <ul class="nav nav-pills flex-wrap gap-1 mb-4">
+        {% for item in cases %}
+            <li class="nav-item">
+                <a class="nav-link {{ case == item.id ? 'active' : '' }}" href="{{ item.url }}">
+                    {{ ('demo.case.' ~ item.id ~ '.nav')|trans }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+
+    {% for type, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ type }} alert-dismissible fade show" role="alert">
+                {{ message|trans }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ 'demo.close'|trans }}"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    {{ include('demo/_device.html.twig') }}
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5">{{ ('demo.case.' ~ case ~ '.title')|trans }}</h2>
+                    <p>{{ ('demo.case.' ~ case ~ '.body')|trans }}</p>
+                    {{ include('demo/cases/_' ~ case ~ '.html.twig') }}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="h6">{{ 'demo.collect_heading'|trans }}</h2>
+                    <pre id="collect-result" class="bg-light border p-3 small mb-0">{{ 'demo.waiting'|trans }}</pre>
+                </div>
+            </div>
+            <p class="small text-muted mt-3 mb-0">{{ 'demo.docs_hint'|trans }}</p>
+        </div>
+    </div>
 </div>
 {% endblock %}

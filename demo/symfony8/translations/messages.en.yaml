@@ -3,6 +3,92 @@ demo:
   brand: 'Device Intelligence'
   heading: 'Device Intelligence Bundle'
   lead: 'Probabilistic device matching demo. A Device ID is not a credential.'
-  body: 'collect() POSTs to /_device/collect. This page reloads once so the Web Profiler (HTML request) can show Device Intelligence. The first toolbar token has no observation yet — that is expected.'
+  body: 'collect() POSTs to /_device/collect. This page reloads once so the HTML request carries the observation cookie. Each example has its own URL — use the pills or open /en/checkout, /en/login, /en/trust, …'
   waiting: 'Waiting for collect()…'
   language: Language
+  close: Close
+  yes: 'yes'
+  no: 'no'
+  logout: 'Sign out'
+  collect_heading: 'Browser collect()'
+  docs_hint: 'Integrator copy-paste samples: docs/USE-CASES.md in the bundle repository.'
+  login:
+    nav: 'Sign in'
+    hint: 'In-memory users alice / vip, password “password”. Sign-in associates the current device; it does not trust it.'
+    username: Username
+    password: Password
+    submit: 'Sign in'
+    signed_in: 'Signed in as %user%.'
+  panel:
+    device_id: 'Device ID'
+    risk: Risk
+    confidence: Confidence
+    new: New
+    trusted: Trusted
+    reasons: Reasons
+    missing: 'No DeviceContext on this HTML request yet. Wait for collect() (and the one-time reload), then open an example again.'
+  flash:
+    checkout_blocked: 'Payment blocked (risk ≥ 90). Device ID is not a card decline by itself — this demo stops here.'
+    checkout_step_up: 'Step-up required (new device, missing observation, or risk ≥ 70). Host would send the user to MFA / 3-D Secure.'
+    checkout_ok: 'Payment allowed for this device cluster (low risk, returning device).'
+    need_login: 'Sign in first (alice or vip).'
+    need_collect: 'No observation cookie yet. Wait for collect() and reload.'
+    trusted: 'This browser is now trusted for 90 days for the signed-in user.'
+    revoked: 'Trust revoked for this browser and user.'
+    need_trust: 'A trusted device is required. Use the Trust example after sign-in.'
+    privileged_risk: 'Privileged action denied (risk score > 70).'
+    privileged_ok: 'API token created (demo). Trusted device + risk ≤ 70.'
+    coupon_ok: 'Coupon redeemed (device rate limit accepted).'
+    coupon_blocked: 'Coupon rate limit exceeded (3 per device / 24 hours).'
+    export_blocked: 'Export blocked (risk > 89), same idea as #[DeviceRisk(max: 89)].'
+    export_ok: 'Export allowed for this risk score.'
+    login_ok: 'Signed in. No device observation on the login request — collect() on the next page.'
+    login_new_device: 'Signed in from a new device cluster. Host apps usually email the account holder.'
+    login_known_device: 'Signed in from a known device cluster.'
+  case:
+    overview:
+      nav: Overview
+      title: 'Live observation'
+      body: 'Device ID, risk, confidence, and trust for this browser after collect(). Not a login factor.'
+      hint: 'Open Checkout, Sign in, or Trust to run the host flows. The Web Profiler Device Intelligence panel fills on this HTML request after collect + cookie.'
+    checkout:
+      nav: Checkout
+      title: 'Payment step-up'
+      body: 'Host-owned MFA when the cluster is new or risk ≥ 70; hard stop at ≥ 90.'
+      logic: 'Mirrors USE-CASES §1. Missing DeviceContext is treated as step-up.'
+      action: 'Pay €42'
+    login:
+      nav: 'Sign in'
+      title: 'Login and device association'
+      body: 'Password check is Symfony Security. On success the bundle associates the user with this device and records login velocity. Trust is never automatic.'
+    trust:
+      nav: Trust
+      title: 'Remember this browser'
+      body: 'Explicit grant after you would have passed MFA. Login never calls trust().'
+      logic: 'DeviceTrustService::trust() / revoke() for 90 days, labelled with the username.'
+      action: 'Trust this browser'
+      revoke: Revoke
+    privileged:
+      nav: Privileged
+      title: 'Create API token'
+      body: 'Requires a signed-in user, a trusted device, and risk ≤ 70 (same idea as #[RequireTrustedDevice] + #[DeviceRisk(max: 70)]).'
+      logic: 'Sign in, trust the browser, then retry. Without trust the action is denied.'
+      action: 'Create token'
+    coupon:
+      nav: Coupon
+      title: 'Promo abuse limit'
+      body: 'Named YAML policy coupon: 3 redemptions per device per 24 hours (hashed IP fallback if there is no device yet).'
+      logic: 'DeviceRateLimiterInterface::consume("coupon", "device", …). Click several times to hit the limit.'
+      action: 'Redeem coupon'
+    export:
+      nav: Export
+      title: 'Hard deny on extreme risk'
+      body: 'Safety net for a sensitive export. Score 0 (no observation) is allowed; score > 89 is blocked.'
+      logic: 'Same threshold idea as #[DeviceRisk(max: 89)]. Prefer checkout step-up for money movement.'
+      action: 'Export account data'
+    alerts:
+      nav: Alerts
+      title: 'Suspicious device listener'
+      body: 'SuspiciousDeviceEvent fires when the assessment is high or critical. This page shows the last event stored in the session (demo stand-in for Slack / email).'
+      empty: 'No high/critical assessment in this session yet. Collect from a noisy profile or wait for a high score.'
+      at: When
