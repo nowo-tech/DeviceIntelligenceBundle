@@ -43,7 +43,7 @@ There is no separate executable spec language (for example Gherkin); Spec Kit sp
 **In scope**
 
 - Documented integration (root `README.md` and `docs/`).
-- Configuration in [`CONFIGURATION.md`](CONFIGURATION.md) and runtime behavior in [`USAGE.md`](USAGE.md).
+- Configuration in [`CONFIGURATION.md`](CONFIGURATION.md) and runtime behavior in [`USAGE.md`](USAGE.md) / [`USE-CASES.md`](USE-CASES.md).
 - Web Profiler panel (optional i18n, domain `NowoDeviceIntelligenceBundle`).
 - Frontend entrypoint `device-intelligence.min.js` built from TypeScript via Vite.
 - Consumer-facing changes in [`CHANGELOG.md`](CHANGELOG.md) and [`UPGRADING.md`](UPGRADING.md).

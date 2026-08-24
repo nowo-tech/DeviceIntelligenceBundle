@@ -1,9 +1,12 @@
 # Usage
 
+Copy-paste scenarios (checkout step-up, new-device login, trusted devices, coupons, custom rules): **[USE-CASES.md](USE-CASES.md)**.
+
 ## Table of contents
 
 - [Collect endpoint](#collect-endpoint)
 - [Controller argument](#controller-argument)
+- [Use cases](#use-cases)
 - [Events](#events)
 - [Security hooks](#security-hooks)
 - [Custom risk rules](#custom-risk-rules)
@@ -48,7 +51,22 @@ public function dashboard(DeviceContext $device): void
 }
 ```
 
-`DeviceContext` is populated on `POST /_device/collect`, and on later requests from the observation cookie (`di_obs` by default — no rematch). Set `observe_on_every_request: true` to always attempt cookie hydration (the demo does this so the Web Profiler panel fills after a reload). Without a cookie, the profiler for that HTML request stays empty: reload after `collect()`, or open the collect POST in the toolbar Ajax tab.
+`DeviceContext` is populated on `POST /_device/collect`, and on later requests from the observation cookie (`di_obs` by default — no rematch). Set `observe_on_every_request: true` to always attempt cookie hydration (the demo does this so the Web Profiler toolbar turns green after a reload). The first HTML request has no cookie yet: if the client sends `X-Previous-Debug-Token` (automatic when the toolbar is on the page), opening Device Intelligence on that GET shows the Ajax collect result. You can also open the collect POST in the Ajax tab.
+
+Type the argument as `?DeviceContext $device = null` on pages that may run before collect. A non-nullable `DeviceContext $device` is only safe after hydration.
+
+## Use cases
+
+| Goal | Start here |
+| ---- | ---------- |
+| Step-up MFA on checkout | [USE-CASES.md §1](USE-CASES.md#1-checkout--payment-step-up) |
+| “New browser signed in” | [USE-CASES.md §2](USE-CASES.md#2-login-from-a-new-device) |
+| Remember this browser | [USE-CASES.md §3](USE-CASES.md#3-remember-this-device-explicit-trust) |
+| Payroll / API tokens | [USE-CASES.md §4](USE-CASES.md#4-privileged-action-on-a-trusted-device) |
+| Coupon / trial limits | [USE-CASES.md §5](USE-CASES.md#5-promo--coupon-abuse) |
+| Custom score | [USE-CASES.md §7](USE-CASES.md#7-custom-risk-rule) |
+
+Full list and copy-paste controllers: **[USE-CASES.md](USE-CASES.md)**.
 
 ## Events
 

@@ -21,4 +21,4 @@ final class TooManyTrialsRule implements RiskRuleInterface
 }
 ```
 
-Enable and weight the rule under `profiles.*.risk.rules`.
+Enable and weight the rule under `profiles.*.risk.rules`. Full checkout / VIP example: [USE-CASES.md](USE-CASES.md#7-custom-risk-rule).

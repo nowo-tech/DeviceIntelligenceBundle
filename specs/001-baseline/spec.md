@@ -103,7 +103,7 @@ Probabilistic **device intelligence** for Symfony: weighted matching (not a mono
 
 ## Success Criteria
 
-- **SC-001**: Production inventory **204/204** (`specs/001-baseline/code-inventory.md`).
+- **SC-001**: Production inventory **206/206** (`specs/001-baseline/code-inventory.md`).
 - **SC-002**: Config keys match `docs/CONFIGURATION.md`.
 - **SC-003**: `make qa` / PHPUnit / PHPStan / Vitest pass in CI.
 

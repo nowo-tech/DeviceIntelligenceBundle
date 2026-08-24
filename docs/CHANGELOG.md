@@ -13,6 +13,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Web Profiler fingerprint icon (`Icon/device-intelligence.svg`) in the toolbar and sidebar.
+- Profiler panel on the HTML request is filled from the Ajax `POST /_device/collect` when the client sends `X-Previous-Debug-Token` (`ProfilerAjaxBridgeSubscriber`).
+- Browser client sends `X-Previous-Debug-Token` when the Web Debug Toolbar is present so collect can be linked to that page profile.
+
+### Documentation
+
+- Integrator use cases with copy-paste controllers: checkout step-up, new-device login, trusted devices, coupons, custom risk rules (`docs/USE-CASES.md`).
+- Symfony 8 demo: eight examples on distinct paths (`/en`, `/en/checkout`, `/en/login`, `/en/trust`, `/en/privileged`, `/en/coupon`, `/en/export`, `/en/alerts`), in-memory login, trust/coupon/export actions, VIP allowlist rule.
+
+### Fixed
+
+- Demo Twig no longer uses raw `<form>` / `<input>` (REQ-TWIG-005): CSRF actions and login use `CsrfOnlyType` / `LoginType` with `form_start` and a `{% for child in form %}` loop.
+- Rate-limit cache keys are hashed so they are valid PSR-16 (colons / `@` in device and user ids no longer fail open after each request).
+- Demo Doctrine `DATABASE_URL` uses a three-part `serverVersion=8.0.0` so DBAL 4 does not treat MySQL 8 as older than 8.0.0.
+- Demo Web Profiler: drop deprecated `framework.profiler.collect_serializer_data` (removed in Symfony 9).
+- Empty Device Intelligence panel: cookie/path diagnostics and clearer empty-state copy.
+
 ## [1.0.1] - 2026-08-23
 
 Profiler i18n, observation-cookie hydration, Pentatrion Vite demo, Spec Kit inventory, and Nowo checklist alignment.

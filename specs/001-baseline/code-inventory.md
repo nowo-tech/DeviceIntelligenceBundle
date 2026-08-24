@@ -2,8 +2,8 @@
 
 **Package**: `nowo-tech/device-intelligence-bundle`  
 **Last audited**: 2026-08-23  
-**Production units**: **204/204**  
-**Audit command**: count `lib/**/*.php` + `src/**/*.php` + `src/**/*.twig` + `src/Resources/translations/*.yaml` + `src/Resources/assets/src/**/*.ts` (exclude `src/Resources/assets/tests/**`).
+**Production units**: **206/206**  
+**Audit command**: count `lib/**/*.php` + `src/**/*.php` + `src/**/*.twig` + `src/**/*.svg` + `src/Resources/translations/*.yaml` + `src/Resources/assets/src/**/*.ts` (exclude `src/Resources/assets/tests/**`).
 
 ## Scope notes
 
@@ -26,13 +26,13 @@
 | Bundle & DI | 6 |
 | HTTP collect | 8 |
 | Doctrine | 10 |
-| Events | 15 |
+| Events | 16 |
 | Request context | 6 |
 | Messenger | 4 |
-| Profiler | 2 |
+| Profiler | 3 |
 | i18n | 7 |
 | Browser SDK | 20 |
-| **Total** | **204** |
+| **Total** | **206** |
 
 ## Matching & risk
 
@@ -247,6 +247,7 @@
 | `src/EventSubscriber/AnalyzeSubscriber.php` | Events | FR-EVT-001 |
 | `src/EventSubscriber/ControllerAttributeSubscriber.php` | Events | FR-EVT-001 |
 | `src/EventSubscriber/DeviceRequestSubscriber.php` | Events | FR-EVT-001 |
+| `src/EventSubscriber/ProfilerAjaxBridgeSubscriber.php` | Events | FR-PROF-001, FR-EVT-001 |
 | `src/EventSubscriber/SecurityDeviceSubscriber.php` | Events | FR-EVT-001 |
 
 ## Request context
@@ -275,6 +276,7 @@
 | --- | --- | --- |
 | `src/Profiler/DeviceIntelligenceDataCollector.php` | Profiler | FR-PROF-001, FR-TWIG-001 |
 | `src/Resources/views/Collector/device_intelligence.html.twig` | Profiler | FR-PROF-001, FR-TWIG-001 |
+| `src/Resources/views/Icon/device-intelligence.svg` | Profiler | FR-PROF-001, FR-TWIG-001 |
 
 ## i18n
 

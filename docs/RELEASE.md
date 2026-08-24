@@ -22,12 +22,15 @@ make release-check
 
 Expected steps:
 
+- `check-no-cursor-coauthor` (REQ-GIT-001)
 - Asset build (`pnpm run build`)
 - Composer validation and lock sync
 - Code style checks
 - Static analysis (Rector dry run + PHPStan)
 - PHP and TypeScript test suites with coverage
 - Demo verification (`demo/Makefile` `release-check`)
+
+After creating the release commit and tag, run `make check-no-cursor-coauthor` again **before** `git push` (REQ-GIT-001).
 
 ## Security checklist (12.4.1)
 

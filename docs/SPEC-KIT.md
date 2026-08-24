@@ -196,17 +196,18 @@ Every Nowo bundle with Spec Kit must ship:
 **Audit command (maintainers):**
 
 ```bash
-# Production units = lib PHP + src PHP + Twig + translation YAML + TS sources (not Vitest, not Vite IIFE).
+# Production units = lib PHP + src PHP + Twig + SVG icons + translation YAML + TS sources (not Vitest, not Vite IIFE).
 find lib -name '*.php' | wc -l
 find src -name '*.php' | wc -l
 find src -name '*.twig' | wc -l
+find src -name '*.svg' | wc -l
 find src/Resources/translations -name '*.yaml' | wc -l
 find src/Resources/assets/src -name '*.ts' | wc -l
 ```
 
-The **Total production sources** row in `code-inventory.md` must match this count (**204** = 115 + 61 + 1 + 7 + 20).
+The **Total production sources** row in `code-inventory.md` must match this count (**206** = 115 + 62 + 1 + 1 + 7 + 20).
 
-In **DeviceIntelligenceBundle**, the baseline inventory covers **204/204** files — see [`specs/001-baseline/code-inventory.md`](../specs/001-baseline/code-inventory.md). Vite `device-intelligence.min.js` (+ `.map`) is `FR-BUILD-001` output, not an extra row.
+In **DeviceIntelligenceBundle**, the baseline inventory covers **206/206** files — see [`specs/001-baseline/code-inventory.md`](../specs/001-baseline/code-inventory.md). Vite `device-intelligence.min.js` (+ `.map`) is `FR-BUILD-001` output, not an extra row.
 
 ---
 

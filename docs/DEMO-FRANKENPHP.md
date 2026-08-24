@@ -46,7 +46,7 @@ make -C demo up-symfony8
 - **Symfony Web Profiler** — `dev` and `test`
 - **Nowo Twig Inspector** and **Nowo Hot Reload** — `dev`/`test` only (Caddyfile Mercure + `hot_reload`; do not enable Hot Reload in production)
 - **Twig Extra Bundle** (`twig/extra-bundle` + `twig/string-extra`)
-- **Device Intelligence Bundle** — collect page, `POST /_device/collect`, profiler panel
+- **Device Intelligence Bundle** — collect page, `POST /_device/collect`, profiler panel, and **eight live examples** on distinct paths (`/en`, `/en/checkout`, `/en/login`, `/en/trust`, `/en/privileged`, `/en/coupon`, `/en/export`, `/en/alerts`). In-memory users `alice` / `vip` (password `password`). See [USE-CASES.md](USE-CASES.md).
 - **Pentatrion Vite + pnpm** — demo entry `assets/app.ts` compiles bundle TypeScript (`@bundle`)
 - **MySQL** — Doctrine schema for `device_intelligence_*` tables (no SQLite / `*.db`)
 

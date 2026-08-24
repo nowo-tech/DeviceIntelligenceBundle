@@ -19,12 +19,12 @@
 
 4. **Collect** — include the browser client (IIFE via `assets:install`, or Pentatrion Vite compiling `src/Resources/assets`) and POST to `/_device/collect` with `v`, `timestamp`, `nonce`, and `signals`.
 
-5. **Use risk** in a controller:
+5. **Use risk** in a controller (more scenarios: [USE-CASES.md](USE-CASES.md)):
 
    ```php
-   public function checkout(\Nowo\DeviceIntelligenceBundle\Request\DeviceContext $device): Response
+   public function checkout(?\Nowo\DeviceIntelligenceBundle\Request\DeviceContext $device = null): Response
    {
-       if ($device->risk()->score() >= 70) {
+       if (($device?->risk()->score() ?? 0) >= 70) {
            // step-up MFA — do not block solely on device id
        }
        return new Response('ok');

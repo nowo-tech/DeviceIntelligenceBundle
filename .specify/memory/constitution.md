@@ -9,7 +9,7 @@ Product behavior lives in `specs/001-baseline/spec.md`, `docs/SPEC-DRIVEN-DEVELO
 PHPUnit, PHPStan, and Vitest are the mechanical proof. Behavioral changes require tests.
 
 ### III. 100% code inventory traceability
-Every production unit under `lib/` and `src/` (PHP, Twig, translation YAML, TypeScript sources) must appear in `specs/001-baseline/code-inventory.md`. Vite IIFE outputs are documented as `FR-BUILD-001`, not extra inventory rows. New files require spec updates in the same PR.
+Every production unit under `lib/` and `src/` (PHP, Twig, SVG icons, translation YAML, TypeScript sources) must appear in `specs/001-baseline/code-inventory.md`. Vite IIFE outputs are documented as `FR-BUILD-001`, not extra inventory rows. New files require spec updates in the same PR.
 
 ### IV. Device ID is not a credential
 A Device ID identifies a probable browser cluster. It is never an authentication factor, session secret, or MFA replacement. Client signals are attacker-controlled by design.
