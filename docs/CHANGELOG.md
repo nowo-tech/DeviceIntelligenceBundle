@@ -8,11 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.1.1] - 2026-08-26](#111---2026-08-26)
+- [[1.1.0] - 2026-08-24](#110---2026-08-24)
 - [[1.0.1] - 2026-08-23](#101---2026-08-23)
 - [[1.0.0] - 2026-08-23](#100---2026-08-23)
 
 ## [Unreleased]
 
+
+## [1.1.1] - 2026-08-26
+
+### Changed
+
+- Browser IIFE: import `DeviceIntelligence` as a local binding before re-export so the published bundle evaluates `client.ts` before the logger.
+
+### Notes
+
+- **No API or configuration changes** for integrators unless noted above.
+
+[1.1.1]: https://github.com/nowo-tech/DeviceIntelligenceBundle/releases/tag/v1.1.1
 
 ## [1.1.0] - 2026-08-24
 

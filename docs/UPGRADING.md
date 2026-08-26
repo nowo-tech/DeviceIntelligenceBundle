@@ -5,6 +5,7 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 ## Table of contents
 
 
+- [From 1.1.0 to 1.1.1](#from-110-to-111)
 - [From 1.0.1 to 1.1.0](#from-101-to-110)
 - [General upgrade process](#general-upgrade-process)
 - [To 1.0.1](#to-101)
@@ -12,12 +13,13 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 - [Future versions](#future-versions)
 - [Getting help](#getting-help)
 
-## From 1.0.1 to 1.1.0
+## From 1.1.0 to 1.1.1
 
-No breaking changes. **No application upgrade steps.**
+No breaking changes. **No application upgrade steps.** Hosts using the published IIFE should run `assets:install` (or rebuild Vite) to pick up `device-intelligence.min.js`.
 
 ```bash
 composer update nowo-tech/device-intelligence-bundle
+php bin/console assets:install
 ```
 
 ## From 1.0.1 to 1.1.0
