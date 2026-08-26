@@ -5,6 +5,7 @@
  * collect endpoint. `collect()` never throws.
  */
 
+import { DeviceIntelligence } from './client';
 import { createBundleLogger, setBundleLogger } from './logger';
 
 declare const __DEVICE_INTELLIGENCE_BUILD_TIME__: string;
@@ -18,7 +19,7 @@ const log = createBundleLogger('device-intelligence', {
 log.scriptLoaded();
 setBundleLogger(log);
 
-export { DeviceIntelligence } from './client';
+export { DeviceIntelligence };
 export { MemoryCache } from './cache/memory-cache';
 export { SDK_VERSION } from './version';
 export {
