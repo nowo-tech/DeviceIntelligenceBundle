@@ -4,6 +4,7 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 
 ## Table of contents
 
+- [From 1.1.1 to 1.1.2](#from-111-to-112)
 
 - [From 1.1.0 to 1.1.1](#from-110-to-111)
 - [From 1.0.1 to 1.1.0](#from-101-to-110)
@@ -12,6 +13,14 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 - [To 1.0.0 (initial release)](#to-100-initial-release)
 - [Future versions](#future-versions)
 - [Getting help](#getting-help)
+
+## From 1.1.1 to 1.1.2
+
+If you develop or CI-test this bundle’s frontend assets, use **Node.js 22.19+** (jsdom 30 requires `worker_threads.markAsUncloneable`). Application runtime PHP/Symfony requirements are unchanged.
+
+```bash
+composer update nowo-tech/device-intelligence-bundle
+```
 
 ## From 1.1.0 to 1.1.1
 

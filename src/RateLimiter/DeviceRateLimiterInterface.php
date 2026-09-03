@@ -15,7 +15,7 @@ interface DeviceRateLimiterInterface
     /**
      * @param 'device'|'device_ip'|'ip'|'user'|'user_device' $key
      *
-     * @return bool;
+     * @return bool
      */
     public function consume(
         string $policy,

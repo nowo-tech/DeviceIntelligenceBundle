@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.1.2] - 2026-09-03](#112---2026-09-03)
 - [[1.1.1] - 2026-08-26](#111---2026-08-26)
 - [[1.1.0] - 2026-08-24](#110---2026-08-24)
 - [[1.0.1] - 2026-08-23](#101---2026-08-23)
@@ -15,6 +16,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-09-03
+
+### Fixed
+
+- **CI / frontend:** raise Node.js to **22** (and `engines.node` to `>=22.19.0`) so jsdom 30 / undici 8 TypeScript tests run correctly.
+
+### Changed
+
+- **Deps:** bump `jsdom` to 30.x, `@eslint/js`, `typescript-eslint`; refresh Composer lockfiles.
+
+[1.1.2]: https://github.com/nowo-tech/DeviceIntelligenceBundle/releases/tag/v1.1.2
 
 ## [1.1.1] - 2026-08-26
 
