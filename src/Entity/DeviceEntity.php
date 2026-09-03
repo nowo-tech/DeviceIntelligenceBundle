@@ -227,8 +227,6 @@ final class DeviceEntity
 
     /**
      * @param array<string, mixed> $metadata
-     *
-     * @return void
      */
     public function setMetadata(array $metadata): void
     {
@@ -245,8 +243,6 @@ final class DeviceEntity
 
     /**
      * @param array<string, mixed> $lastSignals
-     *
-     * @return void
      */
     public function setLastSignals(array $lastSignals): void
     {
