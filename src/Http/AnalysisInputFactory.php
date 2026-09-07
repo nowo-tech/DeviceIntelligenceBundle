@@ -34,6 +34,8 @@ final class AnalysisInputFactory
 
     /**
      * @param array<string, mixed> $payload
+     *
+     * @return AnalysisInput
      */
     public function fromRequest(Request $request, array $payload): AnalysisInput
     {

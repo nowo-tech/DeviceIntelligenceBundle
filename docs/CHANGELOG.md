@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.1.3] - 2026-09-07](#113---2026-09-07)
 - [[1.1.2] - 2026-09-03](#112---2026-09-03)
 - [[1.1.1] - 2026-08-26](#111---2026-08-26)
 - [[1.1.0] - 2026-08-24](#110---2026-08-24)
@@ -15,6 +16,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[1.0.0] - 2026-08-23](#100---2026-08-23)
 
 ## [Unreleased]
+
+## [1.1.3] - 2026-09-07
+
+### Changed
+
+- **Dependency:** bump `symfony/security-bundle` from 8.1.2 to 8.1.6 (Symfony group).
+- **Deps (dev):** eslint, typescript-eslint, `@types/node` bumps.
+- **Style:** PHP CS Fixer phpdoc cleanup.
+
+### Notes
+
+- **No API or configuration changes** for integrators.
+
+[1.1.3]: https://github.com/nowo-tech/DeviceIntelligenceBundle/releases/tag/v1.1.3
 
 ## [1.1.2] - 2026-09-03
 
