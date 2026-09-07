@@ -31,8 +31,6 @@ final class RiskEngineFactory
     /**
      * @param iterable<RiskRuleInterface>                            $tagged
      * @param array<string, array{enabled: bool, weight?: int|null}> $rulesConfig
-     *
-     * @return RiskEngine
      */
     public static function create(iterable $tagged, array $rulesConfig, RiskLevels $levels): RiskEngine
     {

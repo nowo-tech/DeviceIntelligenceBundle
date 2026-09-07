@@ -190,8 +190,6 @@ final class DeviceObservationEntity
 
     /**
      * @param array<string, mixed> $signals
-     *
-     * @return void
      */
     public function setSignals(array $signals): void
     {
