@@ -59,7 +59,7 @@ Failures return **403**. These attributes reduce risk; they do not replace autho
 
 ## FrankenPHP
 
-Matchers and analysis collaborators have no static mutable state. In-memory repositories and `DeviceIntelligence` are **not shared** across worker requests.
+Safe under FrankenPHP worker mode even when the kernel is **not** reset between requests. Bundle-owned per-request state (in-memory repositories, rate-limiter fallback, profiler collector) is cleared at the start of every main request. Doctrine repositories refresh and detach entities so trust/status changes from other workers are visible. Prefer `doctrine.enabled: true` and a shared cache pool. Details: [FRANKENPHP-WORKER-AUDIT.md](FRANKENPHP-WORKER-AUDIT.md).
 
 ## AI security audit
 

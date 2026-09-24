@@ -504,4 +504,4 @@ Other useful events (matcher is not mutated): `DeviceObservedEvent`, `NewDeviceD
 - **Do not** treat `di_obs` as a session cookie. It is an HMAC observation pointer.
 - **Do not** dump raw canvas / audio / font lists. The profiler already truncates summaries.
 - **Do not** set `endpoint.csrf: none` on a public origin. Keep `origin` or `double_submit`.
-- **Do not** share in-memory repositories across FrankenPHP worker requests (`doctrine.enabled: true` in production).
+- **Do not** share custom in-memory adapters across FrankenPHP worker requests without a `reset()` hook. Prefer `doctrine.enabled: true` and `CacheVelocityEngine` in production (see [FRANKENPHP-WORKER-AUDIT.md](FRANKENPHP-WORKER-AUDIT.md)).

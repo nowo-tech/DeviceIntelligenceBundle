@@ -10,7 +10,7 @@
 
 ![FrankenPHP Friendly Worker Mode](docs/images/frankenphp-friendly.png)
 
-This bundle is **FrankenPHP worker mode friendly**.
+This bundle is **FrankenPHP worker mode friendly** (including `reset_kernel: false`). See [docs/FRANKENPHP-WORKER-AUDIT.md](docs/FRANKENPHP-WORKER-AUDIT.md).
 
 ## Features
 
@@ -85,6 +85,7 @@ return [
 - [PSR evaluation](docs/PSR.md)
 - [Coverage policy](docs/COVERAGE.md)
 - [Demo FrankenPHP](docs/DEMO-FRANKENPHP.md)
+- [FrankenPHP worker audit](docs/FRANKENPHP-WORKER-AUDIT.md)
 - [GitHub CI](docs/GITHUB_CI.md)
 - [GitHub About](docs/GITHUB.md)
 

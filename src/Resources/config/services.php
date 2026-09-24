@@ -21,6 +21,7 @@ use Nowo\DeviceIntelligenceBundle\EventSubscriber\AnalyzeSubscriber;
 use Nowo\DeviceIntelligenceBundle\EventSubscriber\ControllerAttributeSubscriber;
 use Nowo\DeviceIntelligenceBundle\EventSubscriber\DeviceRequestSubscriber;
 use Nowo\DeviceIntelligenceBundle\EventSubscriber\ProfilerAjaxBridgeSubscriber;
+use Nowo\DeviceIntelligenceBundle\EventSubscriber\RequestStateResetSubscriber;
 use Nowo\DeviceIntelligenceBundle\EventSubscriber\SecurityDeviceSubscriber;
 use Nowo\DeviceIntelligenceBundle\Http\AnalysisInputFactory;
 use Nowo\DeviceIntelligenceBundle\Http\CollectRequestValidator;
@@ -47,10 +48,14 @@ return static function (ContainerConfigurator $container): void {
     $services->set(SystemClock::class);
 
     $services->set(DeviceMapper::class);
-    $services->set(DoctrineDeviceRepository::class);
-    $services->set(DoctrineObservationRepository::class);
-    $services->set(DoctrineDeviceUserRepository::class);
-    $services->set(DoctrineTrustedDeviceRepository::class);
+    $services->set(DoctrineDeviceRepository::class)
+        ->arg('$em', service('doctrine'));
+    $services->set(DoctrineObservationRepository::class)
+        ->arg('$em', service('doctrine'));
+    $services->set(DoctrineDeviceUserRepository::class)
+        ->arg('$em', service('doctrine'));
+    $services->set(DoctrineTrustedDeviceRepository::class)
+        ->arg('$em', service('doctrine'));
 
     $services->set('nowo_device_intelligence.simple_cache', Psr16Cache::class)
         ->args([service('cache.app')]);
@@ -80,15 +85,20 @@ return static function (ContainerConfigurator $container): void {
     $services->set(SecurityDeviceSubscriber::class);
     $services->set(ControllerAttributeSubscriber::class);
     $services->set(AnalyzeSubscriber::class);
+    $services->set(RequestStateResetSubscriber::class)
+        ->arg('$services', tagged_iterator(RequestStateResetSubscriber::TAG));
 
     $services->set(SecurityUserIdentifierResolver::class);
 
     $services->set(SymfonyDeviceRateLimiter::class)
-        ->arg('$cache', service('nowo_device_intelligence.simple_cache'));
+        ->arg('$cache', service('nowo_device_intelligence.simple_cache'))
+        ->tag('kernel.reset', ['method' => 'reset'])
+        ->tag(RequestStateResetSubscriber::TAG);
     $services->alias(DeviceRateLimiterInterface::class, SymfonyDeviceRateLimiter::class);
 
     $services->set(DeviceIntelligenceDataCollector::class)
-        ->tag('kernel.reset', ['method' => 'reset']);
+        ->tag('kernel.reset', ['method' => 'reset'])
+        ->tag(RequestStateResetSubscriber::TAG);
 
     $services->set(CleanupHandler::class);
     $services->set(RecalculateStabilityHandler::class);

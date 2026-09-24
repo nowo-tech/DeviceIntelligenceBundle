@@ -77,5 +77,10 @@ Update README **Tests and coverage** percentages after each release when coverag
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| [1.1.4](CHANGELOG.md#114---2026-09-24) | 2026-09-24 | FrankenPHP worker (`reset_kernel: false`) hardening; FR-WORKER-001; inventory 208/208 |
+| [1.1.3](CHANGELOG.md#113---2026-09-07) | 2026-09-07 | Symfony security-bundle bump; PHPStan/style hygiene |
+| [1.1.2](CHANGELOG.md#112---2026-09-03) | 2026-09-03 | Node 22 for jsdom 30; frontend dep bumps |
+| [1.1.1](CHANGELOG.md#111---2026-08-26) | 2026-08-26 | Browser IIFE local binding fix |
+| [1.1.0](CHANGELOG.md#110---2026-08-24) | 2026-08-24 | Profiler AJAX bridge, use cases, demo paths |
 | [1.0.1](CHANGELOG.md#101---2026-08-23) | 2026-08-23 | Profiler i18n, cookie hydration, Pentatrion demo, Spec Kit 204/204, SEC-004 |
 | [1.0.0](CHANGELOG.md#100---2026-08-23) | 2026-08-23 | First stable release: matching, collect, Doctrine, profiler, Vite collectors, FrankenPHP demo |

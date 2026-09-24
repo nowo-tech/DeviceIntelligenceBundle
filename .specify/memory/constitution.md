@@ -21,9 +21,9 @@ Default `privacy.hash_ip: true`. Raw IP is not stored. Logs and the profiler nev
 GitHub Spec Kit is initialized with **Cursor Agent** (`cursor-agent`). Skills live in `.cursor/skills/speckit-*`.
 
 ### VII. Symfony compatibility
-Follow declared PHP/Symfony ranges in `composer.json` and README badges. FrankenPHP worker: `DeviceIntelligence` and in-memory repositories are not shared across requests.
+Follow declared PHP/Symfony ranges in `composer.json` and README badges. FrankenPHP worker (`reset_kernel: false`): bundle-owned per-request state is cleared on every main request; Doctrine reads are always fresh. See `docs/FRANKENPHP-WORKER-AUDIT.md`.
 
 ## Governance
 Amendments update this file, baseline spec when principles affect behavior, and `CHANGELOG.md` when consumer-visible.
 
-**Version**: 1.1.0 | **Ratified**: 2026-07-07 | **Last Amended**: 2026-08-23
+**Version**: 1.1.1 | **Ratified**: 2026-07-07 | **Last Amended**: 2026-09-24

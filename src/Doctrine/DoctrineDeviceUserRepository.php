@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\DeviceIntelligenceBundle\Doctrine;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use Nowo\DeviceIntelligence\Device\DeviceId;
 use Nowo\DeviceIntelligence\Port\DeviceUserRepositoryInterface;
 use Nowo\DeviceIntelligence\User\DeviceUserRelation;
@@ -19,68 +20,75 @@ use Nowo\DeviceIntelligenceBundle\Entity\DeviceUserEntity;
  */
 final class DoctrineDeviceUserRepository implements DeviceUserRepositoryInterface
 {
+    use ResolvesEntityManagerTrait;
+
     public function __construct(
-        private EntityManagerInterface $em,
+        private EntityManagerInterface|ManagerRegistry $em,
         private DeviceMapper $mapper,
     ) {
     }
 
     public function save(DeviceUserRelation $relation): void
     {
-        $existing = $this->findEntity($relation->deviceId, $relation->userIdentifier);
+        $em = $this->entityManager(DeviceUserEntity::class);
+        $existing = $this->findEntity($em, $relation->deviceId, $relation->userIdentifier);
         $entity = $this->mapper->toUserEntity($relation, $existing);
-        $this->em->persist($entity);
-        $this->em->flush();
+        $em->persist($entity);
+        $em->flush();
+        $this->detachAll($em, [$entity]);
     }
 
     public function forDevice(DeviceId $deviceId): array
     {
-        $rows = $this->em->createQueryBuilder()
+        $em = $this->entityManager(DeviceUserEntity::class);
+        $rows = $this->withRefresh($em->createQueryBuilder()
             ->select('r')
             ->from(DeviceUserEntity::class, 'r')
             ->where('r.deviceId = :device')
             ->setParameter('device', $deviceId->value)
-            ->getQuery()
-            ->getResult();
+            ->getQuery())->getResult();
 
-        return $this->mapRows($rows);
+        return $this->mapRows($em, $rows);
     }
 
     public function forUser(UserIdentifier $user): array
     {
-        $rows = $this->em->createQueryBuilder()
+        $em = $this->entityManager(DeviceUserEntity::class);
+        $rows = $this->withRefresh($em->createQueryBuilder()
             ->select('r')
             ->from(DeviceUserEntity::class, 'r')
             ->where('r.userIdentifier = :user')
             ->setParameter('user', $user->value)
-            ->getQuery()
-            ->getResult();
+            ->getQuery())->getResult();
 
-        return $this->mapRows($rows);
+        return $this->mapRows($em, $rows);
     }
 
     public function find(DeviceId $deviceId, UserIdentifier $user): ?DeviceUserRelation
     {
-        $entity = $this->findEntity($deviceId, $user);
+        $em = $this->entityManager(DeviceUserEntity::class);
+        $entity = $this->findEntity($em, $deviceId, $user);
         if (!$entity instanceof DeviceUserEntity) {
             return null;
         }
+        $relation = $this->mapper->toUserRelation($entity);
+        $this->detachAll($em, [$entity]);
 
-        return $this->mapper->toUserRelation($entity);
+        return $relation;
     }
 
     public function countAll(): int
     {
-        return (int) $this->em->createQueryBuilder()
+        return (int) $this->entityManager(DeviceUserEntity::class)->createQueryBuilder()
             ->select('COUNT(r.id)')
             ->from(DeviceUserEntity::class, 'r')
             ->getQuery()
             ->getSingleScalarResult();
     }
 
-    private function findEntity(DeviceId $deviceId, UserIdentifier $user): ?DeviceUserEntity
+    private function findEntity(EntityManagerInterface $em, DeviceId $deviceId, UserIdentifier $user): ?DeviceUserEntity
     {
-        $entity = $this->em->createQueryBuilder()
+        $entity = $this->withRefresh($em->createQueryBuilder()
             ->select('r')
             ->from(DeviceUserEntity::class, 'r')
             ->where('r.deviceId = :device')
@@ -88,8 +96,8 @@ final class DoctrineDeviceUserRepository implements DeviceUserRepositoryInterfac
             ->setParameter('device', $deviceId->value)
             ->setParameter('user', $user->value)
             ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult();
+            ->getQuery())->getOneOrNullResult();
+        $entity = $this->fresh($em, $entity instanceof DeviceUserEntity ? $entity : null);
 
         return $entity instanceof DeviceUserEntity ? $entity : null;
     }
@@ -99,7 +107,7 @@ final class DoctrineDeviceUserRepository implements DeviceUserRepositoryInterfac
      *
      * @return list<DeviceUserRelation>
      */
-    private function mapRows(array $rows): array
+    private function mapRows(EntityManagerInterface $em, array $rows): array
     {
         $out = [];
         foreach ($rows as $entity) {
@@ -107,6 +115,7 @@ final class DoctrineDeviceUserRepository implements DeviceUserRepositoryInterfac
                 $out[] = $this->mapper->toUserRelation($entity);
             }
         }
+        $this->detachAll($em, $rows);
 
         return $out;
     }

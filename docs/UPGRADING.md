@@ -4,6 +4,8 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 
 ## Table of contents
 
+- [Unreleased](#unreleased)
+- [From 1.1.3 to 1.1.4](#from-113-to-114)
 - [From 1.1.2 to 1.1.3](#from-112-to-113)
 - [From 1.1.1 to 1.1.2](#from-111-to-112)
 
@@ -14,6 +16,25 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 - [To 1.0.0 (initial release)](#to-100-initial-release)
 - [Future versions](#future-versions)
 - [Getting help](#getting-help)
+
+## Unreleased
+
+No unreleased upgrade notes.
+
+## From 1.1.3 to 1.1.4
+
+No configuration changes. Behaviour notes for long-running runtimes (FrankenPHP worker, RoadRunner):
+
+- With `doctrine.enabled: false`, the in-memory repositories are now cleared at the start of every main request
+  (as under PHP-FPM). They were never meant to share devices or trust grants across requests.
+- The rate limiter's fallback map (used only while the cache pool throws) is request-scoped as well.
+- The Doctrine repositories now receive the `doctrine` registry and detach their entities after use. If you
+  construct them manually, passing an `EntityManagerInterface` still works.
+- Full audit: [FRANKENPHP-WORKER-AUDIT.md](FRANKENPHP-WORKER-AUDIT.md).
+
+```bash
+composer update nowo-tech/device-intelligence-bundle
+```
 
 ## From 1.1.2 to 1.1.3
 

@@ -89,6 +89,10 @@ Probabilistic **device intelligence** for Symfony: weighted matching (not a mono
 - **FR-EVT-001**: `AnalyzeService` dispatches observe/match/created/risk events; subscribers do not mutate the matcher.
 - **FR-CTX-001**: `_device` is set on collect and hydrated from the observation cookie on later requests (`observe_on_every_request` optional).
 
+### Long-running workers (FrankenPHP)
+
+- **FR-WORKER-001**: Bundle-owned per-request state is cleared at the start of every main request (`RequestStateResetSubscriber` + `kernel.reset`). Doctrine repositories resolve the manager per call (reset when closed), refresh managed entities on read, and detach after mapping so trust/status changes from other workers are visible without a kernel reset.
+
 ### i18n
 
 - **FR-I18N-001**: Domain `NowoDeviceIntelligenceBundle`; locales `en`, `es`, `it`, `fr`, `pt`, `de`, `nl` with key parity (profiler UI only).
@@ -103,7 +107,7 @@ Probabilistic **device intelligence** for Symfony: weighted matching (not a mono
 
 ## Success Criteria
 
-- **SC-001**: Production inventory **206/206** (`specs/001-baseline/code-inventory.md`).
+- **SC-001**: Production inventory **208/208** (`specs/001-baseline/code-inventory.md`).
 - **SC-002**: Config keys match `docs/CONFIGURATION.md`.
 - **SC-003**: `make qa` / PHPUnit / PHPStan / Vitest pass in CI.
 

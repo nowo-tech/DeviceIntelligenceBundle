@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.1.4] - 2026-09-24](#114---2026-09-24)
 - [[1.1.3] - 2026-09-07](#113---2026-09-07)
 - [[1.1.2] - 2026-09-03](#112---2026-09-03)
 - [[1.1.1] - 2026-08-26](#111---2026-08-26)
@@ -16,6 +17,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[1.0.0] - 2026-08-23](#100---2026-08-23)
 
 ## [Unreleased]
+
+## [1.1.4] - 2026-09-24
+
+### Fixed
+
+- **FrankenPHP worker (no kernel reset):** new `RequestStateResetSubscriber` clears the in-memory repositories
+  (`doctrine.enabled: false`), the rate limiter cache-failure fallback and the profiler collector at the start of
+  every main request (they are also tagged `kernel.reset`).
+- **Doctrine:** repositories resolve the entity manager from the registry per call (a manager closed by a failed
+  flush is reset on the next call), refresh managed entities on read, and detach after mapping, so trust revocations
+  and device status changes made by another worker are seen immediately and the identity map no longer grows with traffic.
+- **Velocity:** `CacheVelocityEngine::increment()` drops timestamps older than the 7-day TTL before writing;
+  `InMemoryVelocityEngine` exposes `reset()` for hosts that wire it as a shared service.
+- See `docs/FRANKENPHP-WORKER-AUDIT.md`.
+- **QA:** fixed PHPStan findings (0 errors at level 8): invalid `@return` PHPDoc in `DeviceRateLimiterInterface::consume()`.
+
+### Documentation
+
+- Spec Kit inventory **208/208**; `FR-WORKER-001`; constitution / SECURITY / USE-CASES / README worker notes.
+
+[1.1.4]: https://github.com/nowo-tech/DeviceIntelligenceBundle/releases/tag/v1.1.4
 
 ## [1.1.3] - 2026-09-07
 
@@ -150,6 +172,7 @@ First stable release of **Device Intelligence Bundle**.
 - README: canonical badges, FrankenPHP banner, `## Documentation`, `## Tests and coverage`
 - Integrator docs: INSTALLATION, CONFIGURATION, USAGE, SECURITY, CONTRIBUTING, RELEASE, UPGRADING, GITHUB (REQ-DOCS-018)
 
-[Unreleased]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.1.4...HEAD
+[1.1.4]: https://github.com/nowo-tech/DeviceIntelligenceBundle/releases/tag/v1.1.4
 [1.0.1]: https://github.com/nowo-tech/DeviceIntelligenceBundle/releases/tag/v1.0.1
 [1.0.0]: https://github.com/nowo-tech/DeviceIntelligenceBundle/releases/tag/v1.0.0

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\DeviceIntelligenceBundle\Doctrine;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use Nowo\DeviceIntelligence\Device\Device;
 use Nowo\DeviceIntelligence\Observation\DeviceObservation;
 use Nowo\DeviceIntelligence\Observation\ObservationId;
@@ -19,44 +20,51 @@ use Nowo\DeviceIntelligenceBundle\Entity\DeviceObservationEntity;
  */
 final class DoctrineObservationRepository implements ObservationRepositoryInterface
 {
+    use ResolvesEntityManagerTrait;
+
     public function __construct(
-        private EntityManagerInterface $em,
+        private EntityManagerInterface|ManagerRegistry $em,
         private DeviceMapper $mapper,
     ) {
     }
 
     public function save(DeviceObservation $observation): void
     {
-        $entity = $this->em->find(DeviceObservationEntity::class, $observation->id->value);
+        $em = $this->entityManager(DeviceObservationEntity::class);
+        $entity = $em->find(DeviceObservationEntity::class, $observation->id->value);
         $entity = $this->mapper->toObservationEntity(
             $observation,
             $entity instanceof DeviceObservationEntity ? $entity : null,
         );
-        $this->em->persist($entity);
-        $this->em->flush();
+        $em->persist($entity);
+        $em->flush();
+        $this->detachAll($em, [$entity]);
     }
 
     public function find(ObservationId $id): ?DeviceObservation
     {
-        $entity = $this->em->find(DeviceObservationEntity::class, $id->value);
+        $em = $this->entityManager(DeviceObservationEntity::class);
+        $entity = $this->fresh($em, $em->find(DeviceObservationEntity::class, $id->value));
         if (!$entity instanceof DeviceObservationEntity) {
             return null;
         }
+        $observation = $this->mapper->toObservation($entity);
+        $this->detachAll($em, [$entity]);
 
-        return $this->mapper->toObservation($entity);
+        return $observation;
     }
 
     public function latestForDevice(Device $device, int $limit = 10): array
     {
-        $rows = $this->em->createQueryBuilder()
+        $em = $this->entityManager(DeviceObservationEntity::class);
+        $rows = $this->withRefresh($em->createQueryBuilder()
             ->select('o')
             ->from(DeviceObservationEntity::class, 'o')
             ->where('o.deviceId = :device')
             ->setParameter('device', $device->id->value)
             ->orderBy('o.createdAt', 'DESC')
             ->setMaxResults($limit)
-            ->getQuery()
-            ->getResult();
+            ->getQuery())->getResult();
 
         $out = [];
         foreach ($rows as $entity) {
@@ -64,13 +72,14 @@ final class DoctrineObservationRepository implements ObservationRepositoryInterf
                 $out[] = $this->mapper->toObservation($entity);
             }
         }
+        $this->detachAll($em, $rows);
 
         return $out;
     }
 
     public function deleteOlderThan(\DateTimeImmutable $cutoff): int
     {
-        return (int) $this->em->createQueryBuilder()
+        return (int) $this->entityManager(DeviceObservationEntity::class)->createQueryBuilder()
             ->delete(DeviceObservationEntity::class, 'o')
             ->where('o.createdAt < :cutoff')
             ->setParameter('cutoff', $cutoff)
@@ -80,7 +89,7 @@ final class DoctrineObservationRepository implements ObservationRepositoryInterf
 
     public function countAll(): int
     {
-        return (int) $this->em->createQueryBuilder()
+        return (int) $this->entityManager(DeviceObservationEntity::class)->createQueryBuilder()
             ->select('COUNT(o.id)')
             ->from(DeviceObservationEntity::class, 'o')
             ->getQuery()

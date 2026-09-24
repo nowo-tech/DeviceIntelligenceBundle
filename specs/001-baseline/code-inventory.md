@@ -1,8 +1,8 @@
 # Device Intelligence Bundle — baseline code inventory
 
 **Package**: `nowo-tech/device-intelligence-bundle`  
-**Last audited**: 2026-08-23  
-**Production units**: **206/206**  
+**Last audited**: 2026-09-24  
+**Production units**: **208/208**  
 **Audit command**: count `lib/**/*.php` + `src/**/*.php` + `src/**/*.twig` + `src/**/*.svg` + `src/Resources/translations/*.yaml` + `src/Resources/assets/src/**/*.ts` (exclude `src/Resources/assets/tests/**`).
 
 ## Scope notes
@@ -25,14 +25,14 @@
 | CLI | 6 |
 | Bundle & DI | 6 |
 | HTTP collect | 8 |
-| Doctrine | 10 |
-| Events | 16 |
+| Doctrine | 11 |
+| Events | 17 |
 | Request context | 6 |
 | Messenger | 4 |
 | Profiler | 3 |
 | i18n | 7 |
 | Browser SDK | 20 |
-| **Total** | **206** |
+| **Total** | **208** |
 
 ## Matching & risk
 
@@ -219,10 +219,11 @@
 | Source path | Spec section | Requirement ID(s) |
 | --- | --- | --- |
 | `src/Doctrine/DeviceMapper.php` | Doctrine | FR-ORM-001 |
-| `src/Doctrine/DoctrineDeviceRepository.php` | Doctrine | FR-ORM-001 |
-| `src/Doctrine/DoctrineDeviceUserRepository.php` | Doctrine | FR-ORM-001 |
-| `src/Doctrine/DoctrineObservationRepository.php` | Doctrine | FR-ORM-001 |
-| `src/Doctrine/DoctrineTrustedDeviceRepository.php` | Doctrine | FR-ORM-001 |
+| `src/Doctrine/DoctrineDeviceRepository.php` | Doctrine | FR-ORM-001, FR-WORKER-001 |
+| `src/Doctrine/DoctrineDeviceUserRepository.php` | Doctrine | FR-ORM-001, FR-WORKER-001 |
+| `src/Doctrine/DoctrineObservationRepository.php` | Doctrine | FR-ORM-001, FR-WORKER-001 |
+| `src/Doctrine/DoctrineTrustedDeviceRepository.php` | Doctrine | FR-ORM-001, FR-WORKER-001 |
+| `src/Doctrine/ResolvesEntityManagerTrait.php` | Doctrine | FR-ORM-001, FR-WORKER-001 |
 | `src/Doctrine/TablePrefixSubscriber.php` | Doctrine | FR-ORM-001 |
 | `src/Entity/DeviceEntity.php` | Doctrine | FR-ORM-001 |
 | `src/Entity/DeviceObservationEntity.php` | Doctrine | FR-ORM-001 |
@@ -248,6 +249,7 @@
 | `src/EventSubscriber/ControllerAttributeSubscriber.php` | Events | FR-EVT-001 |
 | `src/EventSubscriber/DeviceRequestSubscriber.php` | Events | FR-EVT-001 |
 | `src/EventSubscriber/ProfilerAjaxBridgeSubscriber.php` | Events | FR-PROF-001, FR-EVT-001 |
+| `src/EventSubscriber/RequestStateResetSubscriber.php` | Events | FR-WORKER-001 |
 | `src/EventSubscriber/SecurityDeviceSubscriber.php` | Events | FR-EVT-001 |
 
 ## Request context

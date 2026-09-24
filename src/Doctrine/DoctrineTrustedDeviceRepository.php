@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\DeviceIntelligenceBundle\Doctrine;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use Nowo\DeviceIntelligence\Device\DeviceId;
 use Nowo\DeviceIntelligence\Port\TrustedDeviceRepositoryInterface;
 use Nowo\DeviceIntelligence\Trust\TrustedDevice;
@@ -19,27 +20,33 @@ use Nowo\DeviceIntelligenceBundle\Entity\DeviceTrustEntity;
  */
 final class DoctrineTrustedDeviceRepository implements TrustedDeviceRepositoryInterface
 {
+    use ResolvesEntityManagerTrait;
+
     public function __construct(
-        private EntityManagerInterface $em,
+        private EntityManagerInterface|ManagerRegistry $em,
         private DeviceMapper $mapper,
     ) {
     }
 
     public function save(TrustedDevice $trust): void
     {
-        $existing = $this->findEntity($trust->deviceId, $trust->userIdentifier);
+        $em = $this->entityManager(DeviceTrustEntity::class);
+        $existing = $this->findEntity($em, $trust->deviceId, $trust->userIdentifier);
         $entity = $this->mapper->toTrustEntity($trust, $existing);
-        $this->em->persist($entity);
-        $this->em->flush();
+        $em->persist($entity);
+        $em->flush();
+        $this->detachAll($em, [$entity]);
     }
 
     public function findActive(DeviceId $deviceId, UserIdentifier $user, \DateTimeImmutable $now): ?TrustedDevice
     {
-        $entity = $this->findEntity($deviceId, $user);
+        $em = $this->entityManager(DeviceTrustEntity::class);
+        $entity = $this->findEntity($em, $deviceId, $user);
         if (!$entity instanceof DeviceTrustEntity) {
             return null;
         }
         $trust = $this->mapper->toTrustedDevice($entity);
+        $this->detachAll($em, [$entity]);
         if (!$trust->isActive($now)) {
             return null;
         }
@@ -49,13 +56,13 @@ final class DoctrineTrustedDeviceRepository implements TrustedDeviceRepositoryIn
 
     public function forUser(UserIdentifier $user, \DateTimeImmutable $now): array
     {
-        $rows = $this->em->createQueryBuilder()
+        $em = $this->entityManager(DeviceTrustEntity::class);
+        $rows = $this->withRefresh($em->createQueryBuilder()
             ->select('t')
             ->from(DeviceTrustEntity::class, 't')
             ->where('t.userIdentifier = :user')
             ->setParameter('user', $user->value)
-            ->getQuery()
-            ->getResult();
+            ->getQuery())->getResult();
 
         $out = [];
         foreach ($rows as $entity) {
@@ -67,22 +74,23 @@ final class DoctrineTrustedDeviceRepository implements TrustedDeviceRepositoryIn
                 $out[] = $trust;
             }
         }
+        $this->detachAll($em, $rows);
 
         return $out;
     }
 
     public function countAll(): int
     {
-        return (int) $this->em->createQueryBuilder()
+        return (int) $this->entityManager(DeviceTrustEntity::class)->createQueryBuilder()
             ->select('COUNT(t.id)')
             ->from(DeviceTrustEntity::class, 't')
             ->getQuery()
             ->getSingleScalarResult();
     }
 
-    private function findEntity(DeviceId $deviceId, UserIdentifier $user): ?DeviceTrustEntity
+    private function findEntity(EntityManagerInterface $em, DeviceId $deviceId, UserIdentifier $user): ?DeviceTrustEntity
     {
-        $entity = $this->em->createQueryBuilder()
+        $entity = $this->withRefresh($em->createQueryBuilder()
             ->select('t')
             ->from(DeviceTrustEntity::class, 't')
             ->where('t.deviceId = :device')
@@ -90,8 +98,8 @@ final class DoctrineTrustedDeviceRepository implements TrustedDeviceRepositoryIn
             ->setParameter('device', $deviceId->value)
             ->setParameter('user', $user->value)
             ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult();
+            ->getQuery())->getOneOrNullResult();
+        $entity = $this->fresh($em, $entity instanceof DeviceTrustEntity ? $entity : null);
 
         return $entity instanceof DeviceTrustEntity ? $entity : null;
     }

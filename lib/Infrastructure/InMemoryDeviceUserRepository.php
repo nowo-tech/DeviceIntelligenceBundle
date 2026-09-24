@@ -47,4 +47,12 @@ final class InMemoryDeviceUserRepository implements DeviceUserRepositoryInterfac
     {
         return $this->rows[$deviceId->value.'|'.$user->value] ?? null;
     }
+
+    /**
+     * Forgets all rows. Long-running processes call this per request so the store stays request-scoped.
+     */
+    public function reset(): void
+    {
+        $this->rows = [];
+    }
 }

@@ -35,6 +35,7 @@ use Nowo\DeviceIntelligenceBundle\Doctrine\DoctrineDeviceUserRepository;
 use Nowo\DeviceIntelligenceBundle\Doctrine\DoctrineObservationRepository;
 use Nowo\DeviceIntelligenceBundle\Doctrine\DoctrineTrustedDeviceRepository;
 use Nowo\DeviceIntelligenceBundle\Doctrine\TablePrefixSubscriber;
+use Nowo\DeviceIntelligenceBundle\EventSubscriber\RequestStateResetSubscriber;
 use Nowo\DeviceIntelligenceBundle\Infrastructure\SystemClock;
 use Nowo\DeviceIntelligenceBundle\Profiler\DeviceIntelligenceDataCollector;
 use Nowo\DeviceIntelligenceBundle\Risk\RiskEngineFactory;
@@ -285,10 +286,12 @@ final class NowoDeviceIntelligenceExtension extends Extension implements Prepend
             return;
         }
 
-        $container->register(InMemoryDeviceRepository::class)->setShared(true);
-        $container->register(InMemoryObservationRepository::class)->setShared(true);
-        $container->register(InMemoryDeviceUserRepository::class)->setShared(true);
-        $container->register(InMemoryTrustedDeviceRepository::class)->setShared(true);
+        foreach ([InMemoryDeviceRepository::class, InMemoryObservationRepository::class, InMemoryDeviceUserRepository::class, InMemoryTrustedDeviceRepository::class] as $inMemory) {
+            $container->register($inMemory)
+                ->setShared(true)
+                ->addTag('kernel.reset', ['method' => 'reset'])
+                ->addTag(RequestStateResetSubscriber::TAG);
+        }
 
         $container->setAlias(DeviceRepositoryInterface::class, InMemoryDeviceRepository::class)->setPublic(true);
         $container->setAlias(ObservationRepositoryInterface::class, InMemoryObservationRepository::class)->setPublic(true);

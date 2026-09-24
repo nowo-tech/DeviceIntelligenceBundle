@@ -7,14 +7,17 @@ namespace Nowo\DeviceIntelligenceBundle\RateLimiter;
 use Nowo\DeviceIntelligenceBundle\Config\DeviceIntelligenceConfig;
 use Psr\SimpleCache\CacheInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Contracts\Service\ResetInterface;
 
 /**
- * Uses Symfony RateLimiter factories when configured; otherwise in-memory/cache counting.
+ * Uses Symfony RateLimiter factories when configured; otherwise cache counting.
+ *
+ * When the cache pool fails, counters fall back to a request-scoped in-memory map (cleared by {@see reset()}).
  *
  * @author Héctor Franco Aceituno <hectorfranco@nowo.tech>
  * @copyright 2026 Nowo.tech
  */
-final class SymfonyDeviceRateLimiter implements DeviceRateLimiterInterface
+final class SymfonyDeviceRateLimiter implements DeviceRateLimiterInterface, ResetInterface
 {
     /** @var array<string, array<int>> */
     private array $memory = [];
@@ -74,6 +77,11 @@ final class SymfonyDeviceRateLimiter implements DeviceRateLimiterInterface
         }
 
         return true;
+    }
+
+    public function reset(): void
+    {
+        $this->memory = [];
     }
 
     /**

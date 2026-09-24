@@ -49,4 +49,12 @@ final class InMemoryObservationRepository implements ObservationRepositoryInterf
 
         return $n;
     }
+
+    /**
+     * Forgets all rows. Long-running processes call this per request so the store stays request-scoped.
+     */
+    public function reset(): void
+    {
+        $this->rows = [];
+    }
 }

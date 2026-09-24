@@ -40,4 +40,12 @@ final class InMemoryTrustedDeviceRepository implements TrustedDeviceRepositoryIn
 
         return $out;
     }
+
+    /**
+     * Forgets all rows. Long-running processes call this per request so the store stays request-scoped.
+     */
+    public function reset(): void
+    {
+        $this->rows = [];
+    }
 }

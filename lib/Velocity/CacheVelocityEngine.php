@@ -9,6 +9,8 @@ use Psr\SimpleCache\CacheInterface;
 
 final class CacheVelocityEngine implements VelocityEngineInterface
 {
+    private const TTL = 86400 * 7;
+
     public function __construct(
         private CacheInterface $cache,
         private string $prefix = 'di.vel.',
@@ -23,10 +25,12 @@ final class CacheVelocityEngine implements VelocityEngineInterface
             $payload = [];
         }
         $now = time();
+        $cutoff = $now - self::TTL;
+        $payload = array_values(array_filter($payload, static fn (mixed $ts): bool => (int) $ts >= $cutoff));
         for ($i = 0; $i < max(1, $by); ++$i) {
             $payload[] = $now;
         }
-        $this->cache->set($cacheKey, $payload, 86400 * 7);
+        $this->cache->set($cacheKey, $payload, self::TTL);
     }
 
     public function count(string $key, Device $device, TimeWindow $window): int

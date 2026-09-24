@@ -34,4 +34,26 @@ final class CacheVelocityEngineTest extends TestCase
         self::assertSame(2, $engine->count('k', $device, TimeWindow::parse('1 hours')));
         self::assertSame(0, $engine->count('other', $device, TimeWindow::parse('1 hours')));
     }
+
+    public function testIncrementDropsTimestampsOlderThanTheTtl(): void
+    {
+        $cache = new Psr16Cache(new ArrayAdapter());
+        $engine = new CacheVelocityEngine($cache, 't.');
+        $device = Device::fromNew(
+            DeviceId::generate(new \DateTimeImmutable()),
+            new \DateTimeImmutable(),
+            CandidateIndexKey::unknown(),
+            SignalBag::empty(),
+            'x',
+        );
+        $key = 't.k.'.$device->id->value;
+        $cache->set($key, [time() - 86400 * 8, time() - 86400 * 9, time() - 60]);
+
+        $engine->increment('k', $device);
+
+        $payload = $cache->get($key);
+        self::assertIsArray($payload);
+        self::assertCount(2, $payload);
+        self::assertSame(2, $engine->count('k', $device, TimeWindow::parse('1 hours')));
+    }
 }

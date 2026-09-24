@@ -7,7 +7,8 @@ namespace Nowo\DeviceIntelligence\Velocity;
 use Nowo\DeviceIntelligence\Device\Device;
 
 /**
- * In-process velocity (tests / single worker). Not shared across FrankenPHP workers.
+ * In-process velocity (tests / demos). Prefer {@see CacheVelocityEngine} in FrankenPHP workers.
+ * Call {@see reset()} between requests if this engine is kept as a shared service.
  */
 final class InMemoryVelocityEngine implements VelocityEngineInterface
 {
@@ -34,5 +35,13 @@ final class InMemoryVelocityEngine implements VelocityEngineInterface
         }
 
         return $n;
+    }
+
+    /**
+     * Forgets all counters. Long-running processes call this per request when this engine is shared.
+     */
+    public function reset(): void
+    {
+        $this->hits = [];
     }
 }
