@@ -78,9 +78,6 @@ trait ResolvesEntityManagerTrait
         return $entity;
     }
 
-    /**
-     * @param Query $query
-     */
     private function withRefresh(Query $query): Query
     {
         return $query->setHint(Query::HINT_REFRESH, true);
