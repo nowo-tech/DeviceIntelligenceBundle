@@ -36,7 +36,7 @@
     "require": {
         "php": ">=8.3 <8.6",
         "doctrine/doctrine-bundle": "^2.12 || ^3.0",
-        "doctrine/orm": "^2.19 || ^3.0",
+        "doctrine/orm": "^3.7",
         "psr/clock": "^1.0",
         "psr/log": "^1.0 || ^2 || ^3",
         "psr/simple-cache": "^1.0 || ^2.0 || ^3.0",
