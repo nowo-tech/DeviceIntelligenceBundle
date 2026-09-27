@@ -11,7 +11,6 @@ use Nowo\DeviceIntelligence\Observation\DeviceObservation;
 use Nowo\DeviceIntelligence\Observation\ObservationId;
 use Nowo\DeviceIntelligence\Port\ObservationRepositoryInterface;
 use Nowo\DeviceIntelligenceBundle\Entity\DeviceObservationEntity;
-use SortDirection;
 
 /**
  * Doctrine implementation of the core observation port.
@@ -63,7 +62,7 @@ final class DoctrineObservationRepository implements ObservationRepositoryInterf
             ->from(DeviceObservationEntity::class, 'o')
             ->where('o.deviceId = :device')
             ->setParameter('device', $device->id->value)
-            ->orderBy('o.createdAt', SortDirection::Descending)
+            ->orderBy('o.createdAt', \SortDirection::Descending)
             ->setMaxResults($limit)
             ->getQuery())->getResult();
 
