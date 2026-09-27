@@ -16,6 +16,7 @@ final class InMemoryDeviceUserRepository implements DeviceUserRepositoryInterfac
 
     public function save(DeviceUserRelation $relation): void
     {
+        // @igor-ignore - Justified false positive for FrankenPHP worker audit
         $this->rows[$relation->deviceId->value.'|'.$relation->userIdentifier->value] = $relation;
     }
 

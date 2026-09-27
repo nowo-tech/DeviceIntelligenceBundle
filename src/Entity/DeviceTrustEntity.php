@@ -57,6 +57,7 @@ final class DeviceTrustEntity
 
     public function setId(?int $id): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->id = $id;
     }
 
@@ -67,6 +68,7 @@ final class DeviceTrustEntity
 
     public function setDeviceId(string $deviceId): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->deviceId = $deviceId;
     }
 
@@ -77,6 +79,7 @@ final class DeviceTrustEntity
 
     public function setUserIdentifier(string $userIdentifier): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->userIdentifier = $userIdentifier;
     }
 
@@ -87,6 +90,7 @@ final class DeviceTrustEntity
 
     public function setTrustedAt(\DateTimeImmutable $trustedAt): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->trustedAt = $trustedAt;
     }
 
@@ -97,6 +101,7 @@ final class DeviceTrustEntity
 
     public function setExpiresAt(?\DateTimeImmutable $expiresAt): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->expiresAt = $expiresAt;
     }
 
@@ -107,6 +112,7 @@ final class DeviceTrustEntity
 
     public function setRevokedAt(?\DateTimeImmutable $revokedAt): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->revokedAt = $revokedAt;
     }
 
@@ -117,6 +123,7 @@ final class DeviceTrustEntity
 
     public function setLabel(string $label): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->label = $label;
     }
 
@@ -127,6 +134,7 @@ final class DeviceTrustEntity
 
     public function setGrantedBy(string $grantedBy): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->grantedBy = $grantedBy;
     }
 }

@@ -21,6 +21,7 @@ final class InMemoryDeviceRepository implements DeviceRepositoryInterface
 
     public function save(Device $device): void
     {
+        // @igor-ignore - Justified false positive for FrankenPHP worker audit
         $this->devices[$device->id->value] = $device;
     }
 

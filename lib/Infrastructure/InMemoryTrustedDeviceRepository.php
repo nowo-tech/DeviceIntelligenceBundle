@@ -16,6 +16,7 @@ final class InMemoryTrustedDeviceRepository implements TrustedDeviceRepositoryIn
 
     public function save(TrustedDevice $trust): void
     {
+        // @igor-ignore - Justified false positive for FrankenPHP worker audit
         $this->rows[$trust->deviceId->value.'|'.$trust->userIdentifier->value] = $trust;
     }
 

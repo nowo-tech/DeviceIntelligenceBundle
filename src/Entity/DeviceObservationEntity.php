@@ -77,6 +77,7 @@ final class DeviceObservationEntity
 
     public function setId(string $id): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->id = $id;
     }
 
@@ -87,6 +88,7 @@ final class DeviceObservationEntity
 
     public function setDeviceId(string $deviceId): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->deviceId = $deviceId;
     }
 
@@ -97,6 +99,7 @@ final class DeviceObservationEntity
 
     public function setCreatedAt(\DateTimeImmutable $createdAt): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->createdAt = $createdAt;
     }
 
@@ -107,6 +110,7 @@ final class DeviceObservationEntity
 
     public function setSchemaVersion(int $schemaVersion): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->schemaVersion = $schemaVersion;
     }
 
@@ -117,6 +121,7 @@ final class DeviceObservationEntity
 
     public function setSdkVersion(?string $sdkVersion): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->sdkVersion = $sdkVersion;
     }
 
@@ -127,6 +132,7 @@ final class DeviceObservationEntity
 
     public function setIpHash(?string $ipHash): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->ipHash = $ipHash;
     }
 
@@ -137,6 +143,7 @@ final class DeviceObservationEntity
 
     public function setCountry(?string $country): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->country = $country;
     }
 
@@ -147,6 +154,7 @@ final class DeviceObservationEntity
 
     public function setUserAgentFamily(?string $userAgentFamily): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->userAgentFamily = $userAgentFamily;
     }
 
@@ -157,6 +165,7 @@ final class DeviceObservationEntity
 
     public function setRawUserAgent(?string $rawUserAgent): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->rawUserAgent = $rawUserAgent;
     }
 
@@ -167,6 +176,7 @@ final class DeviceObservationEntity
 
     public function setSessionIdentifier(?string $sessionIdentifier): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->sessionIdentifier = $sessionIdentifier;
     }
 
@@ -177,6 +187,7 @@ final class DeviceObservationEntity
 
     public function setUserIdentifier(?string $userIdentifier): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->userIdentifier = $userIdentifier;
     }
 
@@ -193,6 +204,7 @@ final class DeviceObservationEntity
      */
     public function setSignals(array $signals): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->signals = $signals;
     }
 
@@ -203,6 +215,7 @@ final class DeviceObservationEntity
 
     public function setRiskScore(int $riskScore): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->riskScore = $riskScore;
     }
 
@@ -213,6 +226,7 @@ final class DeviceObservationEntity
 
     public function setDegraded(bool $degraded): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->degraded = $degraded;
     }
 
@@ -223,6 +237,7 @@ final class DeviceObservationEntity
 
     public function setEnhancementLevel(int $enhancementLevel): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->enhancementLevel = $enhancementLevel;
     }
 }

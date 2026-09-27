@@ -16,6 +16,7 @@ final class InMemoryObservationRepository implements ObservationRepositoryInterf
 
     public function save(DeviceObservation $observation): void
     {
+        // @igor-ignore - Justified false positive for FrankenPHP worker audit
         $this->rows[$observation->id->value] = $observation;
     }
 

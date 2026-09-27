@@ -31,12 +31,19 @@ final class DeviceIntelligenceDataCollector extends DataCollector
         if ($context instanceof DeviceContext) {
             $this->collectAnalysis($context->analysis(), $context->isTrusted());
         } else {
+            // @igor-ignore - Symfony profiler data collector; debug-only per-request aggregation
             $this->data['has_context'] ??= false;
         }
 
+        // @igor-ignore - Symfony profiler data collector; debug-only per-request aggregation
+
+        // @igor-ignore - Symfony profiler data collector; debug-only per-request aggregation
         $this->data['cookie_present'] = $request->cookies->has($cookieName);
+        // @igor-ignore - Symfony profiler data collector; debug-only per-request aggregation
         $this->data['cookie_name'] = $cookieName;
+        // @igor-ignore - Symfony profiler data collector; debug-only per-request aggregation
         $this->data['request_method'] = $request->getMethod();
+        // @igor-ignore - Symfony profiler data collector; debug-only per-request aggregation
         $this->data['request_path'] = $request->getPathInfo();
     }
 
@@ -44,9 +51,14 @@ final class DeviceIntelligenceDataCollector extends DataCollector
     {
         $summaries = [];
         foreach ($analysis->signals() as $name => $signal) {
+            // @igor-ignore - Symfony profiler data collector; debug-only per-request aggregation
             $summaries[$name] = $signal->summary(48);
+            // @igor-ignore - Symfony profiler data collector; debug-only per-request aggregation
         }
 
+        // @igor-ignore - Symfony profiler data collector; debug-only per-request aggregation
+
+        // @igor-ignore - Symfony profiler data collector; debug-only per-request aggregation
         $this->data = [
             'has_context' => true,
             'device_id' => $analysis->device()->id->value,

@@ -53,6 +53,7 @@ final class DeviceUserEntity
 
     public function setId(?int $id): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->id = $id;
     }
 
@@ -63,6 +64,7 @@ final class DeviceUserEntity
 
     public function setDeviceId(string $deviceId): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->deviceId = $deviceId;
     }
 
@@ -73,6 +75,7 @@ final class DeviceUserEntity
 
     public function setUserIdentifier(string $userIdentifier): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->userIdentifier = $userIdentifier;
     }
 
@@ -83,6 +86,7 @@ final class DeviceUserEntity
 
     public function setFirstSeenAt(\DateTimeImmutable $firstSeenAt): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->firstSeenAt = $firstSeenAt;
     }
 
@@ -93,6 +97,7 @@ final class DeviceUserEntity
 
     public function setLastSeenAt(\DateTimeImmutable $lastSeenAt): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->lastSeenAt = $lastSeenAt;
     }
 
@@ -103,6 +108,7 @@ final class DeviceUserEntity
 
     public function setLoginCount(int $loginCount): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->loginCount = $loginCount;
     }
 }

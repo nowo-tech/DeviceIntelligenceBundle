@@ -5,6 +5,7 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.1.5](#to-115)
 - [From 1.1.3 to 1.1.4](#from-113-to-114)
 - [From 1.1.2 to 1.1.3](#from-112-to-113)
 - [From 1.1.1 to 1.1.2](#from-111-to-112)
@@ -19,7 +20,18 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 
 ## Unreleased
 
+## To 1.1.5
+
+From **1.1.4** — REQ-CS-008 Igor FrankenPHP worker audit (igor-php require-dev, igor.json, make igor).
+
+```bash
+composer update nowo-tech/device-intelligence-bundle
+php bin/console cache:clear
+```
+
 No unreleased upgrade notes.
+- No application upgrade steps for require-dev Igor tooling (REQ-CS-008). Consumers do not pull `igor-php/igor-php` transitively.
+
 
 ## From 1.1.3 to 1.1.4
 

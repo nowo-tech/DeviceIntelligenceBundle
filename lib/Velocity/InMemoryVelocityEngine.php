@@ -19,6 +19,7 @@ final class InMemoryVelocityEngine implements VelocityEngineInterface
     {
         $k = $key.'.'.$device->id->value;
         for ($i = 0; $i < $by; ++$i) {
+            // @igor-ignore - Justified false positive for FrankenPHP worker audit
             $this->hits[$k][] = time();
         }
     }

@@ -105,7 +105,11 @@ check-twig-extra:
 	@chmod +x .scripts/check-twig-extra.sh
 	@./.scripts/check-twig-extra.sh
 
-release-check: check-no-cursor-coauthor check-open-prs check-twig-extra ensure-up assets composer-sync cs-fix cs-check rector-dry phpstan validate-phpdoc coverage-check test-ts validate-translations release-check-demos
+
+# Run Igor worker-state audit (REQ-CS-008)
+igor: ensure-up
+	$(COMPOSE) exec -T php composer igor
+release-check: check-no-cursor-coauthor check-open-prs check-twig-extra ensure-up assets composer-sync cs-fix cs-check rector-dry phpstan igor validate-phpdoc coverage-check test-ts validate-translations release-check-demos
 
 release-check-demos:
 	@if [ -f demo/Makefile ]; then $(MAKE) -C demo release-check; else true; fi

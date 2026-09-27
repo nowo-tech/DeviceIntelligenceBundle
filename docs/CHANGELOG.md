@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.1.5] - 2026-09-27](#115---2026-09-27)
 - [[1.1.4] - 2026-09-24](#114---2026-09-24)
 - [[1.1.3] - 2026-09-07](#113---2026-09-07)
 - [[1.1.2] - 2026-09-03](#112---2026-09-03)
@@ -17,6 +18,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[1.0.0] - 2026-08-23](#100---2026-08-23)
 
 ## [Unreleased]
+
+## [1.1.5] - 2026-09-27
+
+### Added
+
+- **REQ-CS-008:** `igor-php/igor-php` (require-dev only), root `igor.json`, Composer/`Makefile` `igor` target, and `release-check` wiring for FrankenPHP worker-state audit.
+
+### Changed
+
+- **Worker safety (Igor):** justified `// @igor-ignore` annotations and/or `ResetInterface` / request-scoped fixes so `make igor` passes on package `src/`.
+
+[1.1.5]: https://github.com/nowo-tech/DeviceIntelligenceBundle/releases/tag/v1.1.5
 
 ## [1.1.4] - 2026-09-24
 

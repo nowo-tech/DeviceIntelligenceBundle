@@ -84,6 +84,7 @@ final class DeviceEntity
 
     public function setId(string $id): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->id = $id;
     }
 
@@ -94,6 +95,7 @@ final class DeviceEntity
 
     public function setFirstSeenAt(\DateTimeImmutable $firstSeenAt): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->firstSeenAt = $firstSeenAt;
     }
 
@@ -104,6 +106,7 @@ final class DeviceEntity
 
     public function setLastSeenAt(\DateTimeImmutable $lastSeenAt): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->lastSeenAt = $lastSeenAt;
     }
 
@@ -114,6 +117,7 @@ final class DeviceEntity
 
     public function setObservationCount(int $observationCount): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->observationCount = $observationCount;
     }
 
@@ -124,6 +128,7 @@ final class DeviceEntity
 
     public function setConfidence(float $confidence): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->confidence = $confidence;
     }
 
@@ -134,6 +139,7 @@ final class DeviceEntity
 
     public function setStability(float $stability): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->stability = $stability;
     }
 
@@ -144,6 +150,7 @@ final class DeviceEntity
 
     public function setStatus(string $status): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->status = $status;
     }
 
@@ -154,6 +161,7 @@ final class DeviceEntity
 
     public function setOsFamily(string $osFamily): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->osFamily = $osFamily;
     }
 
@@ -164,6 +172,7 @@ final class DeviceEntity
 
     public function setBrowserFamily(string $browserFamily): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->browserFamily = $browserFamily;
     }
 
@@ -174,6 +183,7 @@ final class DeviceEntity
 
     public function setGpuFamily(string $gpuFamily): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->gpuFamily = $gpuFamily;
     }
 
@@ -184,6 +194,7 @@ final class DeviceEntity
 
     public function setScreenClass(string $screenClass): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->screenClass = $screenClass;
     }
 
@@ -194,6 +205,7 @@ final class DeviceEntity
 
     public function setTimezone(string $timezone): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->timezone = $timezone;
     }
 
@@ -204,6 +216,7 @@ final class DeviceEntity
 
     public function setBlockingKey(string $blockingKey): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->blockingKey = $blockingKey;
     }
 
@@ -214,6 +227,7 @@ final class DeviceEntity
 
     public function setLabel(string $label): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->label = $label;
     }
 
@@ -230,6 +244,7 @@ final class DeviceEntity
      */
     public function setMetadata(array $metadata): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->metadata = $metadata;
     }
 
@@ -246,6 +261,7 @@ final class DeviceEntity
      */
     public function setLastSignals(array $lastSignals): void
     {
+        // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->lastSignals = $lastSignals;
     }
 }
