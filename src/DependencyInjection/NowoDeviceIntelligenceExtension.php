@@ -51,6 +51,7 @@ use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpKernel\DataCollector\DataCollector;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 
 /**
  * Processes nowo_device_intelligence config and wires core + Doctrine services.
@@ -97,6 +98,15 @@ final class NowoDeviceIntelligenceExtension extends Extension implements Prepend
     {
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
+
+        $env = $container->hasParameter('kernel.environment')
+            ? (string) $container->getParameter('kernel.environment')
+            : 'dev';
+        if ($env === 'prod' && ($config['endpoint']['csrf'] ?? 'origin') === 'none') {
+            throw new InvalidConfigurationException(
+                'nowo_device_intelligence.endpoint.csrf cannot be "none" in the prod environment. Use "origin" or "double_submit".',
+            );
+        }
 
         $loader = new PhpFileLoader($container, new FileLocator(\dirname(__DIR__).'/Resources/config'));
         $loader->load('services.php');

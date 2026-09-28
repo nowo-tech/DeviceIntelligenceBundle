@@ -65,11 +65,11 @@ Safe under FrankenPHP worker mode even when the kernel is **not** reset between 
 
 | Field | Value |
 | --- | --- |
-| Date | 2026-08-23 |
-| Method | Cursor static review of `src/`, `lib/`, recipe, Twig/TS assets, `docs/SECURITY.md`, `.github/SECURITY.md` |
+| Date | 2026-09-28 (re-audit wave 5) |
+| Method | Cursor static review + hardens (`endpoint.csrf=none` refused in `prod`) |
 | Grade | **Pass (conditional)** |
 | Overall risk | **Medium** |
-| Open residuals | Client signals are attacker-controlled (by design — Device ID is not a credential). Host must not treat collect cookies as session auth. Rate limits are per hashed IP; additional HTTP limits remain host-owned. |
+| Open residuals | Client signals are attacker-controlled (by design — Device ID is not a credential). Host must not treat collect cookies as session auth. Rate limits are per hashed IP; additional HTTP limits remain host-owned. `csrf: none` is blocked in `prod` only — non-prod may still disable CSRF for local demos. |
 
 This subsection is the in-package REQ-SEC-004 record (date, method, grade, residuals). The monorepo catalog row lives in `BUNDLES_SECURITY_ANALYSIS.md` §4 / §7.2.
 

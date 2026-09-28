@@ -5,6 +5,7 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.2.0](#to-120)
 - [To 1.1.5](#to-115)
 - [From 1.1.3 to 1.1.4](#from-113-to-114)
 - [From 1.1.2 to 1.1.3](#from-112-to-113)
@@ -19,6 +20,18 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.2.0
+
+From **1.1.5** — refuse `csrf=none` in prod; Doctrine `SortDirection`.
+
+```bash
+composer update nowo-tech/device-intelligence-bundle
+php bin/console cache:clear
+```
+
+- In `prod`, `endpoint.csrf: none` is rejected. Use a real CSRF mode (or keep `none` only outside prod).
+- Ensure `doctrine/orm` is `^3.7` (SortDirection).
 
 ## To 1.1.5
 
