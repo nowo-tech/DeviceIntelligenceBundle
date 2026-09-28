@@ -41,6 +41,7 @@ use Nowo\DeviceIntelligenceBundle\Profiler\DeviceIntelligenceDataCollector;
 use Nowo\DeviceIntelligenceBundle\Risk\RiskEngineFactory;
 use Nowo\DeviceIntelligenceBundle\User\SecurityUserIdentifierResolver;
 use Psr\Clock\ClockInterface;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
 use Symfony\Component\DependencyInjection\ChildDefinition;
@@ -51,7 +52,6 @@ use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpKernel\DataCollector\DataCollector;
-use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 
 /**
  * Processes nowo_device_intelligence config and wires core + Doctrine services.
@@ -102,10 +102,8 @@ final class NowoDeviceIntelligenceExtension extends Extension implements Prepend
         $env = $container->hasParameter('kernel.environment')
             ? (string) $container->getParameter('kernel.environment')
             : 'dev';
-        if ($env === 'prod' && ($config['endpoint']['csrf'] ?? 'origin') === 'none') {
-            throw new InvalidConfigurationException(
-                'nowo_device_intelligence.endpoint.csrf cannot be "none" in the prod environment. Use "origin" or "double_submit".',
-            );
+        if ('prod' === $env && ($config['endpoint']['csrf'] ?? 'origin') === 'none') {
+            throw new InvalidConfigurationException('nowo_device_intelligence.endpoint.csrf cannot be "none" in the prod environment. Use "origin" or "double_submit".');
         }
 
         $loader = new PhpFileLoader($container, new FileLocator(\dirname(__DIR__).'/Resources/config'));
