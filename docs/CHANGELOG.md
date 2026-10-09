@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.2.1] - 2026-10-09](#121---2026-10-09)
+  - [Fixed](#fixed)
+  - [Dependencies](#dependencies)
 - [[1.2.0] - 2026-09-28](#120---2026-09-28)
 - [[1.1.5] - 2026-09-27](#115---2026-09-27)
 - [[1.1.4] - 2026-09-24](#114---2026-09-24)
@@ -19,6 +22,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[1.0.0] - 2026-08-23](#100---2026-08-23)
 
 ## [Unreleased]
+
+## [1.2.1] - 2026-10-09
+
+### Fixed
+
+- **DI:** the `kernel.environment` parameter is narrowed to a string before the prod `endpoint.csrf` guard (PHPStan 2.3 `cast.string`); behaviour unchanged.
+
+### Dependencies
+
+- Dependabot: `symfony/security-bundle` 8.1.8; JS dev tooling `vite` 8.3.2, `eslint` 10.11.0, `jsdom` 30.1.1, `@types/node` 26.6.4 (`package.json` / `pnpm-lock.yaml`); rebuilt `device-intelligence.min.js`.
+- Composer refresh: `doctrine/orm` 3.7.4, `doctrine/dbal` 4.5.0, Symfony 8.1.8 components, `twig/twig` 3.30.0; dev tooling `phpstan/phpstan` 2.3.1, `rector/rector` 2.7.0, `nowo-tech/phpstan-frankenphp` 1.2.3.
+- Demo: Symfony 8.1.8, `doctrine/orm` 3.7.4.
+- PHP CS Fixer bot pass (import order / Yoda style in the extension).
 
 ## [1.2.0] - 2026-09-28
 
@@ -197,7 +213,8 @@ First stable release of **Device Intelligence Bundle**.
 - README: canonical badges, FrankenPHP banner, `## Documentation`, `## Tests and coverage`
 - Integrator docs: INSTALLATION, CONFIGURATION, USAGE, SECURITY, CONTRIBUTING, RELEASE, UPGRADING, GITHUB (REQ-DOCS-018)
 
-[Unreleased]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.1.4...HEAD
+[Unreleased]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.2.0...v1.2.1
 [1.1.4]: https://github.com/nowo-tech/DeviceIntelligenceBundle/releases/tag/v1.1.4
 [1.0.1]: https://github.com/nowo-tech/DeviceIntelligenceBundle/releases/tag/v1.0.1
 [1.0.0]: https://github.com/nowo-tech/DeviceIntelligenceBundle/releases/tag/v1.0.0
