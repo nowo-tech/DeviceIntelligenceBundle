@@ -99,9 +99,10 @@ final class NowoDeviceIntelligenceExtension extends Extension implements Prepend
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
-        $env = $container->hasParameter('kernel.environment')
-            ? (string) $container->getParameter('kernel.environment')
+        $envParam = $container->hasParameter('kernel.environment')
+            ? $container->getParameter('kernel.environment')
             : 'dev';
+        $env = \is_string($envParam) ? $envParam : 'dev';
         if ('prod' === $env && ($config['endpoint']['csrf'] ?? 'origin') === 'none') {
             throw new InvalidConfigurationException('nowo_device_intelligence.endpoint.csrf cannot be "none" in the prod environment. Use "origin" or "double_submit".');
         }
