@@ -13,12 +13,17 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 - [From 1.1.3 to 1.1.4](#from-113-to-114)
 - [From 1.1.2 to 1.1.3](#from-112-to-113)
 - [From 1.1.1 to 1.1.2](#from-111-to-112)
-
 - [From 1.1.0 to 1.1.1](#from-110-to-111)
 - [From 1.0.1 to 1.1.0](#from-101-to-110)
 - [General upgrade process](#general-upgrade-process)
 - [To 1.0.1](#to-101)
+  - [Behaviour you may notice](#behaviour-you-may-notice)
+  - [Demo only](#demo-only)
+  - [Breaking changes](#breaking-changes)
 - [To 1.0.0 (initial release)](#to-100-initial-release)
+  - [Requirements](#requirements)
+  - [Enable and configure](#enable-and-configure)
+  - [Breaking changes](#breaking-changes-1)
 - [Future versions](#future-versions)
 - [Getting help](#getting-help)
 
