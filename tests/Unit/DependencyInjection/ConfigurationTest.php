@@ -75,4 +75,22 @@ final class ConfigurationTest extends TestCase
             ],
         ]]);
     }
+
+    public function testRejectsUnsupportedRateLimitInterval(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage('Invalid rate limit interval');
+        (new Processor())->processConfiguration(new Configuration(), [[
+            'profiles' => ['default' => ['rate_limit' => ['policies' => ['login' => ['limit' => 5, 'interval' => '15 minuts']]]]],
+        ]]);
+    }
+
+    public function testAcceptsIsoRateLimitInterval(): void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'profiles' => ['default' => ['rate_limit' => ['policies' => ['login' => ['limit' => 5, 'interval' => 'PT15M']]]]],
+        ]]);
+
+        self::assertSame('PT15M', $config['profiles']['default']['rate_limit']['policies']['login']['interval']);
+    }
 }

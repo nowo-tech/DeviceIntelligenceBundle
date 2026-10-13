@@ -55,7 +55,7 @@ final class CollectController
 
         $ipHash = hash('sha256', (string) $request->getClientIp());
         if (!$this->limiter->consume('collect', 'ip', $ipHash, null, null)) {
-            return new JsonResponse(['error' => 'rate_limited'], Response::HTTP_FORBIDDEN);
+            return new JsonResponse(['error' => 'rate_limited'], Response::HTTP_TOO_MANY_REQUESTS);
         }
 
         try {

@@ -37,8 +37,9 @@ Logs include device ULID, observation ULID, risk score, and high-level reasons. 
 - CSRF: `origin` (default), `double_submit`, or `none` (only behind another gateway).
 - Payload size cap (`max_payload_bytes`).
 - Schema `v=1` and timestamp skew.
-- Nonce replay protection via cache.
-- Rate limiting on hashed IP (`collect` policy).
+- `csrf: origin` compares the `Origin`/`Referer` host against the request host and `endpoint.allowed_origins` (host only).
+- Nonce format check (`^[A-Za-z0-9_-]{8,128}$`) and replay protection via cache.
+- Rate limiting on hashed IP (`collect` policy); exceeded → **429**.
 
 ## Trust
 

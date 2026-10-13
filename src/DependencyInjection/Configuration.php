@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\DeviceIntelligenceBundle\DependencyInjection;
 
 use Nowo\DeviceIntelligence\Matching\MatchingWeights;
+use Nowo\DeviceIntelligenceBundle\RateLimiter\SymfonyDeviceRateLimiter;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
@@ -306,7 +307,22 @@ final class Configuration implements ConfigurationInterface
                     ->arrayPrototype()
                         ->children()
                             ->integerNode('limit')->min(1)->defaultValue(60)->end()
-                            ->scalarNode('interval')->defaultValue('1 minute')->cannotBeEmpty()->end()
+                            ->scalarNode('interval')
+                                ->defaultValue('1 minute')
+                                ->cannotBeEmpty()
+                                ->validate()
+                                    ->ifTrue(static function (mixed $v): bool {
+                                        try {
+                                            SymfonyDeviceRateLimiter::intervalToSeconds((string) $v);
+                                        } catch (\InvalidArgumentException) {
+                                            return true;
+                                        }
+
+                                        return false;
+                                    })
+                                    ->thenInvalid('Invalid rate limit interval %s (use e.g. "15 minutes", "1 hour" or "PT30S").')
+                                ->end()
+                            ->end()
                         ->end()
                     ->end()
                 ->end()

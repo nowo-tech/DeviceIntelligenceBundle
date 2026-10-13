@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Profiles](#profiles)
+- [Collect endpoint](#collect-endpoint)
 - [Validation](#validation)
 - [Persistence](#persistence)
 - [Messenger](#messenger)
@@ -72,6 +73,7 @@ nowo_device_intelligence:
         max_payload_bytes: 65536
         timestamp_skew: 300
         replay_protection: true
+        allowed_origins: []    # extra hosts accepted by csrf: origin (see below)
         response:
             device_id: true
             confidence: true
@@ -97,8 +99,16 @@ nowo_device_intelligence:
     ip_salt: ''   # empty → kernel.secret
 ```
 
+## Collect endpoint
+
+- `endpoint.csrf: origin` (default) requires an `Origin` (or `Referer`) header whose **host** equals the request host or one of `endpoint.allowed_origins`.
+- `endpoint.allowed_origins` lists extra hosts allowed to POST to the collect endpoint (e.g. when the page is served from `www.example.com` and the API from `api.example.com`). Entries may be full origins (`https://www.example.com`) or bare hosts (`www.example.com`); only the host part is compared (scheme and port are ignored). Default: `[]` (same host only).
+- `nonce` must match `^[A-Za-z0-9_-]{8,128}$` (the bundled browser client sends 32 hex chars). It is required when `replay_protection: true`.
+- When the `collect` rate-limit policy is exceeded the endpoint answers **429 Too Many Requests**.
+
 ## Validation
 
+- Rate-limit `interval` accepts relative strings (`'60 seconds'`, `'15 minutes'`, `'1 day'`, `'2 weeks'`) or ISO 8601 durations (`'PT15M'`). Unparseable or non-positive intervals are rejected.
 - Matching **weights must sum to ~1.0** and each weight is in `[0, 1]`.
 - Risk scores and decision thresholds are `0..100`.
 - Unknown collector names are rejected. Allowed: `audio`, `canvas`, `webgl`, `screen`, `navigator`, `timezone`, `client_hints`, `capabilities`, `automation`, `fonts`.

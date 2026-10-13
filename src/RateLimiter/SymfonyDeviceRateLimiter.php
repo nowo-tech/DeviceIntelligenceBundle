@@ -52,7 +52,7 @@ final class SymfonyDeviceRateLimiter implements DeviceRateLimiterInterface, Rese
         $cfg = \is_array($policies[$policy] ?? null) ? $policies[$policy] : [];
         $max = $limit ?? (int) ($cfg['limit'] ?? 60);
         $window = $interval ?? (string) ($cfg['interval'] ?? '1 minute');
-        $seconds = $this->intervalSeconds($window);
+        $seconds = self::intervalToSeconds($window);
         $bucket = $this->cacheKey($policy, $compound);
         $now = time();
 
@@ -107,24 +107,33 @@ final class SymfonyDeviceRateLimiter implements DeviceRateLimiterInterface, Rese
         };
     }
 
-    private function intervalSeconds(string $interval): int
+    /**
+     * Converts a rate-limit interval ("15 minutes", "1 day", "PT30S", ...) to seconds.
+     *
+     * Accepts the same formats as Symfony RateLimiter (relative date strings and ISO 8601 durations).
+     *
+     * @throws \InvalidArgumentException when the interval cannot be parsed or is not positive
+     */
+    public static function intervalToSeconds(string $interval): int
     {
-        if (preg_match('/^(\d+)\s+seconds?$/i', $interval, $m)) {
-            return max(1, (int) $m[1]);
+        $value = trim($interval);
+        try {
+            $parsed = 1 === preg_match('/^P/i', $value)
+                ? new \DateInterval(strtoupper($value))
+                : @\DateInterval::createFromDateString($value);
+        } catch (\Throwable) {
+            $parsed = false;
         }
-        if (preg_match('/^(\d+)\s+minutes?$/i', $interval, $m)) {
-            return max(1, (int) $m[1] * 60);
-        }
-        if (preg_match('/^(\d+)\s+hours?$/i', $interval, $m)) {
-            return max(1, (int) $m[1] * 3600);
-        }
-        if (preg_match('/^PT(\d+)S$/i', $interval, $m)) {
-            return max(1, (int) $m[1]);
-        }
-        if (preg_match('/^PT(\d+)M$/i', $interval, $m)) {
-            return max(1, (int) $m[1] * 60);
+        if (!$parsed instanceof \DateInterval) {
+            throw new \InvalidArgumentException(\sprintf('Invalid rate limit interval "%s".', $interval));
         }
 
-        return 60;
+        $epoch = new \DateTimeImmutable('@0');
+        $seconds = $epoch->add($parsed)->getTimestamp() - $epoch->getTimestamp();
+        if ($seconds < 1) {
+            throw new \InvalidArgumentException(\sprintf('Invalid rate limit interval "%s": it must be a positive duration.', $interval));
+        }
+
+        return $seconds;
     }
 }

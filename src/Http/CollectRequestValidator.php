@@ -10,13 +10,19 @@ use Psr\SimpleCache\CacheInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * Validates collect transport: origin, size, schema v=1, timestamp skew, nonce replay.
+ * Validates collect transport: origin, size, schema v=1, timestamp skew, nonce format and replay.
  *
  * @author Héctor Franco Aceituno <hectorfranco@nowo.tech>
  * @copyright 2026 Nowo.tech
  */
 final class CollectRequestValidator
 {
+    /**
+     * Nonces end up in the `|`-separated observation token, so the alphabet is restricted
+     * (base64url / hex) and the length bounded.
+     */
+    public const string NONCE_PATTERN = '/^[A-Za-z0-9_-]{8,128}$/';
+
     public function __construct(
         private DeviceIntelligenceConfig $config,
         private OriginValidator $origins,
@@ -72,7 +78,12 @@ final class CollectRequestValidator
             throw new CollectValidationException('Stale or future timestamp.');
         }
 
-        $nonce = isset($payload['nonce']) && \is_string($payload['nonce']) ? $payload['nonce'] : '';
+        $nonce = $payload['nonce'] ?? null;
+        if (null === $nonce || '' === $nonce) {
+            $nonce = '';
+        } elseif (!\is_string($nonce) || 1 !== preg_match(self::NONCE_PATTERN, $nonce)) {
+            throw new CollectValidationException('Invalid nonce.');
+        }
         if ($this->config->endpoint()['replay_protection']) {
             if ('' === $nonce) {
                 throw new CollectValidationException('Missing nonce.');

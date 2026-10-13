@@ -23,7 +23,7 @@ POST JSON to `/_device/collect` (route `nowo_device_intelligence_collect`):
 {
   "v": 1,
   "timestamp": 1710000000,
-  "nonce": "random-unique-string",
+  "nonce": "3f9c2a7b1e5d4c6a8b0f2e4d6c8a0b1c",
   "sdkVersion": "1.0.0",
   "highEntropyConsent": true,
   "signals": {
@@ -33,6 +33,8 @@ POST JSON to `/_device/collect` (route `nowo_device_intelligence_collect`):
   }
 }
 ```
+
+`nonce` must match `^[A-Za-z0-9_-]{8,128}$`. Errors: 400 (invalid payload), 403 (origin/CSRF), 409 (replayed nonce), 413 (too large), 429 (rate limited).
 
 The response may include `deviceId`, `confidence`, and `risk` (off by default). An HttpOnly `SameSite=Lax` cookie is set. The browser client in this package builds the payload (IIFE or Pentatrion Vite — see [Browser assets](#browser-assets)).
 

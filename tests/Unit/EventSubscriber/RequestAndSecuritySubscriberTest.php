@@ -23,6 +23,7 @@ use Nowo\DeviceIntelligenceBundle\Tests\Support\ProcessedConfig;
 use Nowo\DeviceIntelligenceBundle\User\SecurityUserIdentifierResolver;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use Symfony\Bundle\SecurityBundle\EventListener\FirewallListener;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
@@ -30,6 +31,7 @@ use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Security\Http\Event\LoginFailureEvent;
 use Symfony\Component\Security\Http\Event\LogoutEvent;
+use Symfony\Component\Security\Http\Firewall;
 
 /**
  * @author Héctor Franco Aceituno <hectorfranco@nowo.tech>
@@ -62,6 +64,20 @@ final class RequestAndSecuritySubscriberTest extends TestCase
         $subscriber->onRequest($event);
         self::assertNull($event->getRequest()->attributes->get('_device'));
         self::assertArrayHasKey(KernelEvents::REQUEST, DeviceRequestSubscriber::getSubscribedEvents());
+    }
+
+    public function testDeviceRequestSubscriberRunsAfterSecurityFirewall(): void
+    {
+        $priorities = [];
+        foreach ([Firewall::class, FirewallListener::class] as $firewall) {
+            $definition = $firewall::getSubscribedEvents()[KernelEvents::REQUEST];
+            $listeners = \is_array($definition) && \is_array($definition[0] ?? null) ? $definition : [(array) $definition];
+            foreach ($listeners as $listener) {
+                $priorities[] = (int) ($listener[1] ?? 0);
+            }
+        }
+        self::assertSame(['onRequest', DeviceRequestSubscriber::PRIORITY], DeviceRequestSubscriber::getSubscribedEvents()[KernelEvents::REQUEST]);
+        self::assertLessThan(min($priorities), DeviceRequestSubscriber::PRIORITY, 'Must run after the Security firewall so the token is available.');
     }
 
     public function testHydratesDeviceFromObservationCookieWhenObserveOnEveryRequestIsFalse(): void

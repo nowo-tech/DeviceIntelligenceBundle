@@ -396,7 +396,7 @@ final class BundleBranchesTest extends TestCase
         $msOk = json_encode([
             'v' => 1,
             'timestamp' => time() * 1000,
-            'nonce' => 'n-ms',
+            'nonce' => 'nonce-ms-0001',
             'signals' => [],
         ], \JSON_THROW_ON_ERROR);
         self::assertArrayHasKey('v', $v2->validate(Request::create('/_device/collect', 'POST', content: $msOk)));

@@ -24,6 +24,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- `DeviceRequestSubscriber` now runs at `kernel.request` priority **7**, strictly after the Security firewall (priority 8). With the same priority the firewall could run later, so the security token was not yet available and `DeviceContext::trusted` was always `false` for authenticated users.
+- Collect endpoint: the `nonce` is now validated (`^[A-Za-z0-9_-]{8,128}$`). Unbounded or `|`-containing nonces could break the signed observation token format.
+
+### Fixed
+
+- Collect endpoint returns **429 Too Many Requests** (instead of 403) when the `collect` rate limit is exceeded.
+- Rate-limit `interval` values are parsed like Symfony RateLimiter (relative strings such as `1 day`/`2 weeks`, or ISO 8601 durations such as `PT15M`). Unsupported values used to silently fall back to 60 seconds; they are now rejected at config time (and with `\InvalidArgumentException` for attribute intervals).
+
+### Changed
+
+- Documented `endpoint.allowed_origins` (extra hosts accepted by the `origin` CSRF mode).
+
 ## [1.2.2] - 2026-10-13
 
 ### Dependencies

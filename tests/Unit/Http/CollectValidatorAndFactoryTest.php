@@ -34,7 +34,7 @@ final class CollectValidatorAndFactoryTest extends TestCase
         $body = json_encode([
             'v' => 1,
             'timestamp' => $now,
-            'nonce' => 'once',
+            'nonce' => 'once-0001',
             'signals' => [],
         ], \JSON_THROW_ON_ERROR);
         $request = Request::create('/_device/collect', 'POST', content: $body);
@@ -87,7 +87,7 @@ final class CollectValidatorAndFactoryTest extends TestCase
         $input = $factory->fromRequest($request, [
             'v' => 1,
             'sdkVersion' => '1.0.0',
-            'nonce' => 'n1',
+            'nonce' => 'nonce-0001',
             'consent' => ['highEntropy' => false],
             'signals' => [
                 'timezone' => ['value' => 'UTC', 'quality' => 1],
@@ -95,7 +95,7 @@ final class CollectValidatorAndFactoryTest extends TestCase
         ]);
 
         self::assertSame('1.0.0', $input->sdkVersion);
-        self::assertSame('n1', $input->nonce);
+        self::assertSame('nonce-0001', $input->nonce);
         self::assertFalse($input->highEntropyConsent);
         self::assertSame(1, $input->schemaVersion);
     }

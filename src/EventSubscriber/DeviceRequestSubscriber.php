@@ -22,6 +22,9 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
  * Sets `_device` from the observation cookie after collect (and whenever
  * observe_on_every_request is true). Does not rematch.
  *
+ * Runs after the Security firewall (priority 8) so the authenticated token is
+ * available when resolving whether the device is trusted for the current user.
+ *
  * @author Héctor Franco Aceituno <hectorfranco@nowo.tech>
  * @copyright 2026 Nowo.tech
  */
@@ -39,10 +42,15 @@ final class DeviceRequestSubscriber implements EventSubscriberInterface
     ) {
     }
 
+    /**
+     * Must stay strictly below the Security firewall listener priority (8).
+     */
+    public const int PRIORITY = 7;
+
     public static function getSubscribedEvents(): array
     {
         return [
-            KernelEvents::REQUEST => ['onRequest', 8],
+            KernelEvents::REQUEST => ['onRequest', self::PRIORITY],
         ];
     }
 

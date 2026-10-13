@@ -42,14 +42,14 @@ final class CollectControllerTest extends TestCase
         self::assertSame(404, $response->getStatusCode());
     }
 
-    public function testRateLimitReturns403(): void
+    public function testRateLimitReturns429(): void
     {
         $limiter = $this->createMock(DeviceRateLimiterInterface::class);
         $limiter->method('consume')->willReturn(false);
         $controller = $this->controller(ProcessedConfig::object(['endpoint' => ['csrf' => 'none']]), $limiter);
         $response = $controller(Request::create('/_device/collect', 'POST'));
 
-        self::assertSame(403, $response->getStatusCode());
+        self::assertSame(429, $response->getStatusCode());
     }
 
     public function testValidCollectReturnsOk(): void
