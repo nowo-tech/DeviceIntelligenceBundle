@@ -5,6 +5,7 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.3.0](#to-130)
 - [To 1.2.2](#to-122)
 - [To 1.2.1](#to-121)
 - [To 1.2.0](#to-120)
@@ -22,6 +23,18 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.3.0
+
+From **1.2.2** — device subscriber runs after the firewall; collect endpoint hardened.
+
+```bash
+composer update nowo-tech/device-intelligence-bundle
+```
+
+- Collect nonces outside `^[A-Za-z0-9_-]{8,128}$` get HTTP 400; rate-limited collect requests now return 429 (was 403).
+- An invalid rate-limit `interval` (e.g. "15 minuts") now fails container compilation instead of silently meaning 60 s.
+- `DeviceRequestSubscriber` now runs at priority 7 (after the security firewall), so `trusted` reflects the authenticated user.
 
 ## To 1.2.2
 
