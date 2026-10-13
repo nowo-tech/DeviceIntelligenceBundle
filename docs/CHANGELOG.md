@@ -25,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Dev:** Vitest 4 (`vitest` / `@vitest/coverage-v8` `^4.1.11`); TS test thresholds unchanged.
+
 ## [1.3.0] - 2026-10-13
 
 ### Security
