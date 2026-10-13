@@ -5,6 +5,7 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.3.1](#to-131)
 - [To 1.3.0](#to-130)
 - [To 1.2.2](#to-122)
 - [To 1.2.1](#to-121)
@@ -28,6 +29,16 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.3.1
+
+From **1.3.0** — Vitest 4 (dev)
+
+```bash
+composer update nowo-tech/device-intelligence-bundle
+```
+
+- No breaking changes. No application upgrade steps.
 
 ## To 1.3.0
 
