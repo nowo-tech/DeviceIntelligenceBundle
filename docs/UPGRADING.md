@@ -5,6 +5,7 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.3.2](#to-132)
 - [To 1.3.1](#to-131)
 - [To 1.3.0](#to-130)
 - [To 1.2.2](#to-122)
@@ -29,6 +30,10 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.3.2
+
+No action. `nowo:device-intelligence:cleanup` and the Messenger cleanup handler now purge observations in batches of 1000 (same result).
 
 ## To 1.3.1
 
