@@ -117,7 +117,7 @@ final class DoctrineRepositoriesTest extends TestCase
         $query->method('getSingleColumnResult')->willReturn([]);
         $query->expects(self::never())->method('execute');
 
-        self::assertSame(0, new DoctrineObservationRepository($this->em($query), new DeviceMapper())->deleteOlderThan(Scenario::now()));
+        self::assertSame(0, (new DoctrineObservationRepository($this->em($query), new DeviceMapper()))->deleteOlderThan(Scenario::now()));
     }
 
     public function testUserRepositorySaveFindAndLists(): void
