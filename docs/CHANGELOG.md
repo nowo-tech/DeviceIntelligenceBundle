@@ -24,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Batched observation purge.** `DoctrineObservationRepository::deleteOlderThan(\DateTimeImmutable $cutoff, int $batchSize = 1000)` deletes in keyset batches (`id > :last ORDER BY id LIMIT n`, one short `DELETE … WHERE id IN (…)` per batch) instead of one unbounded `DELETE`, so `nowo:device-intelligence:cleanup` and the Messenger cleanup handler no longer lock the table on large instances (Nowo REQ-MESSENGER-007). Same result and return value.
+
 ## [1.3.1] - 2026-10-13
 
 ### Changed

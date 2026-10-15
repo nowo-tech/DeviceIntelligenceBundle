@@ -86,6 +86,7 @@ final class DoctrineRepositoriesTest extends TestCase
         $query->method('getResult')->willReturn([$entity, 'skip']);
         $query->method('getSingleScalarResult')->willReturn(2);
         $query->method('execute')->willReturn(3);
+        $query->method('getSingleColumnResult')->willReturn(['01A', '01B', '01C'], []);
         $em = $this->em($query);
         $em->method('find')->willReturnOnConsecutiveCalls(null, $entity, null);
 
@@ -96,6 +97,27 @@ final class DoctrineRepositoriesTest extends TestCase
         self::assertCount(1, $repo->latestForDevice($device, 5));
         self::assertSame(3, $repo->deleteOlderThan(Scenario::now()));
         self::assertSame(2, $repo->countAll());
+    }
+
+    public function testDeleteOlderThanRunsKeysetBatchesUntilAShortBatch(): void
+    {
+        $query = $this->queryMock();
+        // Batch size 2: a full batch, then a short one ends the loop (no third SELECT).
+        $query->expects(self::exactly(2))->method('getSingleColumnResult')->willReturn(['01A', '01B'], ['01C']);
+        $query->expects(self::exactly(2))->method('execute')->willReturn(2, 1);
+
+        $repo = new DoctrineObservationRepository($this->em($query), new DeviceMapper());
+
+        self::assertSame(3, $repo->deleteOlderThan(Scenario::now(), 2));
+    }
+
+    public function testDeleteOlderThanStopsOnAnEmptyBatch(): void
+    {
+        $query = $this->queryMock();
+        $query->method('getSingleColumnResult')->willReturn([]);
+        $query->expects(self::never())->method('execute');
+
+        self::assertSame(0, new DoctrineObservationRepository($this->em($query), new DeviceMapper())->deleteOlderThan(Scenario::now()));
     }
 
     public function testUserRepositorySaveFindAndLists(): void
@@ -172,7 +194,7 @@ final class DoctrineRepositoriesTest extends TestCase
     {
         $query = $this->getMockBuilder(Query::class)
             ->disableOriginalConstructor()
-            ->onlyMethods(['getResult', 'getSingleScalarResult', 'getOneOrNullResult', 'execute'])
+            ->onlyMethods(['getResult', 'getSingleScalarResult', 'getOneOrNullResult', 'execute', 'getSingleColumnResult'])
             ->getMock();
 
         return $query;

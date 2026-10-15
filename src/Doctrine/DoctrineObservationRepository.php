@@ -21,6 +21,8 @@ use Nowo\DeviceIntelligenceBundle\Entity\DeviceObservationEntity;
 final class DoctrineObservationRepository implements ObservationRepositoryInterface
 {
     use ResolvesEntityManagerTrait;
+    /** Rows per purge statement ({@see deleteOlderThan()}). */
+    public const PURGE_BATCH_SIZE = 1000;
 
     public function __construct(
         private EntityManagerInterface|ManagerRegistry $em,
@@ -77,14 +79,42 @@ final class DoctrineObservationRepository implements ObservationRepositoryInterf
         return $out;
     }
 
-    public function deleteOlderThan(\DateTimeImmutable $cutoff): int
+    /**
+     * Deletes observations older than $cutoff in keyset batches (`id > :last ORDER BY id LIMIT n`), one
+     * short statement per batch instead of one unbounded DELETE that locks the table on big instances.
+     */
+    public function deleteOlderThan(\DateTimeImmutable $cutoff, int $batchSize = self::PURGE_BATCH_SIZE): int
     {
-        return (int) $this->entityManager(DeviceObservationEntity::class)->createQueryBuilder()
-            ->delete(DeviceObservationEntity::class, 'o')
-            ->where('o.createdAt < :cutoff')
-            ->setParameter('cutoff', $cutoff)
-            ->getQuery()
-            ->execute();
+        $em = $this->entityManager(DeviceObservationEntity::class);
+        $batchSize = max(1, $batchSize);
+        $deleted = 0;
+        $last = null;
+        do {
+            $select = $em->createQueryBuilder()
+                ->select('o.id')
+                ->from(DeviceObservationEntity::class, 'o')
+                ->where('o.createdAt < :cutoff')
+                ->setParameter('cutoff', $cutoff)
+                ->orderBy('o.id', 'ASC')
+                ->setMaxResults($batchSize);
+            if (null !== $last) {
+                $select->andWhere('o.id > :last')->setParameter('last', $last);
+            }
+            /** @var list<string> $ids */
+            $ids = $select->getQuery()->getSingleColumnResult();
+            if ([] === $ids) {
+                break;
+            }
+            $deleted += (int) $em->createQueryBuilder()
+                ->delete(DeviceObservationEntity::class, 'o')
+                ->where('o.id IN (:ids)')
+                ->setParameter('ids', $ids)
+                ->getQuery()
+                ->execute();
+            $last = $ids[\count($ids) - 1];
+        } while (\count($ids) === $batchSize);
+
+        return $deleted;
     }
 
     public function countAll(): int
