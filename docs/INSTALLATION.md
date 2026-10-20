@@ -8,6 +8,8 @@
 - [Routes](#routes)
 - [Database](#database)
 - [Client assets](#client-assets)
+  - [IIFE (any host)](#iife-any-host)
+  - [Pentatrion Vite (Symfony apps)](#pentatrion-vite-symfony-apps)
 - [Twig template overrides](#twig-template-overrides)
 - [Optional packages](#optional-packages)
 

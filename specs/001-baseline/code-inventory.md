@@ -1,7 +1,7 @@
 # Device Intelligence Bundle — baseline code inventory
 
 **Package**: `nowo-tech/device-intelligence-bundle`  
-**Last audited**: 2026-09-24  
+**Last audited**: 2026-10-20  
 **Production units**: **208/208**  
 **Audit command**: count `lib/**/*.php` + `src/**/*.php` + `src/**/*.twig` + `src/**/*.svg` + `src/Resources/translations/*.yaml` + `src/Resources/assets/src/**/*.ts` (exclude `src/Resources/assets/tests/**`).
 
@@ -10,6 +10,7 @@
 - Vitest files under `src/Resources/assets/tests/` are **excluded** (`FR-TEST-TS-001` in spec.md; not inventory rows).
 - Vite IIFE `src/Resources/public/js/device-intelligence.min.js` (+ `.map`) is a **build output** of `src/Resources/assets/src/**` (`FR-BUILD-001`), not a separate production unit.
 - `src/Resources/assets/LICENSE` and `src/Resources/assets/README.md` are documentation shipped next to the SDK, not runtime units.
+- Unlisted tracked files under `src/` are exactly these exclusions: the 8 Vitest files in `src/Resources/assets/tests/`, `src/Resources/assets/LICENSE`, `src/Resources/assets/README.md`, and the build output `device-intelligence.min.js` + `device-intelligence.min.js.map` (2026-10-20 audit: 208 rows = 115 `lib` PHP + 64 `src` PHP + 1 Twig + 1 SVG + 7 translations + 20 TS sources).
 - `demo/` is out of inventory scope.
 - This package co-locates the matcher engine in `lib/` (PSR-4 `Nowo\DeviceIntelligence\`) and the Symfony adapter in `src/`; both are production scope.
 

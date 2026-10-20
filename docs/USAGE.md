@@ -12,6 +12,8 @@ Copy-paste scenarios (checkout step-up, new-device login, trusted devices, coupo
 - [Custom risk rules](#custom-risk-rules)
 - [Commands](#commands)
 - [Browser assets](#browser-assets)
+  - [IIFE (`assets:install`)](#iife-assetsinstall)
+  - [Pentatrion Vite (recommended in Symfony apps)](#pentatrion-vite-recommended-in-symfony-apps)
 - [Profiler](#profiler)
 - [Translations](#translations)
 

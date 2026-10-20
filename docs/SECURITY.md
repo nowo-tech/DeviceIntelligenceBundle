@@ -10,6 +10,7 @@
 - [Controller guards](#controller-guards)
 - [FrankenPHP](#frankenphp)
 - [AI security audit](#ai-security-audit)
+- [Reporting a vulnerability](#reporting-a-vulnerability)
 - [Release security checklist (12.4.1)](#release-security-checklist-1241)
 
 ## Device ID is not a credential

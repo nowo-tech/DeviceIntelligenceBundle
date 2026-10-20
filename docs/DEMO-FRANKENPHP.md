@@ -7,9 +7,17 @@ This document describes how the **Device Intelligence Bundle** demo runs under *
 - [Overview](#overview)
 - [What the demo includes](#what-the-demo-includes)
 - [Development configuration](#development-configuration)
+  - [Caddyfile (development)](#caddyfile-development)
+  - [PHP and Twig (development)](#php-and-twig-development)
+  - [Start (development)](#start-development)
 - [Production configuration](#production-configuration)
 - [Switching classic vs worker (`FRANKENPHP_MODE`)](#switching-classic-vs-worker-frankenphp_mode)
 - [Troubleshooting](#troubleshooting)
+  - [Twig or PHP changes do not appear](#twig-or-php-changes-do-not-appear)
+  - [Demo does not start](#demo-does-not-start)
+  - [Browser console: 404 on `/build/…` or missing Vite entry](#browser-console-404-on-build-or-missing-vite-entry)
+  - [Browser console: 404 on `device-intelligence.min.js`](#browser-console-404-on-device-intelligenceminjs)
+  - [Database empty](#database-empty)
 
 ## Overview
 
