@@ -9,6 +9,20 @@
 | Remediation (2026-09-23/24) | W-01/W-03/W-04 per-request state cleared by the bundle-owned `RequestStateResetSubscriber` (main request, priority 4096) and tagged `kernel.reset`; W-02 Doctrine repositories resolve the manager per call (reset when closed), refresh managed entities on read (`HINT_REFRESH` / `refresh()`), and detach after mapping; W-05 velocity payload pruned on write; `InMemoryVelocityEngine::reset()` for optional shared wiring. Regression tests simulate consecutive requests / two workers / host-held managed entities without `reset()` |
 | **Verdict** | ✅ **Viable under scenario B** — no bundle-owned state survives a main request; Doctrine reads are always fresh. Clearing the host application's own EntityManager remains the host's responsibility |
 
+## Table of contents
+
+- [Execution model assumed](#execution-model-assumed)
+- [Summary](#summary)
+- [Services reviewed](#services-reviewed)
+- [Findings](#findings)
+  - [W-01 — In-memory repositories keep all data for the worker lifetime (Medium)](#w-01--in-memory-repositories-keep-all-data-for-the-worker-lifetime-medium)
+  - [W-02 — Doctrine repositories depend on the EntityManager reset (Medium)](#w-02--doctrine-repositories-depend-on-the-entitymanager-reset-medium)
+  - [W-03 — Rate limiter fallback map is never pruned or reset (Low)](#w-03--rate-limiter-fallback-map-is-never-pruned-or-reset-low)
+  - [W-04 — Profiler collector keeps the previous request's analysis without reset (Low)](#w-04--profiler-collector-keeps-the-previous-requests-analysis-without-reset-low)
+  - [W-05 — Velocity counters in the cache are append-only (Low)](#w-05--velocity-counters-in-the-cache-are-append-only-low)
+- [Usage recommendations in worker mode](#usage-recommendations-in-worker-mode)
+- [Re-audit triggers](#re-audit-triggers)
+
 ## Execution model assumed
 
 FrankenPHP worker mode boots the Symfony kernel once per worker and serves many requests with the same container. This audit assumes the **strict** variant: the kernel is **not** rebooted between requests, so every shared service, static property and PHP global survives from one request to the next. Two scenarios are evaluated:

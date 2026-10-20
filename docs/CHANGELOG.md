@@ -25,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Documentation: wave-1 REQ compliance — README documentation list order and canonical FrankenPHP claim line, CONTRIBUTING Code of Conduct link and post-release-commit trailer check, canonical issue templates, doc TOCs, demo `.env.example` comments, Spec Kit inventory exclusion note.
+
 ## [1.3.2] - 2026-10-15
 
 ### Changed
