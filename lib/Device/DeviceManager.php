@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Device;
 
+use DateTimeImmutable;
 use Nowo\DeviceIntelligence\Port\DeviceRepositoryInterface;
 use Nowo\DeviceIntelligence\Port\DeviceUserRepositoryInterface;
 use Nowo\DeviceIntelligence\Port\TrustedDeviceRepositoryInterface;
@@ -20,7 +21,7 @@ final class DeviceManager implements DeviceManagerInterface, TrustedDeviceManage
         private DeviceUserRepositoryInterface $users,
         private TrustedDeviceRepositoryInterface $trusts,
         private ClockInterface $clock,
-        private ?\DateTimeImmutable $defaultExpiration = null,
+        private ?DateTimeImmutable $defaultExpiration = null,
     ) {
     }
 
@@ -66,7 +67,7 @@ final class DeviceManager implements DeviceManagerInterface, TrustedDeviceManage
         return $rel;
     }
 
-    public function trust(Device $device, UserIdentifier $user, ?\DateTimeImmutable $expiresAt = null, ?string $label = null): void
+    public function trust(Device $device, UserIdentifier $user, ?DateTimeImmutable $expiresAt = null, ?string $label = null): void
     {
         $now = $this->clock->now();
         $this->trusts->save(new TrustedDevice(

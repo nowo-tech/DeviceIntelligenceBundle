@@ -17,6 +17,9 @@ use Symfony\Component\Security\Core\User\UserInterface;
  */
 final class SecurityUserIdentifierResolver implements UserIdentifierResolverInterface
 {
+    /**
+     * Resolves the user identifier of the authenticated token, if any.
+     */
     public function resolve(object $user): UserIdentifier
     {
         if ($user instanceof UserInterface) {

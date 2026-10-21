@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Nowo\DeviceIntelligence\User;
 
 use Nowo\DeviceIntelligence\Exception\InvalidValueException;
+use Stringable;
 
 /**
  * Application-agnostic user handle. Never a Doctrine association.
  */
-final readonly class UserIdentifier implements \Stringable
+final readonly class UserIdentifier implements Stringable
 {
     public string $value;
 

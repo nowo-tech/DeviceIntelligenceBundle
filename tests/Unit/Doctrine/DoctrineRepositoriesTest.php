@@ -24,6 +24,7 @@ use Nowo\DeviceIntelligenceBundle\Entity\DeviceUserEntity;
 use Nowo\DeviceIntelligenceBundle\Tests\Support\Scenario;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 /**
  * @author Héctor Franco Aceituno <hectorfranco@nowo.tech>
@@ -37,7 +38,7 @@ final class DoctrineRepositoriesTest extends TestCase
         $device = Scenario::device();
         $entity = $mapper->toDeviceEntity($device);
         $query = $this->queryMock();
-        $query->method('getResult')->willReturn([$entity, new \stdClass()]);
+        $query->method('getResult')->willReturn([$entity, new stdClass()]);
         $query->method('getSingleScalarResult')->willReturn('4');
         $em = $this->em($query);
         $finds = 0;
@@ -154,7 +155,7 @@ final class DoctrineRepositoriesTest extends TestCase
         $activeE = $mapper->toTrustEntity($active);
         $expE = $mapper->toTrustEntity($expired);
         $query = $this->queryMock();
-        $query->method('getOneOrNullResult')->willReturnOnConsecutiveCalls(null, $activeE, $expE, new \stdClass());
+        $query->method('getOneOrNullResult')->willReturnOnConsecutiveCalls(null, $activeE, $expE, new stdClass());
         $query->method('getResult')->willReturn([$activeE, $expE, 'nope']);
         $query->method('getSingleScalarResult')->willReturn(2);
         $em = $this->em($query);

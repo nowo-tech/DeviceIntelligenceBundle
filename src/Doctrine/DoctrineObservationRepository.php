@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Doctrine;
 
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\DeviceIntelligence\Device\Device;
@@ -11,6 +12,7 @@ use Nowo\DeviceIntelligence\Observation\DeviceObservation;
 use Nowo\DeviceIntelligence\Observation\ObservationId;
 use Nowo\DeviceIntelligence\Port\ObservationRepositoryInterface;
 use Nowo\DeviceIntelligenceBundle\Entity\DeviceObservationEntity;
+use SortDirection;
 
 /**
  * Doctrine implementation of the core observation port.
@@ -24,12 +26,18 @@ final class DoctrineObservationRepository implements ObservationRepositoryInterf
     /** Rows per purge statement ({@see deleteOlderThan()}). */
     public const PURGE_BATCH_SIZE = 1000;
 
+    /**
+     * Creates the doctrine observation repository.
+     */
     public function __construct(
         private EntityManagerInterface|ManagerRegistry $em,
         private DeviceMapper $mapper,
     ) {
     }
 
+    /**
+     * Persists the observation.
+     */
     public function save(DeviceObservation $observation): void
     {
         $em = $this->entityManager(DeviceObservationEntity::class);
@@ -43,6 +51,9 @@ final class DoctrineObservationRepository implements ObservationRepositoryInterf
         $this->detachAll($em, [$entity]);
     }
 
+    /**
+     * Loads an observation by id.
+     */
     public function find(ObservationId $id): ?DeviceObservation
     {
         $em = $this->entityManager(DeviceObservationEntity::class);
@@ -56,6 +67,9 @@ final class DoctrineObservationRepository implements ObservationRepositoryInterf
         return $observation;
     }
 
+    /**
+     * Latest observations of the device, newest first.
+     */
     public function latestForDevice(Device $device, int $limit = 10): array
     {
         $em = $this->entityManager(DeviceObservationEntity::class);
@@ -64,7 +78,7 @@ final class DoctrineObservationRepository implements ObservationRepositoryInterf
             ->from(DeviceObservationEntity::class, 'o')
             ->where('o.deviceId = :device')
             ->setParameter('device', $device->id->value)
-            ->orderBy('o.createdAt', \SortDirection::Descending)
+            ->orderBy('o.createdAt', SortDirection::Descending)
             ->setMaxResults($limit)
             ->getQuery())->getResult();
 
@@ -83,7 +97,7 @@ final class DoctrineObservationRepository implements ObservationRepositoryInterf
      * Deletes observations older than $cutoff in keyset batches (`id > :last ORDER BY id LIMIT n`), one
      * short statement per batch instead of one unbounded DELETE that locks the table on big instances.
      */
-    public function deleteOlderThan(\DateTimeImmutable $cutoff, int $batchSize = self::PURGE_BATCH_SIZE): int
+    public function deleteOlderThan(DateTimeImmutable $cutoff, int $batchSize = self::PURGE_BATCH_SIZE): int
     {
         $em = $this->entityManager(DeviceObservationEntity::class);
         $batchSize = max(1, $batchSize);
@@ -117,6 +131,9 @@ final class DoctrineObservationRepository implements ObservationRepositoryInterf
         return $deleted;
     }
 
+    /**
+     * Number of stored observations.
+     */
     public function countAll(): int
     {
         return (int) $this->entityManager(DeviceObservationEntity::class)->createQueryBuilder()

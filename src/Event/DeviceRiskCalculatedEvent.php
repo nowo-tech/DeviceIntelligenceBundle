@@ -15,10 +15,16 @@ use Symfony\Contracts\EventDispatcher\Event;
  */
 final class DeviceRiskCalculatedEvent extends Event
 {
+    /**
+     * Creates the device risk calculated event.
+     */
     public function __construct(public Analysis $analysis)
     {
     }
 
+    /**
+     * Creates the event from a risk assessment.
+     */
     public static function fromAssessment(RiskAssessmentCompletedEvent $event): self
     {
         return new self($event->analysis);

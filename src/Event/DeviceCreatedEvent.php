@@ -15,6 +15,9 @@ use Symfony\Contracts\EventDispatcher\Event;
  */
 final class DeviceCreatedEvent extends Event
 {
+    /**
+     * Creates the device created event.
+     */
     public function __construct(public Analysis $analysis)
     {
     }

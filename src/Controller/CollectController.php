@@ -28,6 +28,9 @@ use Symfony\Component\Routing\Attribute\Route;
 #[AsController]
 final class CollectController
 {
+    /**
+     * Creates the collect controller.
+     */
     public function __construct(
         private CollectRequestValidator $validator,
         private AnalysisInputFactory $inputs,
@@ -47,6 +50,9 @@ final class CollectController
         name: 'nowo_device_intelligence_collect',
         methods: ['POST'],
     )]
+    /**
+     * Validates the collect payload, records the observation and answers with the device context.
+     */
     public function __invoke(Request $request): Response
     {
         if (!$this->config->enabled() || !$this->config->endpoint()['enabled']) {

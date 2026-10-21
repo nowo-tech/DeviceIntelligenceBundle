@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Device;
 
+use DateTimeImmutable;
 use Nowo\DeviceIntelligence\User\DeviceUserRelation;
 use Nowo\DeviceIntelligence\User\UserIdentifier;
 
@@ -23,7 +24,7 @@ interface DeviceManagerInterface
      */
     public function devicesForUser(UserIdentifier $user): iterable;
 
-    public function trust(Device $device, UserIdentifier $user, ?\DateTimeImmutable $expiresAt = null, ?string $label = null): void;
+    public function trust(Device $device, UserIdentifier $user, ?DateTimeImmutable $expiresAt = null, ?string $label = null): void;
 
     public function revoke(Device $device, UserIdentifier $user): void;
 }

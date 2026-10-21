@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\Controller;
 
+use DateTimeImmutable;
 use Nowo\DeviceIntelligence\DeviceIntelligence;
 use Nowo\DeviceIntelligence\Infrastructure\FrozenClock;
 use Nowo\DeviceIntelligence\Infrastructure\InMemoryDeviceRepository;
@@ -54,7 +55,7 @@ final class CollectControllerTest extends TestCase
 
     public function testValidCollectReturnsOk(): void
     {
-        $now = new \DateTimeImmutable();
+        $now = new DateTimeImmutable();
         $controller = $this->controller(
             ProcessedConfig::object([
                 'endpoint' => [
@@ -107,9 +108,9 @@ final class CollectControllerTest extends TestCase
     private function controller(
         DeviceIntelligenceConfig $config,
         ?DeviceRateLimiterInterface $limiter = null,
-        ?\DateTimeImmutable $clock = null,
+        ?DateTimeImmutable $clock = null,
     ): CollectController {
-        $now = $clock ?? new \DateTimeImmutable();
+        $now = $clock ?? new DateTimeImmutable();
         $frozen = new FrozenClock($now);
         $cache = new Psr16Cache(new ArrayAdapter());
         $origins = new OriginValidator($config);

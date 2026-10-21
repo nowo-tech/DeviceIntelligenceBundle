@@ -22,12 +22,18 @@ final class DoctrineDeviceUserRepository implements DeviceUserRepositoryInterfac
 {
     use ResolvesEntityManagerTrait;
 
+    /**
+     * Creates the doctrine device user repository.
+     */
     public function __construct(
         private EntityManagerInterface|ManagerRegistry $em,
         private DeviceMapper $mapper,
     ) {
     }
 
+    /**
+     * Persists the device/user relation.
+     */
     public function save(DeviceUserRelation $relation): void
     {
         $em = $this->entityManager(DeviceUserEntity::class);
@@ -38,6 +44,9 @@ final class DoctrineDeviceUserRepository implements DeviceUserRepositoryInterfac
         $this->detachAll($em, [$entity]);
     }
 
+    /**
+     * Relations of the given device.
+     */
     public function forDevice(DeviceId $deviceId): array
     {
         $em = $this->entityManager(DeviceUserEntity::class);
@@ -51,6 +60,9 @@ final class DoctrineDeviceUserRepository implements DeviceUserRepositoryInterfac
         return $this->mapRows($em, $rows);
     }
 
+    /**
+     * Relations of the given user.
+     */
     public function forUser(UserIdentifier $user): array
     {
         $em = $this->entityManager(DeviceUserEntity::class);
@@ -64,6 +76,9 @@ final class DoctrineDeviceUserRepository implements DeviceUserRepositoryInterfac
         return $this->mapRows($em, $rows);
     }
 
+    /**
+     * Loads the relation between a device and a user.
+     */
     public function find(DeviceId $deviceId, UserIdentifier $user): ?DeviceUserRelation
     {
         $em = $this->entityManager(DeviceUserEntity::class);
@@ -77,6 +92,9 @@ final class DoctrineDeviceUserRepository implements DeviceUserRepositoryInterfac
         return $relation;
     }
 
+    /**
+     * Number of stored device/user relations.
+     */
     public function countAll(): int
     {
         return (int) $this->entityManager(DeviceUserEntity::class)->createQueryBuilder()

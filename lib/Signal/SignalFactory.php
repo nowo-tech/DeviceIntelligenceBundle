@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Signal;
 
+use DateTimeImmutable;
+
 final class SignalFactory
 {
     /**
      * @param array<string, mixed> $payload client `signals` map
      */
-    public static function bagFromClient(array $payload, \DateTimeImmutable $now): SignalBag
+    public static function bagFromClient(array $payload, DateTimeImmutable $now): SignalBag
     {
         $bag = SignalBag::empty();
         foreach ($payload as $name => $raw) {
@@ -29,7 +31,7 @@ final class SignalFactory
                 if (isset($raw['collectedAt'])) {
                     $ts = $raw['collectedAt'];
                     if (is_numeric($ts)) {
-                        $collectedAt = (new \DateTimeImmutable())->setTimestamp((int) ((int) $ts > 2_000_000_000 ? ((int) $ts / 1000) : $ts));
+                        $collectedAt = (new DateTimeImmutable())->setTimestamp((int) ((int) $ts > 2_000_000_000 ? ((int) $ts / 1000) : $ts));
                     }
                 }
             }

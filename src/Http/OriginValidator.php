@@ -16,10 +16,16 @@ use Symfony\Component\HttpFoundation\Request;
  */
 final class OriginValidator
 {
+    /**
+     * Creates the origin validator.
+     */
     public function __construct(private DeviceIntelligenceConfig $config)
     {
     }
 
+    /**
+     * Rejects collect requests whose Origin / Referer is not allowed.
+     */
     public function validate(Request $request): void
     {
         $mode = (string) $this->config->endpoint()['csrf'];

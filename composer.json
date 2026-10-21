@@ -10,7 +10,6 @@
         "fingerprint",
         "antifraud",
         "risk",
-        "nowo",
         "frankenphp"
     ],
     "homepage": "https://github.com/nowo-tech/DeviceIntelligenceBundle",
@@ -92,7 +91,7 @@
     "scripts": {
         "test": "phpunit --color=always",
         "test-coverage": "phpunit --color=always --coverage-html coverage --coverage-clover coverage.xml --coverage-text",
-        "coverage-check": "phpunit --color=always --coverage-text --coverage-clover=coverage.xml",
+        "coverage-check": "phpunit --color=always --coverage-text=coverage-output.txt --coverage-clover=coverage.xml && sh .scripts/coverage-fail-under.sh coverage-output.txt 99",
         "cs-check": "php-cs-fixer fix --dry-run --diff --config=.php-cs-fixer.dist.php",
         "cs-fix": "php-cs-fixer fix --config=.php-cs-fixer.dist.php",
         "rector": "rector process",
@@ -111,7 +110,7 @@
     "scripts-descriptions": {
         "test": "Run PHPUnit tests",
         "test-coverage": "Run PHPUnit tests with code coverage",
-        "coverage-check": "Run PHPUnit with coverage text (CI gate)",
+        "coverage-check": "Run PHPUnit with coverage and fail below 99% lines (REQ-TEST-003)",
         "cs-check": "Check code style with PHP-CS-Fixer",
         "cs-fix": "Fix code style with PHP-CS-Fixer",
         "rector": "Apply Rector refactoring",
@@ -136,9 +135,9 @@
     "minimum-stability": "stable",
     "prefer-stable": true,
     "extra": {
-        "nowo-package-version": "1.0.1",
+        "nowo-package-version": "1.4.0",
         "branch-alias": {
-            "dev-main": "1.0.x-dev"
+            "dev-main": "1.4.x-dev"
         }
     }
 }

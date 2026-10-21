@@ -15,6 +15,7 @@ use Symfony\Component\Security\Http\Event\InteractiveLoginEvent;
 use Symfony\Component\Security\Http\Event\LoginFailureEvent;
 use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
 use Symfony\Component\Security\Http\Event\LogoutEvent;
+use Throwable;
 
 /**
  * Associates users on login, records velocity, never auto-trusts. Logout keeps the cookie.
@@ -24,6 +25,9 @@ use Symfony\Component\Security\Http\Event\LogoutEvent;
  */
 final class SecurityDeviceSubscriber implements EventSubscriberInterface
 {
+    /**
+     * Creates the security device subscriber.
+     */
     public function __construct(
         private DeviceManager $devices,
         private UserIdentifierResolverInterface $users,
@@ -33,6 +37,9 @@ final class SecurityDeviceSubscriber implements EventSubscriberInterface
     ) {
     }
 
+    /**
+     * Returns the subscribed events.
+     */
     public static function getSubscribedEvents(): array
     {
         $events = [
@@ -47,11 +54,17 @@ final class SecurityDeviceSubscriber implements EventSubscriberInterface
         return $events;
     }
 
+    /**
+     * Links the device to the authenticated user after a successful login.
+     */
     public function onLoginSuccess(LoginSuccessEvent $event): void
     {
         $this->associate($event->getUser());
     }
 
+    /**
+     * Records an interactive login for the current device.
+     */
     public function onInteractiveLogin(InteractiveLoginEvent $event): void
     {
         $user = $event->getAuthenticationToken()->getUser();
@@ -60,6 +73,9 @@ final class SecurityDeviceSubscriber implements EventSubscriberInterface
         }
     }
 
+    /**
+     * Records a failed login for the current device.
+     */
     public function onLoginFailure(LoginFailureEvent $event): void
     {
         unset($event);
@@ -73,6 +89,9 @@ final class SecurityDeviceSubscriber implements EventSubscriberInterface
         ]);
     }
 
+    /**
+     * Records the logout for the current device.
+     */
     public function onLogout(LogoutEvent $event): void
     {
         unset($event);
@@ -87,7 +106,7 @@ final class SecurityDeviceSubscriber implements EventSubscriberInterface
         }
         try {
             $identifier = $this->users->resolve($user);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->logger?->info('device_intelligence.user_resolve_failed', ['error' => $e->getMessage()]);
 
             return;

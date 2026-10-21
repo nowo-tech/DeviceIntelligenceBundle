@@ -26,6 +26,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- PHPDoc description on every public method of `src/` (226 added); global classes imported instead of leading-backslash names (`global_namespace_import`) (REQ-CS-001).
+- `DeviceMapper`, `CleanupCommand` and `RiskTestCommand` take the PSR-20 clock (autowired, `SystemClock` by default) instead of `new DateTimeImmutable()` (REQ-DI-001).
+- Rector targets PHP 8.3 (the package floor) with at most 2 workers; pending Rector findings applied (REQ-CS-003, REQ-SF-001).
+- `composer coverage-check` and the CI coverage job fail below 99% lines; CI instruments `lib/` as well (`pcov.directory=.`) so the reported value matches local runs (REQ-TEST-003/007).
+- Translation key parity is checked by `.scripts/validate-translations.php` (PHP) instead of the former Python helper (REQ-MAKE-004, REQ-TEST-004).
+- `release-check` starts with `ensure-up` and runs `check-no-raw-html-form` (REQ-MAKE-002).
+- `composer.json`: `extra.nowo-package-version` / `branch-alias` aligned with 1.4, vanity keyword `nowo` removed (REQ-PKG-004).
+- `docs/DEMO-FRANKENPHP.md`: Symfony 8 demo PHP-version policy and smoke check (REQ-DEMO-010, REQ-TEST-011).
+- `.scripts/check-no-cursor-coauthor.sh` accepts git worktrees (REQ-GIT-001).
+
 ## [1.3.3] - 2026-10-21
 
 Dependency refresh (bundle and demos). See [UPGRADING](UPGRADING.md#to-133).

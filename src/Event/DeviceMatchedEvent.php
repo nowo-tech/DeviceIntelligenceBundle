@@ -15,6 +15,9 @@ use Symfony\Contracts\EventDispatcher\Event;
  */
 final class DeviceMatchedEvent extends Event
 {
+    /**
+     * Creates the device matched event.
+     */
     public function __construct(public Analysis $analysis)
     {
     }

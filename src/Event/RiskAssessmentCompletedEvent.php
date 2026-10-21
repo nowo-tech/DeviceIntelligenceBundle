@@ -15,6 +15,9 @@ use Symfony\Contracts\EventDispatcher\Event;
  */
 final class RiskAssessmentCompletedEvent extends Event
 {
+    /**
+     * Creates the risk assessment completed event.
+     */
     public function __construct(public Analysis $analysis)
     {
     }

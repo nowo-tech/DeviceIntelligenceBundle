@@ -15,6 +15,9 @@ use Symfony\Contracts\EventDispatcher\Event;
  */
 final class BeforeRiskAssessmentEvent extends Event
 {
+    /**
+     * Creates the before risk assessment event.
+     */
     public function __construct(public AnalysisInput $input)
     {
     }

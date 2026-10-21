@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\EventSubscriber;
 
+use DateTimeImmutable;
 use Nowo\DeviceIntelligence\AnalysisInput;
 use Nowo\DeviceIntelligence\DeviceIntelligence;
 use Nowo\DeviceIntelligence\Infrastructure\InMemoryDeviceRepository;
@@ -38,7 +39,7 @@ final class ProfilerAjaxBridgeSubscriberTest extends TestCase
             new InMemoryDeviceUserRepository(),
             new InMemoryTrustedDeviceRepository(),
         );
-        $analysis = $engine->analyze(new AnalysisInput(new \DateTimeImmutable(), SignalBag::empty(), '1.1.1.1'));
+        $analysis = $engine->analyze(new AnalysisInput(new DateTimeImmutable(), SignalBag::empty(), '1.1.1.1'));
         $parentCollector = new DeviceIntelligenceDataCollector();
         $parentCollector->collect(Request::create('/es'), new Response());
         self::assertFalse($parentCollector->hasContext());

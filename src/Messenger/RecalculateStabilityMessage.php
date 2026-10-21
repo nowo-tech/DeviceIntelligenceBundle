@@ -10,6 +10,9 @@ namespace Nowo\DeviceIntelligenceBundle\Messenger;
  */
 final readonly class RecalculateStabilityMessage
 {
+    /**
+     * Creates the recalculate stability message.
+     */
     public function __construct(public ?string $deviceId = null)
     {
     }

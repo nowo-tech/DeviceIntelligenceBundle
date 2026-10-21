@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\Doctrine;
 
+use DateTimeImmutable;
 use Nowo\DeviceIntelligence\Device\Device;
 use Nowo\DeviceIntelligence\Device\DeviceId;
 use Nowo\DeviceIntelligence\Device\DeviceStatus;
@@ -33,7 +34,7 @@ final class DeviceMapperTest extends TestCase
 {
     public function testDeviceRoundtrip(): void
     {
-        $now = new \DateTimeImmutable('2026-01-02T03:04:05+00:00');
+        $now = new DateTimeImmutable('2026-01-02T03:04:05+00:00');
         $id = DeviceId::generate($now);
         $bag = SignalBag::empty()->with(new Signal(
             SignalName::Timezone,
@@ -76,7 +77,7 @@ final class DeviceMapperTest extends TestCase
 
     public function testObservationAndRelationsRoundtrip(): void
     {
-        $now = new \DateTimeImmutable('2026-03-04T05:06:07+00:00');
+        $now = new DateTimeImmutable('2026-03-04T05:06:07+00:00');
         $deviceId = DeviceId::generate($now);
         $obsId = ObservationId::generate($now);
         $user = new UserIdentifier('alice@example.test');

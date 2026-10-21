@@ -17,10 +17,16 @@ final class TablePrefixSubscriber
 {
     private const ENTITY_NS = 'Nowo\\DeviceIntelligenceBundle\\Entity\\';
 
+    /**
+     * Creates the table prefix subscriber.
+     */
     public function __construct(private string $prefix)
     {
     }
 
+    /**
+     * Prepends the configured table prefix to the bundle entities.
+     */
     public function loadClassMetadata(LoadClassMetadataEventArgs $args): void
     {
         $metadata = $args->getClassMetadata();

@@ -20,6 +20,9 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 #[AsCommand(name: 'device-intelligence:user:devices', description: 'List devices associated with a user identifier')]
 final class UserDevicesCommand extends Command
 {
+    /**
+     * Creates the user devices command.
+     */
     public function __construct(private DeviceManager $devices)
     {
         parent::__construct();

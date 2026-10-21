@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Infrastructure;
 
+use DateTimeImmutable;
 use Nowo\DeviceIntelligence\Device\Device;
 use Nowo\DeviceIntelligence\Device\DeviceId;
 use Nowo\DeviceIntelligence\Device\DeviceStatus;
@@ -31,7 +32,7 @@ final class InMemoryDeviceRepository implements DeviceRepositoryInterface
         ?string $timezone,
         ?string $gpuFamily,
         int $limit,
-        \DateTimeImmutable $since,
+        DateTimeImmutable $since,
     ): array {
         $out = [];
         foreach ($this->devices as $device) {

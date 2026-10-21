@@ -26,6 +26,9 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 #[AsCommand(name: 'device-intelligence:stats', description: 'Show stored device / observation / relation counts')]
 final class StatsCommand extends Command
 {
+    /**
+     * Creates the stats command.
+     */
     public function __construct(
         private DeviceRepositoryInterface $devices,
         private ObservationRepositoryInterface $observations,

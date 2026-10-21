@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\Event;
 
+use DateTimeImmutable;
 use Nowo\DeviceIntelligence\AnalysisInput;
 use Nowo\DeviceIntelligence\DeviceIntelligence;
 use Nowo\DeviceIntelligence\Infrastructure\InMemoryDeviceRepository;
@@ -47,7 +48,7 @@ final class AnalyzeServiceTest extends TestCase
         }
 
         $service = new AnalyzeService($this->engine(), $dispatcher);
-        $analysis = $service->analyze(new AnalysisInput(new \DateTimeImmutable(), SignalBag::empty(), '10.0.0.1'));
+        $analysis = $service->analyze(new AnalysisInput(new DateTimeImmutable(), SignalBag::empty(), '10.0.0.1'));
 
         self::assertTrue($analysis->match()->isNewDevice());
         self::assertContains(DeviceCreatedEvent::class, $seen);
@@ -59,7 +60,7 @@ final class AnalyzeServiceTest extends TestCase
     {
         $engine = $this->engine();
         $service = new AnalyzeService($engine, new EventDispatcher());
-        $now = new \DateTimeImmutable('2026-08-23T10:00:00Z');
+        $now = new DateTimeImmutable('2026-08-23T10:00:00Z');
         $signals = SignalFactory::bagFromClient([
             'platform' => ['value' => 'MacIntel', 'quality' => 1],
             'canvas' => ['value' => 'aabbccddeeff0011', 'quality' => 0.95],

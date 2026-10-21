@@ -13,6 +13,7 @@ use Nowo\DeviceIntelligenceBundle\Config\DeviceIntelligenceConfig;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Throwable;
 
 /**
  * Maps an HTTP Request + collect payload to the core AnalysisInput DTO.
@@ -22,6 +23,9 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
  */
 final class AnalysisInputFactory
 {
+    /**
+     * Creates the analysis input factory.
+     */
     public function __construct(
         private DeviceIntelligenceConfig $config,
         private ClockInterface $clock,
@@ -103,7 +107,7 @@ final class AnalysisInputFactory
 
         try {
             return $this->users->resolve($user);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return null;
         }
     }

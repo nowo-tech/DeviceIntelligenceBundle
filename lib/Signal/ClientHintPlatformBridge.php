@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Signal;
 
+use DateTimeImmutable;
+
 final class ClientHintPlatformBridge
 {
-    public static function platformFromHints(SignalBag $bag, \DateTimeImmutable $now): SignalBag
+    public static function platformFromHints(SignalBag $bag, DateTimeImmutable $now): SignalBag
     {
         if ($bag->has(SignalName::Platform)) {
             return $bag;

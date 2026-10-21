@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\Command;
 
+use DateTimeImmutable;
 use Nowo\DeviceIntelligence\AnalysisInput;
 use Nowo\DeviceIntelligence\Device\DeviceId;
 use Nowo\DeviceIntelligence\Device\DeviceManager;
@@ -25,6 +26,7 @@ use Nowo\DeviceIntelligenceBundle\Messenger\CleanupMessage;
 use Nowo\DeviceIntelligenceBundle\Messenger\RecalculateStabilityHandler;
 use Nowo\DeviceIntelligenceBundle\Messenger\RecalculateStabilityMessage;
 use PHPUnit\Framework\TestCase;
+use Psr\Clock\ClockInterface;
 use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\Messenger\Envelope;
@@ -52,6 +54,20 @@ final class CommandsTest extends TestCase
         );
         $async = new CommandTester(new CleanupCommand($observations, $bus));
         self::assertSame(0, $async->execute(['--async' => true]));
+    }
+
+    public function testCleanupCutoffComesFromTheInjectedClock(): void
+    {
+        $clock = new class implements ClockInterface {
+            public function now(): DateTimeImmutable
+            {
+                return new DateTimeImmutable('2026-10-21T12:00:00+00:00');
+            }
+        };
+        $tester = new CommandTester(new CleanupCommand(new InMemoryObservationRepository(), null, $clock));
+
+        self::assertSame(0, $tester->execute(['--older-than' => 'P1D']));
+        self::assertStringContainsString('2026-10-20T12:00:00+00:00', $tester->getDisplay());
     }
 
     public function testStatsWithInMemory(): void
@@ -86,7 +102,7 @@ final class CommandsTest extends TestCase
 
     public function testDeviceShowMissing(): void
     {
-        $now = new \DateTimeImmutable();
+        $now = new DateTimeImmutable();
         $manager = new DeviceManager(
             new InMemoryDeviceRepository(),
             new InMemoryDeviceUserRepository(),
@@ -99,7 +115,7 @@ final class CommandsTest extends TestCase
 
     public function testUserDevicesEmpty(): void
     {
-        $now = new \DateTimeImmutable();
+        $now = new DateTimeImmutable();
         $manager = new DeviceManager(
             new InMemoryDeviceRepository(),
             new InMemoryDeviceUserRepository(),
@@ -131,7 +147,7 @@ final class CommandsTest extends TestCase
 
     public function testAnalyzeInputDto(): void
     {
-        $input = new AnalysisInput(new \DateTimeImmutable(), SignalBag::empty());
+        $input = new AnalysisInput(new DateTimeImmutable(), SignalBag::empty());
         self::assertSame(1, $input->schemaVersion);
         self::assertTrue($input->highEntropyConsent);
     }

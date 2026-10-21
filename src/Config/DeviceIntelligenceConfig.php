@@ -19,11 +19,17 @@ final class DeviceIntelligenceConfig
     {
     }
 
+    /**
+     * Whether device intelligence is enabled.
+     */
     public function enabled(): bool
     {
         return (bool) $this->config['enabled'];
     }
 
+    /**
+     * Name of the default profile.
+     */
     public function defaultProfileName(): string
     {
         return (string) $this->config['default_profile'];
@@ -55,16 +61,25 @@ final class DeviceIntelligenceConfig
         return $this->config['token_cookie'];
     }
 
+    /**
+     * Lifetime of the device token in seconds.
+     */
     public function tokenTtl(): int
     {
         return (int) $this->config['token_ttl'];
     }
 
+    /**
+     * Whether every request is observed (not only the collect endpoint).
+     */
     public function observeOnEveryRequest(): bool
     {
         return (bool) $this->config['observe_on_every_request'];
     }
 
+    /**
+     * Salt used to hash client IP addresses.
+     */
     public function ipSalt(): string
     {
         return (string) $this->config['ip_salt'];

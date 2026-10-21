@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Signal;
 
+use ArrayIterator;
+use Countable;
+use IteratorAggregate;
+use Traversable;
+
 /**
  * Unique map of signal name → Signal.
  *
- * @implements \IteratorAggregate<string, Signal>
+ * @implements IteratorAggregate<string, Signal>
  */
-final readonly class SignalBag implements \IteratorAggregate, \Countable
+final readonly class SignalBag implements IteratorAggregate, Countable
 {
     /**
      * @param array<string, Signal> $signals
@@ -75,9 +80,9 @@ final readonly class SignalBag implements \IteratorAggregate, \Countable
         return \count($this->signals);
     }
 
-    public function getIterator(): \Traversable
+    public function getIterator(): Traversable
     {
-        return new \ArrayIterator($this->signals);
+        return new ArrayIterator($this->signals);
     }
 
     /**

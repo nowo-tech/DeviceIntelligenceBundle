@@ -21,6 +21,9 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 #[AsCommand(name: 'device-intelligence:device:show', description: 'Show a stored device by ULID')]
 final class DeviceShowCommand extends Command
 {
+    /**
+     * Creates the device show command.
+     */
     public function __construct(
         private DeviceManager $devices,
         private ObservationRepositoryInterface $observations,

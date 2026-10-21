@@ -61,17 +61,23 @@ use Symfony\Component\HttpKernel\DataCollector\DataCollector;
  */
 final class NowoDeviceIntelligenceExtension extends Extension implements PrependExtensionInterface
 {
+    /**
+     * Returns the alias.
+     */
     public function getAlias(): string
     {
         return Configuration::ALIAS;
     }
 
+    /**
+     * Prepends the framework / Twig / Doctrine configuration the bundle relies on.
+     */
     public function prepend(ContainerBuilder $container): void
     {
         if ($container->hasExtension('twig')) {
             $container->prependExtensionConfig('twig', [
                 'paths' => [
-                    \dirname(__DIR__).'/Resources/views' => 'NowoDeviceIntelligenceBundle',
+                    __DIR__.'/../Resources/views' => 'NowoDeviceIntelligenceBundle',
                 ],
             ]);
         }
@@ -87,13 +93,16 @@ final class NowoDeviceIntelligenceExtension extends Extension implements Prepend
                 ],
                 'translator' => [
                     'paths' => [
-                        \dirname(__DIR__).'/Resources/translations',
+                        __DIR__.'/../Resources/translations',
                     ],
                 ],
             ]);
         }
     }
 
+    /**
+     * Processes the configuration and loads the bundle services.
+     */
     public function load(array $configs, ContainerBuilder $container): void
     {
         $configuration = new Configuration();
@@ -107,7 +116,7 @@ final class NowoDeviceIntelligenceExtension extends Extension implements Prepend
             throw new InvalidConfigurationException('nowo_device_intelligence.endpoint.csrf cannot be "none" in the prod environment. Use "origin" or "double_submit".');
         }
 
-        $loader = new PhpFileLoader($container, new FileLocator(\dirname(__DIR__).'/Resources/config'));
+        $loader = new PhpFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.php');
 
         $this->setParameters($container, $config);

@@ -10,6 +10,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\Persistence\ManagerRegistry;
+use LogicException;
 use Nowo\DeviceIntelligence\Trust\TrustedDevice;
 use Nowo\DeviceIntelligence\User\DeviceUserRelation;
 use Nowo\DeviceIntelligence\User\UserIdentifier;
@@ -169,7 +170,7 @@ final class DoctrineRepositoriesWorkerTest extends TestCase
         $registry = $this->createMock(ManagerRegistry::class);
         $registry->method('getManagerForClass')->willReturn(null);
 
-        $this->expectException(\LogicException::class);
+        $this->expectException(LogicException::class);
         $this->expectExceptionMessage(DeviceEntity::class);
         (new DoctrineDeviceRepository($registry, new DeviceMapper()))->countAll();
     }
@@ -184,7 +185,7 @@ final class DoctrineRepositoriesWorkerTest extends TestCase
         $registry->method('getManagerNames')->willReturn([]);
         $registry->expects(self::never())->method('resetManager');
 
-        $this->expectException(\LogicException::class);
+        $this->expectException(LogicException::class);
         (new DoctrineDeviceRepository($registry, new DeviceMapper()))->countAll();
     }
 

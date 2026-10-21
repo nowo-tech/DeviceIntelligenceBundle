@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Tests\Unit;
 
+use DateTimeImmutable;
 use Nowo\DeviceIntelligence\Device\Device;
 use Nowo\DeviceIntelligence\Device\DeviceId;
 use Nowo\DeviceIntelligence\Device\DeviceStatus;
@@ -73,7 +74,7 @@ final class WeightedDeviceMatcherTest extends TestCase
 
     private function observation(string $browser, string $os, string $canvas, string $gpu, bool $audio = true): DeviceObservation
     {
-        $now = new \DateTimeImmutable('2026-08-22T12:00:00Z');
+        $now = new DateTimeImmutable('2026-08-22T12:00:00Z');
         $bag = SignalBag::empty()
             ->with($this->signal(SignalName::Platform, $os, $now))
             ->with($this->signal(SignalName::ClientHints, ['browser' => $browser, 'platform' => $os], $now))
@@ -123,7 +124,7 @@ final class WeightedDeviceMatcherTest extends TestCase
         );
     }
 
-    private function signal(SignalName $name, mixed $value, \DateTimeImmutable $now, float $q = 0.9): Signal
+    private function signal(SignalName $name, mixed $value, DateTimeImmutable $now, float $q = 0.9): Signal
     {
         return new Signal(
             $name,

@@ -16,10 +16,16 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  */
 final class AnalyzeSubscriber implements EventSubscriberInterface
 {
+    /**
+     * Creates the analyze subscriber.
+     */
     public function __construct(private ?DeviceIntelligenceDataCollector $collector = null)
     {
     }
 
+    /**
+     * Returns the subscribed events.
+     */
     public static function getSubscribedEvents(): array
     {
         return [
@@ -27,6 +33,9 @@ final class AnalyzeSubscriber implements EventSubscriberInterface
         ];
     }
 
+    /**
+     * Analyzes a freshly recorded observation.
+     */
     public function onObserved(DeviceObservedEvent $event): void
     {
         $this->collector?->collectAnalysis($event->analysis);

@@ -10,6 +10,7 @@ use Nowo\DeviceIntelligenceBundle\Request\DeviceContext;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\DataCollector\DataCollector;
+use Throwable;
 
 /**
  * Web Profiler panel. Signal values are truncated summaries only.
@@ -19,11 +20,17 @@ use Symfony\Component\HttpKernel\DataCollector\DataCollector;
  */
 final class DeviceIntelligenceDataCollector extends DataCollector
 {
+    /**
+     * Creates the device intelligence data collector.
+     */
     public function __construct(private ?DeviceIntelligenceConfig $config = null)
     {
     }
 
-    public function collect(Request $request, Response $response, ?\Throwable $exception = null): void
+    /**
+     * Collects the device context of the request for the profiler.
+     */
+    public function collect(Request $request, Response $response, ?Throwable $exception = null): void
     {
         unset($response, $exception);
         $cookieName = $this->cookieName();
@@ -47,6 +54,9 @@ final class DeviceIntelligenceDataCollector extends DataCollector
         $this->data['request_path'] = $request->getPathInfo();
     }
 
+    /**
+     * Stores an analysis (and its trust state) for the profiler panel.
+     */
     public function collectAnalysis(Analysis $analysis, bool $trusted = false, string $source = 'request'): void
     {
         $summaries = [];
@@ -82,81 +92,129 @@ final class DeviceIntelligenceDataCollector extends DataCollector
         ];
     }
 
+    /**
+     * Returns the name.
+     */
     public function getName(): string
     {
         return 'nowo_device_intelligence';
     }
 
+    /**
+     * Clears the collected data.
+     */
     public function reset(): void
     {
         $this->data = [];
     }
 
+    /**
+     * Whether a device context was collected.
+     */
     public function hasContext(): bool
     {
         return (bool) ($this->data['has_context'] ?? false);
     }
 
+    /**
+     * Whether the data comes from an AJAX request.
+     */
     public function isFromAjax(): bool
     {
         return 'ajax' === ($this->data['source'] ?? '');
     }
 
+    /**
+     * Whether the device cookie was present on the request.
+     */
     public function isCookiePresent(): bool
     {
         return (bool) ($this->data['cookie_present'] ?? false);
     }
 
+    /**
+     * Returns the cookie name.
+     */
     public function getCookieName(): string
     {
         return (string) ($this->data['cookie_name'] ?? $this->cookieName());
     }
 
+    /**
+     * Returns the request method.
+     */
     public function getRequestMethod(): string
     {
         return (string) ($this->data['request_method'] ?? '');
     }
 
+    /**
+     * Returns the request path.
+     */
     public function getRequestPath(): string
     {
         return (string) ($this->data['request_path'] ?? '');
     }
 
+    /**
+     * Returns the device id.
+     */
     public function getDeviceId(): string
     {
         return (string) ($this->data['device_id'] ?? '');
     }
 
+    /**
+     * Whether it is new.
+     */
     public function isNew(): bool
     {
         return (bool) ($this->data['new'] ?? false);
     }
 
+    /**
+     * Whether it is trusted.
+     */
     public function isTrusted(): bool
     {
         return (bool) ($this->data['trusted'] ?? false);
     }
 
+    /**
+     * Returns the confidence.
+     */
     public function getConfidence(): float
     {
         return (float) ($this->data['confidence'] ?? 0.0);
     }
 
+    /**
+     * Returns the similarity.
+     */
     public function getSimilarity(): float
     {
         return (float) ($this->data['similarity'] ?? 0.0);
     }
 
+    /**
+     * Returns the stability.
+     */
     public function getStability(): float
     {
         return (float) ($this->data['stability'] ?? 0.0);
     }
 
+    /**
+     * Returns the risk.
+     */
     public function getRisk(): int
     {
         return (int) ($this->data['risk'] ?? 0);
     }
 
+    /**
+     * Returns the risk level.
+     */
     public function getRiskLevel(): string
     {
         return (string) ($this->data['risk_level'] ?? '');
@@ -192,11 +250,17 @@ final class DeviceIntelligenceDataCollector extends DataCollector
         return \is_array($timings) ? $timings : [];
     }
 
+    /**
+     * Whether it is degraded.
+     */
     public function isDegraded(): bool
     {
         return (bool) ($this->data['degraded'] ?? false);
     }
 
+    /**
+     * Returns the observation id.
+     */
     public function getObservationId(): string
     {
         return (string) ($this->data['observation_id'] ?? '');

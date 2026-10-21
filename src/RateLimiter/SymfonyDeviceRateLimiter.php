@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\RateLimiter;
 
+use DateInterval;
+use DateTimeImmutable;
+use InvalidArgumentException;
 use Nowo\DeviceIntelligenceBundle\Config\DeviceIntelligenceConfig;
 use Psr\SimpleCache\CacheInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Contracts\Service\ResetInterface;
+use Throwable;
 
 /**
  * Uses Symfony RateLimiter factories when configured; otherwise cache counting.
@@ -32,6 +36,9 @@ final class SymfonyDeviceRateLimiter implements DeviceRateLimiterInterface, Rese
     ) {
     }
 
+    /**
+     * Consumes one token of the device rate limiter and returns whether the call is accepted.
+     */
     public function consume(
         string $policy,
         string $key,
@@ -58,7 +65,7 @@ final class SymfonyDeviceRateLimiter implements DeviceRateLimiterInterface, Rese
 
         try {
             $hits = $this->cache->get($bucket, []);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             $hits = $this->memory[$bucket] ?? [];
         }
         if (!\is_array($hits)) {
@@ -72,13 +79,16 @@ final class SymfonyDeviceRateLimiter implements DeviceRateLimiterInterface, Rese
         $hits[] = $now;
         try {
             $this->cache->set($bucket, $hits, $seconds);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             $this->memory[$bucket] = $hits;
         }
 
         return true;
     }
 
+    /**
+     * Clears the in-memory limiter state.
+     */
     public function reset(): void
     {
         $this->memory = [];
@@ -112,26 +122,26 @@ final class SymfonyDeviceRateLimiter implements DeviceRateLimiterInterface, Rese
      *
      * Accepts the same formats as Symfony RateLimiter (relative date strings and ISO 8601 durations).
      *
-     * @throws \InvalidArgumentException when the interval cannot be parsed or is not positive
+     * @throws InvalidArgumentException when the interval cannot be parsed or is not positive
      */
     public static function intervalToSeconds(string $interval): int
     {
         $value = trim($interval);
         try {
             $parsed = 1 === preg_match('/^P/i', $value)
-                ? new \DateInterval(strtoupper($value))
-                : @\DateInterval::createFromDateString($value);
-        } catch (\Throwable) {
+                ? new DateInterval(strtoupper($value))
+                : @DateInterval::createFromDateString($value);
+        } catch (Throwable) {
             $parsed = false;
         }
-        if (!$parsed instanceof \DateInterval) {
-            throw new \InvalidArgumentException(\sprintf('Invalid rate limit interval "%s".', $interval));
+        if (!$parsed instanceof DateInterval) {
+            throw new InvalidArgumentException(\sprintf('Invalid rate limit interval "%s".', $interval));
         }
 
-        $epoch = new \DateTimeImmutable('@0');
+        $epoch = new DateTimeImmutable('@0');
         $seconds = $epoch->add($parsed)->getTimestamp() - $epoch->getTimestamp();
         if ($seconds < 1) {
-            throw new \InvalidArgumentException(\sprintf('Invalid rate limit interval "%s": it must be a positive duration.', $interval));
+            throw new InvalidArgumentException(\sprintf('Invalid rate limit interval "%s": it must be a positive duration.', $interval));
         }
 
         return $seconds;

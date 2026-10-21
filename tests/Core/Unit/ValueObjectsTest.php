@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Tests\Unit;
 
+use DateTimeImmutable;
 use Nowo\DeviceIntelligence\AnalysisInput;
 use Nowo\DeviceIntelligence\Device\DefaultDeviceLabeler;
 use Nowo\DeviceIntelligence\Device\Device;
@@ -41,7 +42,7 @@ final class ValueObjectsTest extends TestCase
 {
     public function testUlidAndDeviceId(): void
     {
-        $now = new \DateTimeImmutable();
+        $now = new DateTimeImmutable();
         $id = DeviceId::generate($now);
         self::assertTrue(Ulid::isValid($id->value));
         self::assertTrue($id->equals($id));
@@ -111,14 +112,14 @@ final class ValueObjectsTest extends TestCase
         $metrics->increment('x');
         $metrics->timing('y', 1.0);
         $net = new NullNetworkSignalProvider();
-        self::assertSame([], iterator_to_array($net->collect(new AnalysisInput(new \DateTimeImmutable()))));
+        self::assertSame([], iterator_to_array($net->collect(new AnalysisInput(new DateTimeImmutable()))));
         $label = (new DefaultDeviceLabeler())->label(SignalBag::empty());
         self::assertStringContainsString('on', $label);
         $velocity = new InMemoryVelocityEngine();
-        $id = DeviceId::generate(new \DateTimeImmutable());
+        $id = DeviceId::generate(new DateTimeImmutable());
         $device = Device::fromNew(
             $id,
-            new \DateTimeImmutable(),
+            new DateTimeImmutable(),
             CandidateIndexKey::unknown(),
             SignalBag::empty(),
             'Browser on unknown OS',

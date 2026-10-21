@@ -15,6 +15,9 @@ use Symfony\Contracts\EventDispatcher\Event;
  */
 final class NewDeviceDetectedEvent extends Event
 {
+    /**
+     * Creates the new device detected event.
+     */
     public function __construct(public Analysis $analysis)
     {
     }

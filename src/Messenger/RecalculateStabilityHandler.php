@@ -22,12 +22,18 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler]
 final class RecalculateStabilityHandler
 {
+    /**
+     * Creates the recalculate stability handler.
+     */
     public function __construct(
         private DeviceRepositoryInterface $devices,
         private ObservationRepositoryInterface $observations,
     ) {
     }
 
+    /**
+     * Recomputes the stability score of the device.
+     */
     public function __invoke(RecalculateStabilityMessage $message): int
     {
         $targets = [];

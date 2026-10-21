@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Command;
 
+use DateInterval;
 use Nowo\DeviceIntelligence\Port\ObservationRepositoryInterface;
+use Nowo\DeviceIntelligenceBundle\Infrastructure\SystemClock;
 use Nowo\DeviceIntelligenceBundle\Messenger\CleanupMessage;
+use Psr\Clock\ClockInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -21,9 +24,13 @@ use Symfony\Component\Messenger\MessageBusInterface;
 #[AsCommand(name: 'device-intelligence:cleanup', description: 'Delete observations older than a lookback interval')]
 final class CleanupCommand extends Command
 {
+    /**
+     * Creates the cleanup command.
+     */
     public function __construct(
         private ObservationRepositoryInterface $observations,
         private ?MessageBusInterface $bus = null,
+        private ClockInterface $clock = new SystemClock(),
     ) {
         parent::__construct();
     }
@@ -46,7 +53,7 @@ final class CleanupCommand extends Command
             return Command::SUCCESS;
         }
 
-        $cutoff = (new \DateTimeImmutable())->sub(new \DateInterval($spec));
+        $cutoff = $this->clock->now()->sub(new DateInterval($spec));
         $deleted = $this->observations->deleteOlderThan($cutoff);
         $io->success(\sprintf('Deleted %d observation(s) older than %s.', $deleted, $cutoff->format(\DATE_ATOM)));
 

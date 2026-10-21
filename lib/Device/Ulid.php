@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Device;
 
+use DateTimeInterface;
 use Nowo\DeviceIntelligence\Exception\InvalidValueException;
 
 /**
@@ -13,7 +14,7 @@ final readonly class Ulid
 {
     private const string ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 
-    public static function generate(\DateTimeInterface $now): string
+    public static function generate(DateTimeInterface $now): string
     {
         $ms = ((int) $now->format('U')) * 1000 + (int) $now->format('v');
         $time = pack('J', $ms);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Http;
 
+use JsonException;
 use Nowo\DeviceIntelligenceBundle\Config\DeviceIntelligenceConfig;
 use Nowo\DeviceIntelligenceBundle\Http\Exception\CollectValidationException;
 use Psr\SimpleCache\CacheInterface;
@@ -23,6 +24,9 @@ final class CollectRequestValidator
      */
     public const string NONCE_PATTERN = '/^[A-Za-z0-9_-]{8,128}$/';
 
+    /**
+     * Creates the collect request validator.
+     */
     public function __construct(
         private DeviceIntelligenceConfig $config,
         private OriginValidator $origins,
@@ -53,7 +57,7 @@ final class CollectRequestValidator
 
         try {
             $payload = json_decode($raw, true, 512, \JSON_THROW_ON_ERROR);
-        } catch (\JsonException $e) {
+        } catch (JsonException $e) {
             throw new CollectValidationException('Invalid JSON: '.$e->getMessage());
         }
         if (!\is_array($payload)) {

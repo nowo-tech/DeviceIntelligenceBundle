@@ -22,10 +22,16 @@ use Symfony\Component\HttpKernel\KernelEvents;
  */
 final class ControllerAttributeSubscriber implements EventSubscriberInterface
 {
+    /**
+     * Creates the controller attribute subscriber.
+     */
     public function __construct(private DeviceRateLimiterInterface $limiter)
     {
     }
 
+    /**
+     * Returns the subscribed events.
+     */
     public static function getSubscribedEvents(): array
     {
         return [
@@ -33,6 +39,9 @@ final class ControllerAttributeSubscriber implements EventSubscriberInterface
         ];
     }
 
+    /**
+     * Applies the device-intelligence controller attributes of the matched controller.
+     */
     public function onController(ControllerEvent $event): void
     {
         $request = $event->getRequest();

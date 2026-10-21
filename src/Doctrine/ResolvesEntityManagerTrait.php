@@ -7,6 +7,7 @@ namespace Nowo\DeviceIntelligenceBundle\Doctrine;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;
 use Doctrine\Persistence\ManagerRegistry;
+use LogicException;
 
 /**
  * Resolves the entity manager per call and keeps bundle entities out of the identity map.
@@ -34,7 +35,7 @@ trait ResolvesEntityManagerTrait
 
         $manager = $this->em->getManagerForClass($entityClass);
         if (!$manager instanceof EntityManagerInterface) {
-            throw new \LogicException(\sprintf('No Doctrine ORM entity manager is configured for "%s".', $entityClass));
+            throw new LogicException(\sprintf('No Doctrine ORM entity manager is configured for "%s".', $entityClass));
         }
         if ($manager->isOpen()) {
             return $manager;
@@ -50,7 +51,7 @@ trait ResolvesEntityManagerTrait
 
         $manager = $this->em->getManagerForClass($entityClass);
         if (!$manager instanceof EntityManagerInterface) {
-            throw new \LogicException(\sprintf('No Doctrine ORM entity manager is configured for "%s".', $entityClass));
+            throw new LogicException(\sprintf('No Doctrine ORM entity manager is configured for "%s".', $entityClass));
         }
 
         return $manager;

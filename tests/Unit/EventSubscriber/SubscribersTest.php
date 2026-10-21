@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\EventSubscriber;
 
+use DateTimeImmutable;
 use Nowo\DeviceIntelligence\AnalysisInput;
 use Nowo\DeviceIntelligence\DeviceIntelligence;
 use Nowo\DeviceIntelligence\Infrastructure\InMemoryDeviceRepository;
@@ -41,7 +42,7 @@ final class SubscribersTest extends TestCase
             new InMemoryDeviceUserRepository(),
             new InMemoryTrustedDeviceRepository(),
         );
-        $analysis = $engine->analyze(new AnalysisInput(new \DateTimeImmutable(), SignalBag::empty()));
+        $analysis = $engine->analyze(new AnalysisInput(new DateTimeImmutable(), SignalBag::empty()));
         $collector = new DeviceIntelligenceDataCollector();
         $subscriber = new AnalyzeSubscriber($collector);
         $subscriber->onObserved(new DeviceObservedEvent($analysis));
@@ -69,7 +70,7 @@ final class SubscribersTest extends TestCase
             new InMemoryDeviceUserRepository(),
             new InMemoryTrustedDeviceRepository(),
         );
-        $analysis = $engine->analyze(new AnalysisInput(new \DateTimeImmutable(), SignalBag::empty(), '1.1.1.1'));
+        $analysis = $engine->analyze(new AnalysisInput(new DateTimeImmutable(), SignalBag::empty(), '1.1.1.1'));
         $request = Request::create('/');
         $request->attributes->set('_device', new DeviceContext($analysis, true));
         $limiter = $this->createMock(DeviceRateLimiterInterface::class);

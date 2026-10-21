@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\EventSubscriber;
 
+use DateTimeImmutable;
 use Nowo\DeviceIntelligence\AnalysisInput;
 use Nowo\DeviceIntelligence\DeviceIntelligence;
 use Nowo\DeviceIntelligence\Infrastructure\InMemoryDeviceRepository;
@@ -23,6 +24,8 @@ use Nowo\DeviceIntelligenceBundle\Tests\Support\ProcessedConfig;
 use Nowo\DeviceIntelligenceBundle\Tests\Support\Scenario;
 use PHPUnit\Framework\TestCase;
 use Psr\SimpleCache\CacheInterface;
+use RuntimeException;
+use stdClass;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpFoundation\Request;
@@ -51,7 +54,7 @@ final class RequestStateResetSubscriberTest extends TestCase
         $observations = new InMemoryObservationRepository();
         $users = new InMemoryDeviceUserRepository();
         $trusts = new InMemoryTrustedDeviceRepository();
-        $subscriber = new RequestStateResetSubscriber([$devices, $observations, $users, $trusts, new \stdClass()]);
+        $subscriber = new RequestStateResetSubscriber([$devices, $observations, $users, $trusts, new stdClass()]);
 
         $now = Scenario::now();
         $device = Scenario::device($now);
@@ -82,8 +85,8 @@ final class RequestStateResetSubscriberTest extends TestCase
     public function testRateLimiterFallbackIsRequestScoped(): void
     {
         $cache = $this->createMock(CacheInterface::class);
-        $cache->method('get')->willThrowException(new \RuntimeException('redis down'));
-        $cache->method('set')->willThrowException(new \RuntimeException('redis down'));
+        $cache->method('get')->willThrowException(new RuntimeException('redis down'));
+        $cache->method('set')->willThrowException(new RuntimeException('redis down'));
         $limiter = new SymfonyDeviceRateLimiter(ProcessedConfig::object(), $cache);
         $subscriber = new RequestStateResetSubscriber([$limiter]);
 
@@ -103,7 +106,7 @@ final class RequestStateResetSubscriberTest extends TestCase
             new InMemoryDeviceUserRepository(),
             new InMemoryTrustedDeviceRepository(),
         );
-        $analysis = $engine->analyze(new AnalysisInput(new \DateTimeImmutable(), SignalBag::empty(), '1.1.1.1'));
+        $analysis = $engine->analyze(new AnalysisInput(new DateTimeImmutable(), SignalBag::empty(), '1.1.1.1'));
         $collector = new DeviceIntelligenceDataCollector();
         $subscriber = new RequestStateResetSubscriber([$collector]);
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Tests\Unit;
 
+use DateTimeImmutable;
 use Nowo\DeviceIntelligence\Device\Device;
 use Nowo\DeviceIntelligence\Device\DeviceId;
 use Nowo\DeviceIntelligence\Matching\CandidateIndexKey;
@@ -38,7 +39,7 @@ final class RiskEngineTest extends TestCase
 
     private function context(bool $new): RiskContext
     {
-        $now = new \DateTimeImmutable();
+        $now = new DateTimeImmutable();
         $id = DeviceId::generate($now);
         $obs = new DeviceObservation(
             ObservationId::generate($now),

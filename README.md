@@ -1,6 +1,6 @@
 # Device Intelligence Bundle
 
-[![CI](https://github.com/nowo-tech/DeviceIntelligenceBundle/actions/workflows/ci.yml/badge.svg)](https://github.com/nowo-tech/DeviceIntelligenceBundle/actions/workflows/ci.yml) [![Packagist Version](https://img.shields.io/packagist/v/nowo-tech/device-intelligence-bundle.svg?style=flat)](https://packagist.org/packages/nowo-tech/device-intelligence-bundle) [![Packagist Downloads](https://img.shields.io/packagist/dt/nowo-tech/device-intelligence-bundle.svg)](https://packagist.org/packages/nowo-tech/device-intelligence-bundle) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![PHP](https://img.shields.io/badge/PHP-8.3%2B-777BB4?logo=php)](https://php.net) [![Symfony](https://img.shields.io/badge/Symfony-7.4%20%7C%208.0%20%7C%208.1%2B-000000?logo=symfony)](https://symfony.com) [![GitHub stars](https://img.shields.io/github/stars/nowo-tech/device-intelligence-bundle.svg?style=social&label=Star)](https://github.com/nowo-tech/DeviceIntelligenceBundle) [![Coverage](https://img.shields.io/badge/Coverage-99.75%25-brightgreen)](#tests-and-coverage)
+[![CI](https://github.com/nowo-tech/DeviceIntelligenceBundle/actions/workflows/ci.yml/badge.svg)](https://github.com/nowo-tech/DeviceIntelligenceBundle/actions/workflows/ci.yml) [![Packagist Version](https://img.shields.io/packagist/v/nowo-tech/device-intelligence-bundle.svg?style=flat)](https://packagist.org/packages/nowo-tech/device-intelligence-bundle) [![Packagist Downloads](https://img.shields.io/packagist/dt/nowo-tech/device-intelligence-bundle.svg)](https://packagist.org/packages/nowo-tech/device-intelligence-bundle) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![PHP](https://img.shields.io/badge/PHP-8.3%2B-777BB4?logo=php)](https://php.net) [![Symfony](https://img.shields.io/badge/Symfony-7.4%20%7C%208.0%20%7C%208.1%2B-000000?logo=symfony)](https://symfony.com) [![GitHub stars](https://img.shields.io/github/stars/nowo-tech/device-intelligence-bundle.svg?style=social&label=Star)](https://github.com/nowo-tech/DeviceIntelligenceBundle) [![Coverage](https://img.shields.io/badge/Coverage-99.36%25-brightgreen)](#tests-and-coverage)
 
 > ⭐ **Found this useful?** [Install from Packagist](https://packagist.org/packages/nowo-tech/device-intelligence-bundle) · Give it a **star** on [GitHub](https://github.com/nowo-tech/DeviceIntelligenceBundle) so more developers can find it.
 
@@ -92,7 +92,7 @@ return [
 
 ## Tests and coverage
 
-PHP line coverage target: **99.75%** of includable `src/` and `lib/` (gate **≥ 99%**). TypeScript line coverage: **95.60%** (gate **≥ 90%**).
+PHP line coverage: **99.36%** of includable `src/` and `lib/` (gate **≥ 99%**). TypeScript line coverage: **94.28%** (gate **≥ 90%**).
 
 ```bash
 make test
@@ -103,8 +103,8 @@ make qa
 
 | Language | Latest reported |
 | --- | --- |
-| PHP | 99.75% lines (Clover `coverage.xml`, CI) |
-| TypeScript | 95.60% lines (`pnpm run test:coverage`) |
+| PHP | 99.36% lines (2936/2955; Clover `coverage.xml`, CI gate ≥ 99%) |
+| TypeScript | 94.28% lines (495/525; `pnpm run test:coverage`, gate ≥ 90%) |
 
 ## License
 

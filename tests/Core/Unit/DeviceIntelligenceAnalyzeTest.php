@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Tests\Unit;
 
+use DateTimeImmutable;
 use Nowo\DeviceIntelligence\AnalysisInput;
 use Nowo\DeviceIntelligence\DeviceIntelligence;
 use Nowo\DeviceIntelligence\Infrastructure\InMemoryDeviceRepository;
@@ -26,7 +27,7 @@ final class DeviceIntelligenceAnalyzeTest extends TestCase
     public function secondVisitMatchesSameDevice(): void
     {
         $engine = $this->engine();
-        $now = new \DateTimeImmutable('2026-08-22T10:00:00Z');
+        $now = new DateTimeImmutable('2026-08-22T10:00:00Z');
         $signals = SignalFactory::bagFromClient([
             'platform' => ['value' => 'MacIntel', 'quality' => 1],
             'canvas' => ['value' => 'aabbccddeeff0011', 'quality' => 0.95],
@@ -52,7 +53,7 @@ final class DeviceIntelligenceAnalyzeTest extends TestCase
     public function levelZeroStillReturnsAnalysis(): void
     {
         $engine = $this->engine();
-        $now = new \DateTimeImmutable('2026-08-22T10:00:00Z');
+        $now = new DateTimeImmutable('2026-08-22T10:00:00Z');
         $analysis = $engine->analyze(new AnalysisInput($now, SignalBag::empty(), '10.0.0.1', 'Mozilla/5.0 Firefox/128.0'));
 
         self::assertTrue($analysis->degraded());
@@ -64,7 +65,7 @@ final class DeviceIntelligenceAnalyzeTest extends TestCase
     public function browserNormalizerKeepsMajorOnly(): void
     {
         $n = new BrowserVersionNormalizer();
-        $now = new \DateTimeImmutable();
+        $now = new DateTimeImmutable();
         $signal = new Signal(
             SignalName::UserAgent,
             'Mozilla/5.0 Chrome/143.0.7312.58 Safari/537.36',

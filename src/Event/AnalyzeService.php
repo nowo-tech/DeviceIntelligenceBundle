@@ -17,12 +17,18 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  */
 final class AnalyzeService
 {
+    /**
+     * Creates the analyze service.
+     */
     public function __construct(
         private DeviceIntelligence $engine,
         private EventDispatcherInterface $dispatcher,
     ) {
     }
 
+    /**
+     * Runs the device analysis for the input and dispatches the resulting events.
+     */
     public function analyze(AnalysisInput $input): Analysis
     {
         $this->dispatcher->dispatch(new BeforeRiskAssessmentEvent($input));

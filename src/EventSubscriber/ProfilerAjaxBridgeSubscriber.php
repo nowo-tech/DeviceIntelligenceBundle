@@ -12,6 +12,7 @@ use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\HttpKernel\Profiler\Profiler;
 use Symfony\Component\HttpKernel\Profiler\ProfilerStorageInterface;
+use Throwable;
 
 /**
  * Copies collect() analysis onto the HTML request profiler profile when the
@@ -23,6 +24,9 @@ use Symfony\Component\HttpKernel\Profiler\ProfilerStorageInterface;
  */
 final class ProfilerAjaxBridgeSubscriber implements EventSubscriberInterface
 {
+    /**
+     * Creates the profiler ajax bridge subscriber.
+     */
     public function __construct(
         private ?Profiler $profiler = null,
         private ?ProfilerStorageInterface $storage = null,
@@ -30,6 +34,9 @@ final class ProfilerAjaxBridgeSubscriber implements EventSubscriberInterface
     ) {
     }
 
+    /**
+     * Returns the subscribed events.
+     */
     public static function getSubscribedEvents(): array
     {
         return [
@@ -37,6 +44,9 @@ final class ProfilerAjaxBridgeSubscriber implements EventSubscriberInterface
         ];
     }
 
+    /**
+     * Adds the profiler bridge headers to AJAX responses.
+     */
     public function onResponse(ResponseEvent $event): void
     {
         if (!$event->isMainRequest() || null === $this->profiler || null === $this->storage) {
@@ -67,7 +77,7 @@ final class ProfilerAjaxBridgeSubscriber implements EventSubscriberInterface
 
             $collector->collectAnalysis($context->analysis(), $context->isTrusted(), 'ajax');
             $this->storage->write($parent);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->logger?->info('device_intelligence.profiler_ajax_bridge_failed', [
                 'error' => $e->getMessage(),
             ]);

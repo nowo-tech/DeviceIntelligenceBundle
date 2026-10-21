@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Signal;
 
+use DateTimeImmutable;
+
 /**
  * One device characteristic. `value` is already a compact derived representation.
  */
@@ -19,7 +21,7 @@ final readonly class Signal
         public Quality $quality,
         public float $stability,
         public EntropyCategory $entropyCategory,
-        public \DateTimeImmutable $collectedAt,
+        public DateTimeImmutable $collectedAt,
         public SignalSource $source = SignalSource::Client,
         public ?string $qualityReason = null,
     ) {

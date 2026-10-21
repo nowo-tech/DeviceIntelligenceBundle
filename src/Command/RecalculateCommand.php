@@ -22,6 +22,9 @@ use Symfony\Component\Messenger\MessageBusInterface;
 #[AsCommand(name: 'device-intelligence:recalculate', description: 'Recalculate device stability from stored observations')]
 final class RecalculateCommand extends Command
 {
+    /**
+     * Creates the recalculate command.
+     */
     public function __construct(
         private RecalculateStabilityHandler $handler,
         private ?MessageBusInterface $bus = null,

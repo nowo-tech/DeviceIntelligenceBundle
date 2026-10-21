@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Doctrine;
 
+use DateTimeImmutable;
 use Nowo\DeviceIntelligence\Device\Device;
 use Nowo\DeviceIntelligence\Device\DeviceId;
 use Nowo\DeviceIntelligence\Device\DeviceStatus;
@@ -26,6 +27,8 @@ use Nowo\DeviceIntelligenceBundle\Entity\DeviceEntity;
 use Nowo\DeviceIntelligenceBundle\Entity\DeviceObservationEntity;
 use Nowo\DeviceIntelligenceBundle\Entity\DeviceTrustEntity;
 use Nowo\DeviceIntelligenceBundle\Entity\DeviceUserEntity;
+use Nowo\DeviceIntelligenceBundle\Infrastructure\SystemClock;
+use Psr\Clock\ClockInterface;
 
 /**
  * Maps core value objects to Doctrine entities and back. Pure, no EntityManager.
@@ -35,6 +38,17 @@ use Nowo\DeviceIntelligenceBundle\Entity\DeviceUserEntity;
  */
 final class DeviceMapper
 {
+    /**
+     * Creates the mapper; the clock dates signals restored without a stored collection time (REQ-DI-001).
+     */
+    public function __construct(
+        private readonly ClockInterface $clock = new SystemClock(),
+    ) {
+    }
+
+    /**
+     * Maps a domain device onto its Doctrine entity (new or existing).
+     */
     public function toDeviceEntity(Device $device, ?DeviceEntity $entity = null): DeviceEntity
     {
         $entity ??= new DeviceEntity();
@@ -58,6 +72,9 @@ final class DeviceMapper
         return $entity;
     }
 
+    /**
+     * Maps a Doctrine device entity back to the domain device.
+     */
     public function toDevice(DeviceEntity $entity): Device
     {
         return new Device(
@@ -82,6 +99,9 @@ final class DeviceMapper
         );
     }
 
+    /**
+     * Maps a domain observation onto its Doctrine entity (new or existing).
+     */
     public function toObservationEntity(DeviceObservation $observation, ?DeviceObservationEntity $entity = null): DeviceObservationEntity
     {
         $entity ??= new DeviceObservationEntity();
@@ -104,6 +124,9 @@ final class DeviceMapper
         return $entity;
     }
 
+    /**
+     * Maps a Doctrine observation entity back to the domain observation.
+     */
     public function toObservation(DeviceObservationEntity $entity): DeviceObservation
     {
         $ipHash = null;
@@ -134,6 +157,9 @@ final class DeviceMapper
         );
     }
 
+    /**
+     * Maps a device/user relation onto its Doctrine entity (new or existing).
+     */
     public function toUserEntity(DeviceUserRelation $relation, ?DeviceUserEntity $entity = null): DeviceUserEntity
     {
         $entity ??= new DeviceUserEntity();
@@ -146,6 +172,9 @@ final class DeviceMapper
         return $entity;
     }
 
+    /**
+     * Maps a Doctrine device/user entity back to the domain relation.
+     */
     public function toUserRelation(DeviceUserEntity $entity): DeviceUserRelation
     {
         return new DeviceUserRelation(
@@ -157,6 +186,9 @@ final class DeviceMapper
         );
     }
 
+    /**
+     * Maps a trusted-device record onto its Doctrine entity (new or existing).
+     */
     public function toTrustEntity(TrustedDevice $trust, ?DeviceTrustEntity $entity = null): DeviceTrustEntity
     {
         $entity ??= new DeviceTrustEntity();
@@ -171,6 +203,9 @@ final class DeviceMapper
         return $entity;
     }
 
+    /**
+     * Maps a Doctrine trust entity back to the domain trusted device.
+     */
     public function toTrustedDevice(DeviceTrustEntity $entity): TrustedDevice
     {
         return new TrustedDevice(
@@ -198,10 +233,10 @@ final class DeviceMapper
             if (null === $enum) {
                 continue;
             }
-            $collectedAt = new \DateTimeImmutable();
+            $collectedAt = $this->clock->now();
             if (isset($row['collectedAt']) && \is_string($row['collectedAt'])) {
-                $parsed = \DateTimeImmutable::createFromFormat(\DATE_ATOM, $row['collectedAt']);
-                if ($parsed instanceof \DateTimeImmutable) {
+                $parsed = DateTimeImmutable::createFromFormat(\DATE_ATOM, $row['collectedAt']);
+                if ($parsed instanceof DateTimeImmutable) {
                     $collectedAt = $parsed;
                 }
             }

@@ -15,6 +15,9 @@ use Symfony\Contracts\EventDispatcher\Event;
  */
 final class SuspiciousDeviceEvent extends Event
 {
+    /**
+     * Creates the suspicious device event.
+     */
     public function __construct(public Analysis $analysis)
     {
     }

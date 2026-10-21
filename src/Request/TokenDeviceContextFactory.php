@@ -21,6 +21,9 @@ use Nowo\DeviceIntelligence\Risk\RiskScore;
  */
 final class TokenDeviceContextFactory
 {
+    /**
+     * Builds a device context from a stored device and observation (token path).
+     */
     public function fromStored(Device $device, DeviceObservation $observation, bool $trusted): DeviceContext
     {
         $score = new RiskScore($observation->riskScore);

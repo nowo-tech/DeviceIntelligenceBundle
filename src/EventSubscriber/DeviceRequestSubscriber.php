@@ -17,6 +17,7 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Throwable;
 
 /**
  * Sets `_device` from the observation cookie after collect (and whenever
@@ -30,6 +31,9 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
  */
 final class DeviceRequestSubscriber implements EventSubscriberInterface
 {
+    /**
+     * Creates the device request subscriber.
+     */
     public function __construct(
         private DeviceIntelligenceConfig $config,
         private ObservationTokenIssuer $tokens,
@@ -47,6 +51,9 @@ final class DeviceRequestSubscriber implements EventSubscriberInterface
      */
     public const int PRIORITY = 7;
 
+    /**
+     * Returns the subscribed events.
+     */
     public static function getSubscribedEvents(): array
     {
         return [
@@ -54,6 +61,9 @@ final class DeviceRequestSubscriber implements EventSubscriberInterface
         ];
     }
 
+    /**
+     * Observes the main request and exposes the device context on it.
+     */
     public function onRequest(RequestEvent $event): void
     {
         if (!$event->isMainRequest() || !$this->config->enabled()) {
@@ -76,7 +86,7 @@ final class DeviceRequestSubscriber implements EventSubscriberInterface
 
         try {
             $observation = $this->observations->find(new ObservationId($token['observation_id']));
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->logger?->info('device_intelligence.token_lookup_failed', ['error' => $e->getMessage()]);
 
             return;
@@ -94,7 +104,7 @@ final class DeviceRequestSubscriber implements EventSubscriberInterface
         if (\is_object($userObj) && null !== $this->users) {
             try {
                 $trusted = $this->devices->isTrusted($device, $this->users->resolve($userObj));
-            } catch (\Throwable) {
+            } catch (Throwable) {
                 $trusted = false;
             }
         }

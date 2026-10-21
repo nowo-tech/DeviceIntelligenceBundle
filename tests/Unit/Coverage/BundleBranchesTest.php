@@ -70,6 +70,7 @@ use Nowo\DeviceIntelligenceBundle\User\SecurityUserIdentifierResolver;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Psr\SimpleCache\CacheInterface;
+use ReflectionClass;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\Cache\Psr16Cache;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
@@ -566,7 +567,7 @@ final class BundleBranchesTest extends TestCase
         $container->register('cache.app', ArrayAdapter::class);
         $extension = new NowoDeviceIntelligenceExtension();
         $extension->load([['profiles' => ['default' => ['risk' => ['enabled' => false]]]]], $container);
-        $ref = new \ReflectionClass($container);
+        $ref = new ReflectionClass($container);
         $prop = null;
         foreach ($ref->getProperties() as $p) {
             if ('autoconfiguredAttributes' === $p->getName()) {

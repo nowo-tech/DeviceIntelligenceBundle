@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\Trust;
 
+use DateTimeImmutable;
 use Nowo\DeviceIntelligence\AnalysisInput;
 use Nowo\DeviceIntelligence\Device\DeviceManager;
 use Nowo\DeviceIntelligence\DeviceIntelligence;
@@ -28,7 +29,7 @@ final class DeviceTrustServiceTest extends TestCase
 {
     public function testTrustAndRevokeDispatchEvents(): void
     {
-        $now = new \DateTimeImmutable('2026-08-23T12:00:00Z');
+        $now = new DateTimeImmutable('2026-08-23T12:00:00Z');
         $devices = new InMemoryDeviceRepository();
         $users = new InMemoryDeviceUserRepository();
         $trusts = new InMemoryTrustedDeviceRepository();

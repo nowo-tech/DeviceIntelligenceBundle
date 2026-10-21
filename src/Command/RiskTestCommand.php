@@ -7,6 +7,8 @@ namespace Nowo\DeviceIntelligenceBundle\Command;
 use Nowo\DeviceIntelligence\AnalysisInput;
 use Nowo\DeviceIntelligence\Signal\SignalFactory;
 use Nowo\DeviceIntelligenceBundle\Event\AnalyzeService;
+use Nowo\DeviceIntelligenceBundle\Infrastructure\SystemClock;
+use Psr\Clock\ClockInterface;
 
 use const STDIN;
 
@@ -26,8 +28,13 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 #[AsCommand(name: 'device-intelligence:risk:test', description: 'Run risk analysis against a JSON signals file')]
 final class RiskTestCommand extends Command
 {
-    public function __construct(private AnalyzeService $analyze)
-    {
+    /**
+     * Creates the risk test command.
+     */
+    public function __construct(
+        private AnalyzeService $analyze,
+        private ClockInterface $clock = new SystemClock(),
+    ) {
         parent::__construct();
     }
 
@@ -51,7 +58,7 @@ final class RiskTestCommand extends Command
             return Command::FAILURE;
         }
         $signals = isset($decoded['signals']) && \is_array($decoded['signals']) ? $decoded['signals'] : $decoded;
-        $now = new \DateTimeImmutable();
+        $now = $this->clock->now();
         $analysis = $this->analyze->analyze(new AnalysisInput(
             $now,
             SignalFactory::bagFromClient($signals, $now),

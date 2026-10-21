@@ -18,6 +18,9 @@ use Symfony\Component\HttpFoundation\Request;
  */
 final class ObservationTokenIssuer
 {
+    /**
+     * Creates the observation token issuer.
+     */
     public function __construct(
         private DeviceIntelligenceConfig $config,
         private ClockInterface $clock,
@@ -25,6 +28,9 @@ final class ObservationTokenIssuer
     ) {
     }
 
+    /**
+     * Issues the signed, short-lived device token cookie for the observation.
+     */
     public function issue(ObservationId $observationId, string $nonce, bool $secure): Cookie
     {
         $now = $this->clock->now()->getTimestamp();

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Infrastructure;
 
+use DateTimeImmutable;
 use Nowo\DeviceIntelligence\Device\Device;
 use Nowo\DeviceIntelligence\Observation\DeviceObservation;
 use Nowo\DeviceIntelligence\Observation\ObservationId;
@@ -38,7 +39,7 @@ final class InMemoryObservationRepository implements ObservationRepositoryInterf
         return \array_slice($out, 0, $limit);
     }
 
-    public function deleteOlderThan(\DateTimeImmutable $cutoff): int
+    public function deleteOlderThan(DateTimeImmutable $cutoff): int
     {
         $n = 0;
         foreach ($this->rows as $id => $row) {

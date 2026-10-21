@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\RateLimiter;
 
+use InvalidArgumentException;
 use Nowo\DeviceIntelligenceBundle\RateLimiter\SymfonyDeviceRateLimiter;
 use Nowo\DeviceIntelligenceBundle\Tests\Support\ProcessedConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -50,7 +51,7 @@ final class SymfonyDeviceRateLimiterTest extends TestCase
             new Psr16Cache(new ArrayAdapter()),
         );
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid rate limit interval "weird"');
         $limiter->consume('login', 'ip', 'ip', null, null, 5, 'weird');
     }
@@ -93,7 +94,7 @@ final class SymfonyDeviceRateLimiterTest extends TestCase
     #[DataProvider('invalidIntervalProvider')]
     public function testIntervalToSecondsRejectsInvalid(string $interval): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         SymfonyDeviceRateLimiter::intervalToSeconds($interval);
     }
 

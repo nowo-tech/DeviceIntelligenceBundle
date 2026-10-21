@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\Request;
 
+use DateTimeImmutable;
 use Nowo\DeviceIntelligence\AnalysisInput;
 use Nowo\DeviceIntelligence\DeviceIntelligence;
 use Nowo\DeviceIntelligence\Infrastructure\InMemoryDeviceRepository;
@@ -32,7 +33,7 @@ final class TokenAndValueResolverTest extends TestCase
             new InMemoryDeviceUserRepository(),
             new InMemoryTrustedDeviceRepository(),
         );
-        $analysis = $engine->analyze(new AnalysisInput(new \DateTimeImmutable(), SignalBag::empty(), '9.9.9.9'));
+        $analysis = $engine->analyze(new AnalysisInput(new DateTimeImmutable(), SignalBag::empty(), '9.9.9.9'));
         $context = (new TokenDeviceContextFactory())->fromStored($analysis->device(), $analysis->observation(), true);
 
         self::assertTrue($context->isTrusted());

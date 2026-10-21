@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\EventSubscriber;
 
+use DateTimeImmutable;
 use Nowo\DeviceIntelligence\AnalysisInput;
 use Nowo\DeviceIntelligence\Device\DeviceManager;
 use Nowo\DeviceIntelligence\DeviceIntelligence;
@@ -42,7 +43,7 @@ final class RequestAndSecuritySubscriberTest extends TestCase
     public function testDeviceRequestSubscriberSkipsWhenDisabled(): void
     {
         $config = ProcessedConfig::object(['enabled' => false]);
-        $now = new \DateTimeImmutable();
+        $now = new DateTimeImmutable();
         $devices = new InMemoryDeviceRepository();
         $observations = new InMemoryObservationRepository();
         $manager = new DeviceManager(
@@ -82,7 +83,7 @@ final class RequestAndSecuritySubscriberTest extends TestCase
 
     public function testHydratesDeviceFromObservationCookieWhenObserveOnEveryRequestIsFalse(): void
     {
-        $now = new \DateTimeImmutable();
+        $now = new DateTimeImmutable();
         $devices = new InMemoryDeviceRepository();
         $observations = new InMemoryObservationRepository();
         $users = new InMemoryDeviceUserRepository();
@@ -111,7 +112,7 @@ final class RequestAndSecuritySubscriberTest extends TestCase
 
     public function testSecurityLogoutAndFailureWithoutContext(): void
     {
-        $now = new \DateTimeImmutable();
+        $now = new DateTimeImmutable();
         $devices = new InMemoryDeviceRepository();
         $users = new InMemoryDeviceUserRepository();
         $trusts = new InMemoryTrustedDeviceRepository();

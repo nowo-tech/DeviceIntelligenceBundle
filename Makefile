@@ -11,7 +11,7 @@ export DOCKER_CONFIG := $(BUNDLE_ROOT)/.docker
 	check-twig-extra test-with-db test-coverage-with-db coverage-check test-coverage-100 cs-check cs-fix \
 	rector rector-dry phpstan validate-phpdoc qa release-check release-check-demos demo-smoke composer-sync \
 	clean update update-deps validate validate-translations setup-hooks check-no-cursor-coauthor check-open-prs \
-	strip-cursor-coauthor-from-history
+	strip-cursor-coauthor-from-history check-no-raw-html-form igor
 
 help:
 	@echo "Device Intelligence Bundle - Development Commands"
@@ -105,11 +105,15 @@ check-twig-extra:
 	@chmod +x .scripts/check-twig-extra.sh
 	@./.scripts/check-twig-extra.sh
 
+check-no-raw-html-form:
+	@bash .scripts/check-no-raw-html-form.sh
+
 
 # Run Igor worker-state audit (REQ-CS-008)
 igor: ensure-up
 	$(COMPOSE) exec -T php composer igor
-release-check: check-no-cursor-coauthor check-open-prs check-twig-extra ensure-up assets composer-sync cs-fix cs-check rector-dry phpstan igor validate-phpdoc coverage-check test-ts validate-translations release-check-demos
+# REQ-MAKE-002 order.
+release-check: ensure-up check-no-cursor-coauthor check-open-prs check-twig-extra check-no-raw-html-form assets composer-sync cs-fix cs-check rector-dry phpstan igor validate-phpdoc coverage-check test-ts validate-translations release-check-demos
 
 release-check-demos:
 	@if [ -f demo/Makefile ]; then $(MAKE) -C demo release-check; else true; fi
@@ -131,8 +135,7 @@ validate: ensure-up
 	@$(COMPOSE) exec -T $(SERVICE_PHP) composer validate --strict
 
 validate-translations: ensure-up
-	@python3 .scripts/check-translation-key-parity.py
-	@$(COMPOSE) exec -T $(SERVICE_PHP) php -r 'require "vendor/autoload.php"; foreach (glob("src/Resources/translations/*.yaml") as $$f) { Symfony\Component\Yaml\Yaml::parseFile($$f); } echo "YAML parse OK\n";'
+	@$(COMPOSE) exec -T $(SERVICE_PHP) php .scripts/validate-translations.php
 
 setup-hooks:
 	@chmod +x .githooks/pre-commit 2>/dev/null || true

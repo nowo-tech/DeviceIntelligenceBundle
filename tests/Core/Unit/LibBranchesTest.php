@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Tests\Unit;
 
+use DateTimeImmutable;
 use Nowo\DeviceIntelligence\AnalysisInput;
 use Nowo\DeviceIntelligence\Device\DefaultDeviceLabeler;
 use Nowo\DeviceIntelligence\Device\Device;
@@ -525,7 +526,7 @@ final class LibBranchesTest extends TestCase
                     new Quality(1),
                     0.4,
                     SignalName::IpAsn->entropyCategory(),
-                    new \DateTimeImmutable(),
+                    new DateTimeImmutable(),
                     SignalSource::Server,
                 );
             }

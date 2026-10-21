@@ -10,6 +10,9 @@ namespace Nowo\DeviceIntelligenceBundle\Messenger;
  */
 final readonly class CleanupMessage
 {
+    /**
+     * Creates the cleanup message.
+     */
     public function __construct(public string $olderThan = 'P180D')
     {
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Doctrine;
 
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\DeviceIntelligence\Device\DeviceId;
@@ -22,12 +23,18 @@ final class DoctrineTrustedDeviceRepository implements TrustedDeviceRepositoryIn
 {
     use ResolvesEntityManagerTrait;
 
+    /**
+     * Creates the doctrine trusted device repository.
+     */
     public function __construct(
         private EntityManagerInterface|ManagerRegistry $em,
         private DeviceMapper $mapper,
     ) {
     }
 
+    /**
+     * Persists the trusted-device record.
+     */
     public function save(TrustedDevice $trust): void
     {
         $em = $this->entityManager(DeviceTrustEntity::class);
@@ -38,7 +45,10 @@ final class DoctrineTrustedDeviceRepository implements TrustedDeviceRepositoryIn
         $this->detachAll($em, [$entity]);
     }
 
-    public function findActive(DeviceId $deviceId, UserIdentifier $user, \DateTimeImmutable $now): ?TrustedDevice
+    /**
+     * Active (not expired, not revoked) trust of the user on the device at the given time.
+     */
+    public function findActive(DeviceId $deviceId, UserIdentifier $user, DateTimeImmutable $now): ?TrustedDevice
     {
         $em = $this->entityManager(DeviceTrustEntity::class);
         $entity = $this->findEntity($em, $deviceId, $user);
@@ -54,7 +64,10 @@ final class DoctrineTrustedDeviceRepository implements TrustedDeviceRepositoryIn
         return $trust;
     }
 
-    public function forUser(UserIdentifier $user, \DateTimeImmutable $now): array
+    /**
+     * Active trusted devices of the user at the given time.
+     */
+    public function forUser(UserIdentifier $user, DateTimeImmutable $now): array
     {
         $em = $this->entityManager(DeviceTrustEntity::class);
         $rows = $this->withRefresh($em->createQueryBuilder()
@@ -79,6 +92,9 @@ final class DoctrineTrustedDeviceRepository implements TrustedDeviceRepositoryIn
         return $out;
     }
 
+    /**
+     * Number of stored trusted-device records.
+     */
     public function countAll(): int
     {
         return (int) $this->entityManager(DeviceTrustEntity::class)->createQueryBuilder()

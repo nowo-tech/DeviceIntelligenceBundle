@@ -16,6 +16,9 @@ use Symfony\Contracts\EventDispatcher\Event;
  */
 final class DeviceTrustedEvent extends Event
 {
+    /**
+     * Creates the device trusted event.
+     */
     public function __construct(
         public Device $device,
         public UserIdentifier $user,

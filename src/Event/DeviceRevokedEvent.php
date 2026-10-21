@@ -16,6 +16,9 @@ use Symfony\Contracts\EventDispatcher\Event;
  */
 final class DeviceRevokedEvent extends Event
 {
+    /**
+     * Creates the device revoked event.
+     */
     public function __construct(
         public Device $device,
         public UserIdentifier $user,

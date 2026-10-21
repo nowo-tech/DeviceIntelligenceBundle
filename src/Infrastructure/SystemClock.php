@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Infrastructure;
 
+use DateTimeImmutable;
 use Psr\Clock\ClockInterface;
 
 /**
@@ -14,8 +15,11 @@ use Psr\Clock\ClockInterface;
  */
 final class SystemClock implements ClockInterface
 {
-    public function now(): \DateTimeImmutable
+    /**
+     * Current system time.
+     */
+    public function now(): DateTimeImmutable
     {
-        return new \DateTimeImmutable();
+        return new DateTimeImmutable();
     }
 }

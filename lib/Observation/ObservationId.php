@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Observation;
 
+use DateTimeInterface;
 use Nowo\DeviceIntelligence\Device\Ulid;
 use Nowo\DeviceIntelligence\Exception\InvalidValueException;
+use Stringable;
 
-final readonly class ObservationId implements \Stringable
+final readonly class ObservationId implements Stringable
 {
     public function __construct(public string $value)
     {
@@ -16,7 +18,7 @@ final readonly class ObservationId implements \Stringable
         }
     }
 
-    public static function generate(\DateTimeInterface $now): self
+    public static function generate(DateTimeInterface $now): self
     {
         return new self(Ulid::generate($now));
     }

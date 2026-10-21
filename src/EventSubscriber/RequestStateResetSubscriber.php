@@ -28,6 +28,9 @@ final class RequestStateResetSubscriber implements EventSubscriberInterface
     {
     }
 
+    /**
+     * Returns the subscribed events.
+     */
     public static function getSubscribedEvents(): array
     {
         return [
@@ -35,6 +38,9 @@ final class RequestStateResetSubscriber implements EventSubscriberInterface
         ];
     }
 
+    /**
+     * Clears per-request state at the start of each main request (worker mode).
+     */
     public function onRequest(RequestEvent $event): void
     {
         if (!$event->isMainRequest()) {

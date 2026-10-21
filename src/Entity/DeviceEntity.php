@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Entity;
 
+use DateTimeImmutable;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -24,10 +25,10 @@ final class DeviceEntity
     private string $id = '';
 
     #[ORM\Column(name: 'first_seen_at', type: Types::DATETIME_IMMUTABLE)]
-    private \DateTimeImmutable $firstSeenAt;
+    private DateTimeImmutable $firstSeenAt;
 
     #[ORM\Column(name: 'last_seen_at', type: Types::DATETIME_IMMUTABLE)]
-    private \DateTimeImmutable $lastSeenAt;
+    private DateTimeImmutable $lastSeenAt;
 
     #[ORM\Column(name: 'observation_count', type: Types::INTEGER)]
     private int $observationCount = 0;
@@ -70,161 +71,248 @@ final class DeviceEntity
     #[ORM\Column(name: 'last_signals', type: Types::JSON)]
     private array $lastSignals = [];
 
+    /**
+     * Creates the device entity.
+     */
     public function __construct()
     {
-        $now = new \DateTimeImmutable();
+        $now = new DateTimeImmutable();
         $this->firstSeenAt = $now;
         $this->lastSeenAt = $now;
     }
 
+    /**
+     * Returns the id.
+     */
     public function getId(): string
     {
         return $this->id;
     }
 
+    /**
+     * Sets the id.
+     */
     public function setId(string $id): void
     {
         // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->id = $id;
     }
 
-    public function getFirstSeenAt(): \DateTimeImmutable
+    /**
+     * Returns the first seen at.
+     */
+    public function getFirstSeenAt(): DateTimeImmutable
     {
         return $this->firstSeenAt;
     }
 
-    public function setFirstSeenAt(\DateTimeImmutable $firstSeenAt): void
+    /**
+     * Sets the first seen at.
+     */
+    public function setFirstSeenAt(DateTimeImmutable $firstSeenAt): void
     {
         // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->firstSeenAt = $firstSeenAt;
     }
 
-    public function getLastSeenAt(): \DateTimeImmutable
+    /**
+     * Returns the last seen at.
+     */
+    public function getLastSeenAt(): DateTimeImmutable
     {
         return $this->lastSeenAt;
     }
 
-    public function setLastSeenAt(\DateTimeImmutable $lastSeenAt): void
+    /**
+     * Sets the last seen at.
+     */
+    public function setLastSeenAt(DateTimeImmutable $lastSeenAt): void
     {
         // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->lastSeenAt = $lastSeenAt;
     }
 
+    /**
+     * Returns the observation count.
+     */
     public function getObservationCount(): int
     {
         return $this->observationCount;
     }
 
+    /**
+     * Sets the observation count.
+     */
     public function setObservationCount(int $observationCount): void
     {
         // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->observationCount = $observationCount;
     }
 
+    /**
+     * Returns the confidence.
+     */
     public function getConfidence(): float
     {
         return $this->confidence;
     }
 
+    /**
+     * Sets the confidence.
+     */
     public function setConfidence(float $confidence): void
     {
         // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->confidence = $confidence;
     }
 
+    /**
+     * Returns the stability.
+     */
     public function getStability(): float
     {
         return $this->stability;
     }
 
+    /**
+     * Sets the stability.
+     */
     public function setStability(float $stability): void
     {
         // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->stability = $stability;
     }
 
+    /**
+     * Returns the status.
+     */
     public function getStatus(): string
     {
         return $this->status;
     }
 
+    /**
+     * Sets the status.
+     */
     public function setStatus(string $status): void
     {
         // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->status = $status;
     }
 
+    /**
+     * Returns the os family.
+     */
     public function getOsFamily(): string
     {
         return $this->osFamily;
     }
 
+    /**
+     * Sets the os family.
+     */
     public function setOsFamily(string $osFamily): void
     {
         // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->osFamily = $osFamily;
     }
 
+    /**
+     * Returns the browser family.
+     */
     public function getBrowserFamily(): string
     {
         return $this->browserFamily;
     }
 
+    /**
+     * Sets the browser family.
+     */
     public function setBrowserFamily(string $browserFamily): void
     {
         // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->browserFamily = $browserFamily;
     }
 
+    /**
+     * Returns the gpu family.
+     */
     public function getGpuFamily(): string
     {
         return $this->gpuFamily;
     }
 
+    /**
+     * Sets the gpu family.
+     */
     public function setGpuFamily(string $gpuFamily): void
     {
         // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->gpuFamily = $gpuFamily;
     }
 
+    /**
+     * Returns the screen class.
+     */
     public function getScreenClass(): string
     {
         return $this->screenClass;
     }
 
+    /**
+     * Sets the screen class.
+     */
     public function setScreenClass(string $screenClass): void
     {
         // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->screenClass = $screenClass;
     }
 
+    /**
+     * Returns the timezone.
+     */
     public function getTimezone(): string
     {
         return $this->timezone;
     }
 
+    /**
+     * Sets the timezone.
+     */
     public function setTimezone(string $timezone): void
     {
         // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->timezone = $timezone;
     }
 
+    /**
+     * Returns the blocking key.
+     */
     public function getBlockingKey(): string
     {
         return $this->blockingKey;
     }
 
+    /**
+     * Sets the blocking key.
+     */
     public function setBlockingKey(string $blockingKey): void
     {
         // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->blockingKey = $blockingKey;
     }
 
+    /**
+     * Returns the label.
+     */
     public function getLabel(): string
     {
         return $this->label;
     }
 
+    /**
+     * Sets the label.
+     */
     public function setLabel(string $label): void
     {
         // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service

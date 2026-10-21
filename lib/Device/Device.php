@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligence\Device;
 
+use DateTimeImmutable;
 use Nowo\DeviceIntelligence\Matching\CandidateIndexKey;
 use Nowo\DeviceIntelligence\Matching\Confidence;
 use Nowo\DeviceIntelligence\Observation\DeviceObservation;
@@ -17,8 +18,8 @@ final readonly class Device
      */
     public function __construct(
         public DeviceId $id,
-        public \DateTimeImmutable $firstSeenAt,
-        public \DateTimeImmutable $lastSeenAt,
+        public DateTimeImmutable $firstSeenAt,
+        public DateTimeImmutable $lastSeenAt,
         public int $observationCount,
         public Confidence $confidence,
         public Stability $stability,
@@ -36,7 +37,7 @@ final readonly class Device
     }
 
     public function withObservation(
-        \DateTimeImmutable $seenAt,
+        DateTimeImmutable $seenAt,
         Confidence $confidence,
         Stability $stability,
         CandidateIndexKey $indexKey,
@@ -99,7 +100,7 @@ final readonly class Device
 
     public static function fromNew(
         DeviceId $id,
-        \DateTimeImmutable $now,
+        DateTimeImmutable $now,
         CandidateIndexKey $key,
         SignalBag $signals,
         string $label,

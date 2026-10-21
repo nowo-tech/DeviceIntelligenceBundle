@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Doctrine;
 
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\DeviceIntelligence\Device\Device;
@@ -22,12 +23,18 @@ final class DoctrineDeviceRepository implements DeviceRepositoryInterface
 {
     use ResolvesEntityManagerTrait;
 
+    /**
+     * Creates the doctrine device repository.
+     */
     public function __construct(
         private EntityManagerInterface|ManagerRegistry $em,
         private DeviceMapper $mapper,
     ) {
     }
 
+    /**
+     * Loads a device by id.
+     */
     public function find(DeviceId $id): ?Device
     {
         $em = $this->entityManager(DeviceEntity::class);
@@ -41,6 +48,9 @@ final class DoctrineDeviceRepository implements DeviceRepositoryInterface
         return $device;
     }
 
+    /**
+     * Persists the device.
+     */
     public function save(Device $device): void
     {
         $em = $this->entityManager(DeviceEntity::class);
@@ -51,13 +61,16 @@ final class DoctrineDeviceRepository implements DeviceRepositoryInterface
         $this->detachAll($em, [$entity]);
     }
 
+    /**
+     * Returns stored devices that may match the given fingerprint signals.
+     */
     public function findCandidates(
         string $osFamily,
         string $browserFamily,
         ?string $timezone,
         ?string $gpuFamily,
         int $limit,
-        \DateTimeImmutable $since,
+        DateTimeImmutable $since,
     ): array {
         $em = $this->entityManager(DeviceEntity::class);
         $qb = $em->createQueryBuilder()
@@ -92,6 +105,9 @@ final class DoctrineDeviceRepository implements DeviceRepositoryInterface
         return $out;
     }
 
+    /**
+     * Number of stored devices.
+     */
     public function countAll(): int
     {
         return (int) $this->entityManager(DeviceEntity::class)->createQueryBuilder()

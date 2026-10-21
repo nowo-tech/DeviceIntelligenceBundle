@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\DependencyInjection;
 
+use InvalidArgumentException;
 use Nowo\DeviceIntelligence\Matching\MatchingWeights;
 use Nowo\DeviceIntelligenceBundle\RateLimiter\SymfonyDeviceRateLimiter;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
@@ -64,6 +65,9 @@ final class Configuration implements ConfigurationInterface
         'trusted_device',
     ];
 
+    /**
+     * Returns the config tree builder.
+     */
     public function getConfigTreeBuilder(): TreeBuilder
     {
         $treeBuilder = new TreeBuilder(self::ALIAS);
@@ -314,7 +318,7 @@ final class Configuration implements ConfigurationInterface
                                     ->ifTrue(static function (mixed $v): bool {
                                         try {
                                             SymfonyDeviceRateLimiter::intervalToSeconds((string) $v);
-                                        } catch (\InvalidArgumentException) {
+                                        } catch (InvalidArgumentException) {
                                             return true;
                                         }
 

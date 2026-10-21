@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Nowo\DeviceIntelligence\Privacy;
 
 use Nowo\DeviceIntelligence\Exception\InvalidValueException;
+use Stringable;
 
-final readonly class IpHash implements \Stringable
+final readonly class IpHash implements Stringable
 {
     public function __construct(public string $value)
     {

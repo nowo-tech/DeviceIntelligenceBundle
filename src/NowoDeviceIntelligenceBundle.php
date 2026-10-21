@@ -18,6 +18,9 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
  */
 final class NowoDeviceIntelligenceBundle extends Bundle
 {
+    /**
+     * Registers the bundle compiler passes.
+     */
     public function build(ContainerBuilder $container): void
     {
         $entityDir = __DIR__.'/Entity';
@@ -29,6 +32,9 @@ final class NowoDeviceIntelligenceBundle extends Bundle
         }
     }
 
+    /**
+     * Returns the container extension.
+     */
     public function getContainerExtension(): ExtensionInterface
     {
         if (!$this->extension instanceof ExtensionInterface) {

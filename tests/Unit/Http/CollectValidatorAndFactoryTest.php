@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\Http;
 
+use DateTimeImmutable;
 use Nowo\DeviceIntelligence\Infrastructure\FrozenClock;
 use Nowo\DeviceIntelligence\Privacy\PrivacyContext;
 use Nowo\DeviceIntelligence\Privacy\PrivacyMode;
@@ -77,7 +78,7 @@ final class CollectValidatorAndFactoryTest extends TestCase
     public function testAnalysisInputFactoryMapsPayload(): void
     {
         $config = ProcessedConfig::object();
-        $now = new \DateTimeImmutable('2026-08-23T12:00:00Z');
+        $now = new DateTimeImmutable('2026-08-23T12:00:00Z');
         $factory = new AnalysisInputFactory($config, new FrozenClock($now), new PrivacyContext(PrivacyMode::Balanced), 'secret');
         $request = Request::create('/_device/collect', 'POST', server: [
             'REMOTE_ADDR' => '203.0.113.9',

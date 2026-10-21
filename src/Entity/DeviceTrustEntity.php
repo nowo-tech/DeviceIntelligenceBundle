@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Entity;
 
+use DateTimeImmutable;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -31,13 +32,13 @@ final class DeviceTrustEntity
     private string $userIdentifier = '';
 
     #[ORM\Column(name: 'trusted_at', type: Types::DATETIME_IMMUTABLE)]
-    private \DateTimeImmutable $trustedAt;
+    private DateTimeImmutable $trustedAt;
 
     #[ORM\Column(name: 'expires_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
-    private ?\DateTimeImmutable $expiresAt = null;
+    private ?DateTimeImmutable $expiresAt = null;
 
     #[ORM\Column(name: 'revoked_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
-    private ?\DateTimeImmutable $revokedAt = null;
+    private ?DateTimeImmutable $revokedAt = null;
 
     #[ORM\Column(name: 'label', type: Types::STRING, length: 191)]
     private string $label = '';
@@ -45,93 +46,144 @@ final class DeviceTrustEntity
     #[ORM\Column(name: 'granted_by', type: Types::STRING, length: 32)]
     private string $grantedBy = 'user';
 
+    /**
+     * Creates the device trust entity.
+     */
     public function __construct()
     {
-        $this->trustedAt = new \DateTimeImmutable();
+        $this->trustedAt = new DateTimeImmutable();
     }
 
+    /**
+     * Returns the id.
+     */
     public function getId(): ?int
     {
         return $this->id;
     }
 
+    /**
+     * Sets the id.
+     */
     public function setId(?int $id): void
     {
         // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->id = $id;
     }
 
+    /**
+     * Returns the device id.
+     */
     public function getDeviceId(): string
     {
         return $this->deviceId;
     }
 
+    /**
+     * Sets the device id.
+     */
     public function setDeviceId(string $deviceId): void
     {
         // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->deviceId = $deviceId;
     }
 
+    /**
+     * Returns the user identifier.
+     */
     public function getUserIdentifier(): string
     {
         return $this->userIdentifier;
     }
 
+    /**
+     * Sets the user identifier.
+     */
     public function setUserIdentifier(string $userIdentifier): void
     {
         // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->userIdentifier = $userIdentifier;
     }
 
-    public function getTrustedAt(): \DateTimeImmutable
+    /**
+     * Returns the trusted at.
+     */
+    public function getTrustedAt(): DateTimeImmutable
     {
         return $this->trustedAt;
     }
 
-    public function setTrustedAt(\DateTimeImmutable $trustedAt): void
+    /**
+     * Sets the trusted at.
+     */
+    public function setTrustedAt(DateTimeImmutable $trustedAt): void
     {
         // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->trustedAt = $trustedAt;
     }
 
-    public function getExpiresAt(): ?\DateTimeImmutable
+    /**
+     * Returns the expires at.
+     */
+    public function getExpiresAt(): ?DateTimeImmutable
     {
         return $this->expiresAt;
     }
 
-    public function setExpiresAt(?\DateTimeImmutable $expiresAt): void
+    /**
+     * Sets the expires at.
+     */
+    public function setExpiresAt(?DateTimeImmutable $expiresAt): void
     {
         // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->expiresAt = $expiresAt;
     }
 
-    public function getRevokedAt(): ?\DateTimeImmutable
+    /**
+     * Returns the revoked at.
+     */
+    public function getRevokedAt(): ?DateTimeImmutable
     {
         return $this->revokedAt;
     }
 
-    public function setRevokedAt(?\DateTimeImmutable $revokedAt): void
+    /**
+     * Sets the revoked at.
+     */
+    public function setRevokedAt(?DateTimeImmutable $revokedAt): void
     {
         // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->revokedAt = $revokedAt;
     }
 
+    /**
+     * Returns the label.
+     */
     public function getLabel(): string
     {
         return $this->label;
     }
 
+    /**
+     * Sets the label.
+     */
     public function setLabel(string $label): void
     {
         // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service
         $this->label = $label;
     }
 
+    /**
+     * Returns the granted by.
+     */
     public function getGrantedBy(): string
     {
         return $this->grantedBy;
     }
 
+    /**
+     * Sets the granted by.
+     */
     public function setGrantedBy(string $grantedBy): void
     {
         // @igor-ignore - Doctrine entity instance state; not a FrankenPHP shared service

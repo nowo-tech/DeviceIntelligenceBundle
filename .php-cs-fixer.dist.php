@@ -20,6 +20,13 @@ return (new PhpCsFixer\Config())
         'fully_qualified_strict_types' => [
             'import_symbols' => true,
         ],
+        // Global classes too (`use DateTimeImmutable;` instead of `new \DateTimeImmutable`); native functions and
+        // constants keep the @Symfony:risky leading-backslash form.
+        'global_namespace_import' => [
+            'import_classes' => true,
+            'import_constants' => false,
+            'import_functions' => false,
+        ],
         'no_unused_imports' => true,
         'ordered_imports' => ['sort_algorithm' => 'alpha'],
         'trailing_comma_in_multiline' => ['elements' => ['arrays']],

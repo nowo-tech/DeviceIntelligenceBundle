@@ -18,6 +18,7 @@
 /coverage-ts
 /coverage.xml
 /coverage-php.txt
+/coverage-output.txt
 /coverage-ts.txt
 
 # PHP tool caches
