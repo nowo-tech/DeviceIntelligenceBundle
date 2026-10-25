@@ -10,7 +10,7 @@ export class TimezoneCollector implements Collector {
   async collect(ctx: CollectorContext): Promise<Signal> {
     throwIfAborted(ctx);
 
-    let timeZone = 'UTC';
+    let timeZone: string;
     try {
       timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
     } catch {

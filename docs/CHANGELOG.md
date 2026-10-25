@@ -27,6 +27,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Developer tooling (REQ-CS-001):** `make validate-phpdoc` is read-only: it fails when a class or public method in `src/` has no PHPDoc block (the former script added `@return` tags that `cs-fix` (`no_superfluous_phpdoc_tags`) removes again).
+- **Assets:** reproducible bundle build. `__DEVICE_INTELLIGENCE_BUILD_TIME__` now holds a build id (a hash of the TypeScript/CSS sources and `pnpm-lock.yaml`) instead of the build time, so rebuilding unchanged sources (`make assets`, `make release-check`) no longer rewrites the committed JS; the console line reads `script loaded, build: <id>`.
+- Developer tooling: `pnpm run lint` passes again (no useless initial assignment in the timezone collector).
+
 ## [1.4.0] - 2026-10-21
 
 Wave-2 REQ compliance: documented public API, injectable clock, enforced coverage gate with lib/ instrumented, PHP translation parity. See [UPGRADING](UPGRADING.md#to-140).
