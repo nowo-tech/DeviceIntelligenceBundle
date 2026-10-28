@@ -14,6 +14,7 @@ Thank you for your interest in contributing to Device Intelligence Bundle! This 
 - [License](#license)
 - [Git hooks (REQ-GIT-001)](#git-hooks-req-git-001)
 - [Cursor Agent (REQ-IDE-006)](#cursor-agent-req-ide-006)
+- [End-to-end tests and screenshots (REQ-DEMO-013)](#end-to-end-tests-and-screenshots-req-demo-013)
 
 ## Code of Conduct
 
@@ -129,3 +130,14 @@ Contributors using Cursor Agent on this repository should:
 ```
 
 Do **not** use `"steer"` as the org default: steer interrupts the running agent as soon as a follow-up is sent.
+
+## End-to-end tests and screenshots (REQ-DEMO-013)
+
+The Symfony 8 demo ships a Playwright suite in `demo/symfony8/e2e/` (official Playwright image, nothing to install on the host):
+
+```bash
+make -C demo/symfony8 test-e2e          # starts the demo if needed, runs the happy-path specs
+make -C demo/symfony8 demo-screenshots  # recaptures docs/images/demo/*.webp (PNG → WebP via sharp)
+```
+
+The happy path waits for the browser `collect()` call, checks the resolved device (ID, risk, confidence), pays in the Checkout case and trusts the browser after signing in as `alice`. Refresh the screenshots when the demo UI changes and commit only the `.webp` files.

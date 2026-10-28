@@ -14,6 +14,19 @@ This bundle is **FrankenPHP worker mode friendly**.
 
 Worker mode is supported including `reset_kernel: false`; see [docs/FRANKENPHP-WORKER-AUDIT.md](docs/FRANKENPHP-WORKER-AUDIT.md).
 
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/images/demo/device-overview.webp" alt="Device Intelligence demo: device ID, risk score, match confidence and the browser collect() response" />
+      <br /><sub>Browser collect() — device ID, risk score and match confidence</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/images/demo/trusted-device.webp" alt="Device Intelligence demo: signed-in user trusts the current browser for 90 days" />
+      <br /><sub>Trusted devices — signed-in user trusts this browser for 90 days</sub>
+    </td>
+  </tr>
+</table>
+
 ## Features
 
 - Weighted matching (no `sha256(all_signals)` identity hash)
@@ -53,6 +66,10 @@ return [
 - PHP `>=8.3 <8.6`
 - Symfony 7.4, 8.0, and 8.1+
 - Optional: Doctrine ORM (default persistence), Messenger, Twig / Web Profiler
+
+## Demo
+
+`make -C demo up-symfony8`, then open http://localhost:8038 (`PORT` in `demo/symfony8/.env`). Playwright e2e: `make -C demo/symfony8 test-e2e`; refresh the README screenshots with `make -C demo/symfony8 demo-screenshots` (see [CONTRIBUTING](docs/CONTRIBUTING.md#end-to-end-tests-and-screenshots-req-demo-013)).
 
 ## Documentation
 
