@@ -27,9 +27,9 @@ final class TwigPathsPass implements CompilerPassInterface
         if ($container->hasParameter('kernel.project_dir')) {
             $projectDirParam = $container->getParameter('kernel.project_dir');
             if (\is_string($projectDirParam)) {
-                $projectDir = \rtrim($projectDirParam, '/\\');
+                $projectDir = rtrim($projectDirParam, '/\\');
                 $overridePath = $projectDir.'/templates/bundles/NowoDeviceIntelligenceBundle';
-                if (\is_dir($overridePath)) {
+                if (is_dir($overridePath)) {
                     // @igor-ignore - Container compile-time DI mutation; not runtime worker state.
                     $definition->addMethodCall('prependPath', [$overridePath, self::TWIG_NAMESPACE]);
                 }
