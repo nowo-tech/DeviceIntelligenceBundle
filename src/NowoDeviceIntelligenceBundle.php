@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\DeviceIntelligenceBundle;
 
 use Doctrine\Bundle\DoctrineBundle\DependencyInjection\Compiler\DoctrineOrmMappingsPass;
+use Nowo\DeviceIntelligenceBundle\DependencyInjection\Compiler\TwigPathsPass;
 use Nowo\DeviceIntelligenceBundle\DependencyInjection\NowoDeviceIntelligenceExtension;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
@@ -23,6 +24,9 @@ final class NowoDeviceIntelligenceBundle extends Bundle
      */
     public function build(ContainerBuilder $container): void
     {
+        // REQ-TWIG-001: templates/bundles/NowoDeviceIntelligenceBundle/ first, then the bundle views.
+        $container->addCompilerPass(new TwigPathsPass());
+
         $entityDir = __DIR__.'/Entity';
         if (is_dir($entityDir) && class_exists(DoctrineOrmMappingsPass::class)) {
             $container->addCompilerPass(DoctrineOrmMappingsPass::createAttributeMappingDriver(

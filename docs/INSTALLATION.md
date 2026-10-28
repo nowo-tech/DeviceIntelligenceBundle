@@ -17,6 +17,8 @@
 
 - PHP `>=8.3 <8.6`
 - Symfony `^7.4` or `^8.0` (covers 8.1+)
+- Twig Extra: `twig/extra-bundle` and `twig/string-extra` (required by the bundle and installed with it, REQ-TWIG-004).
+  Without Flex, register `Twig\Extra\TwigExtraBundle\TwigExtraBundle` in `config/bundles.php`
 
 ## Composer
 
@@ -104,17 +106,23 @@ Install `pentatrion/vite-bundle` and `vite-plugin-symfony`, then import the sour
 
 ## Twig template overrides
 
-Profiler (and any future) templates live under `src/Resources/views/` with namespace **`NowoDeviceIntelligenceBundle`**.
+Templates live under `src/Resources/views/` with namespace **`NowoDeviceIntelligenceBundle`**. `TwigPathsPass` registers
+`templates/bundles/NowoDeviceIntelligenceBundle/` first (when it exists) and then the bundle views, so application files
+**always win**.
 
-Override from the host app:
+| `<subpath>` | Purpose |
+| --- | --- |
+| `Collector/device_intelligence.html.twig` | Web profiler panel and toolbar item (`nowo_device_intelligence`) |
+| `Icon/device-intelligence.svg` | Icon used by the profiler panel |
 
-```
-templates/bundles/NowoDeviceIntelligenceBundle/Collector/device_intelligence.html.twig
-```
+**Procedure:** copy `vendor/nowo-tech/device-intelligence-bundle/src/Resources/views/<subpath>` to
+`templates/bundles/NowoDeviceIntelligenceBundle/<subpath>`, edit it, then `php bin/console cache:clear`. Logical names:
+`@NowoDeviceIntelligenceBundle/<subpath>`.
 
-A full-file override hides vendor updates for that path until you merge them. Prefer small diffs.
-
-Logical names: `@NowoDeviceIntelligenceBundle/Collector/device_intelligence.html.twig`.
+**Override vs upgrade (freeze rule).** An override does not pick up vendor changes for that `<subpath>` until you remove
+or merge it: the file stays frozen on every `composer update` while the rest of the bundle upgrades. The panel is a dev
+tool, so prefer leaving it as is and reading the data through the collector service or the events. To recover the vendor
+version, delete the override, clear the cache and diff your copy against the new vendor file before re-applying changes.
 
 ## Optional packages
 

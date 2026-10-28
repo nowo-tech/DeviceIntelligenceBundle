@@ -74,14 +74,6 @@ final class NowoDeviceIntelligenceExtension extends Extension implements Prepend
      */
     public function prepend(ContainerBuilder $container): void
     {
-        if ($container->hasExtension('twig')) {
-            $container->prependExtensionConfig('twig', [
-                'paths' => [
-                    __DIR__.'/../Resources/views' => 'NowoDeviceIntelligenceBundle',
-                ],
-            ]);
-        }
-
         if ($container->hasExtension('framework')) {
             $container->prependExtensionConfig('framework', [
                 'assets' => [

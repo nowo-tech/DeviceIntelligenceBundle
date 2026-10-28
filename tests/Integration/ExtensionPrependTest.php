@@ -7,6 +7,7 @@ namespace Nowo\DeviceIntelligenceBundle\Tests\Integration;
 use Nowo\DeviceIntelligence\DeviceIntelligence;
 use Nowo\DeviceIntelligence\Infrastructure\InMemoryDeviceRepository;
 use Nowo\DeviceIntelligence\Port\DeviceRepositoryInterface;
+use Nowo\DeviceIntelligenceBundle\DependencyInjection\Compiler\TwigPathsPass;
 use Nowo\DeviceIntelligenceBundle\DependencyInjection\Configuration;
 use Nowo\DeviceIntelligenceBundle\DependencyInjection\NowoDeviceIntelligenceExtension;
 use Nowo\DeviceIntelligenceBundle\Doctrine\DoctrineDeviceRepository;
@@ -60,8 +61,8 @@ final class ExtensionPrependTest extends TestCase
             '/Resources/translations',
             $framework[0]['translator']['paths'][0],
         );
-        $twig = $container->getExtensionConfig('twig');
-        self::assertContains('NowoDeviceIntelligenceBundle', $twig[0]['paths']);
+        // Twig paths are registered by TwigPathsPass (app overrides first), not prepended as twig.paths.
+        self::assertSame([], $container->getExtensionConfig('twig'));
     }
 
     public function testBundleExposesExtension(): void
@@ -70,8 +71,11 @@ final class ExtensionPrependTest extends TestCase
         $ext = $bundle->getContainerExtension();
         self::assertInstanceOf(NowoDeviceIntelligenceExtension::class, $ext);
         self::assertSame('nowo_device_intelligence', $ext->getAlias());
-        $bundle->build(new ContainerBuilder());
+        $builder = new ContainerBuilder();
+        $bundle->build($builder);
         self::assertSame($ext, $bundle->getContainerExtension());
+        $passes = array_map(static fn (object $pass): string => $pass::class, $builder->getCompilerPassConfig()->getBeforeOptimizationPasses());
+        self::assertContains(TwigPathsPass::class, $passes);
     }
 
     public function testLoadRegistersParametersAndInMemoryWhenDoctrineDisabled(): void

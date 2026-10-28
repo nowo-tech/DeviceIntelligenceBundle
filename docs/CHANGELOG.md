@@ -28,6 +28,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Twig template overrides win (REQ-TWIG-001).** The views were registered by prepending `twig.paths`, so an application
+  copy under `templates/bundles/NowoDeviceIntelligenceBundle/` was not guaranteed to take precedence. `TwigPathsPass`
+  now prepends that directory (when it exists) and then adds the bundle views on the native Twig loader.
+
+### Documentation
+
+- INSTALLATION / README: Twig Extra requirement (REQ-TWIG-004); overridable templates table, procedure and freeze rule.
+
 ## [1.4.1] - 2026-10-25
 
 Reproducible JS bundle: the build stamp is a hash of the sources instead of the build time. See [UPGRADING](UPGRADING.md#to-141).
