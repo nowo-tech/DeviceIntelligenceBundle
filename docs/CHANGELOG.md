@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.5.1] - 2026-10-30](#151---2026-10-30)
 - [[1.5.0] - 2026-10-28](#150---2026-10-28)
 - [[1.4.1] - 2026-10-25](#141---2026-10-25)
 - [[1.4.0] - 2026-10-21](#140---2026-10-21)
@@ -28,6 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[1.0.0] - 2026-08-23](#100---2026-08-23)
 
 ## [Unreleased]
+
+## [1.5.1] - 2026-10-30
+
+Bundle routes are opt-in again: controllers are no longer autoconfigured, so a host's routing.controllers import does not expose them (REQ-SF-004 rule 7). See [UPGRADING](UPGRADING.md#to-151).
 
 ### Security
 
@@ -315,7 +320,8 @@ First stable release of **Device Intelligence Bundle**.
 - README: canonical badges, FrankenPHP banner, `## Documentation`, `## Tests and coverage`
 - Integrator docs: INSTALLATION, CONFIGURATION, USAGE, SECURITY, CONTRIBUTING, RELEASE, UPGRADING, GITHUB (REQ-DOCS-018)
 
-[Unreleased]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.5.1...HEAD
+[1.5.1]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.3.3...v1.4.0

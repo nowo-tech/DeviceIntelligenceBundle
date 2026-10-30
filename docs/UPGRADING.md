@@ -5,6 +5,7 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.5.1](#to-151)
 - [To 1.5.0](#to-150)
 - [To 1.4.1](#to-141)
 - [To 1.4.0](#to-140)
@@ -34,6 +35,14 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.5.1
+
+From **1.5.0**:
+
+```bash
+composer update nowo-tech/device-intelligence-bundle
+```
 
 `POST /_device/collect` is only registered by the documented import of
 `@NowoDeviceIntelligenceBundle/Resources/config/routes.php` (the Flex recipe adds it). On Symfony >= 7.3 a host
