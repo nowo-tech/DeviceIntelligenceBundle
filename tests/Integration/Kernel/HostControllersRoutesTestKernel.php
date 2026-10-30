@@ -8,6 +8,8 @@ use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Nowo\DeviceIntelligenceBundle\NowoDeviceIntelligenceBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
+use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
@@ -62,15 +64,23 @@ final class HostControllersRoutesTestKernel extends Kernel
             'secret' => 'test',
             'test' => true,
             'http_method_override' => false,
-            // The bundle prepends an asset package and translator paths; neither component is required by the bundle.
-            'assets' => ['enabled' => false],
-            'translator' => ['enabled' => false],
             'router' => ['utf8' => true, 'resource' => 'kernel::loadRoutes', 'type' => 'service'],
         ]);
         $container->extension('doctrine', [
             'dbal' => ['url' => 'sqlite:///:memory:'],
             'orm' => [],
         ]);
+    }
+
+    protected function build(ContainerBuilder $container): void
+    {
+        // Routing only: no ORM proxies are warmed (the final entities need native lazy objects, PHP >= 8.4).
+        $container->addCompilerPass(new class implements CompilerPassInterface {
+            public function process(ContainerBuilder $container): void
+            {
+                $container->removeDefinition('doctrine.orm.proxy_cache_warmer');
+            }
+        });
     }
 
     private function configureRoutes(RoutingConfigurator $routes): void
