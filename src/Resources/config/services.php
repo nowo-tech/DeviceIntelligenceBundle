@@ -67,7 +67,11 @@ return static function (ContainerConfigurator $container): void {
         ->arg('$kernelSecret', param('kernel.secret'));
     $services->set(ObservationTokenIssuer::class)
         ->arg('$secret', param('kernel.secret'));
+    // REQ-SF-004 rule 7: NOT autoconfigured. On Symfony >= 7.3 autoconfiguration tags every #[Route] class with
+    // routing.controller, and the host's default `routing.controllers` import would then expose the collect endpoint
+    // without the documented routes.php import. Tags are explicit instead.
     $services->set(CollectController::class)
+        ->autoconfigure(false)
         ->tag('controller.service_arguments')
         ->tag('monolog.logger', ['channel' => 'device_intelligence'])
         ->public();

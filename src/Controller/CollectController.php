@@ -16,7 +16,6 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -25,7 +24,6 @@ use Symfony\Component\Routing\Attribute\Route;
  * @author Héctor Franco Aceituno <hectorfranco@nowo.tech>
  * @copyright 2026 Nowo.tech
  */
-#[AsController]
 final class CollectController
 {
     /**
