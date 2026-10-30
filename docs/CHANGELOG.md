@@ -29,6 +29,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **The collect endpoint is opt-in again (REQ-SF-004 rule 7).** On Symfony >= 7.3 the `#[AsController]` /
+  `#[Route]` autoconfiguration tagged `CollectController` with `routing.controller`, so a host's default
+  `config/routes.yaml` (`controllers: { resource: routing.controllers }`) exposed the public
+  `POST /_device/collect` endpoint even when the host did not import the bundle `routes.php`. The controller is no
+  longer autoconfigured (`#[AsController]` removed, explicit `controller.service_arguments` tag).
+
 ## [1.5.0] - 2026-10-28
 
 DeviceIntelligence: template overrides always win (TwigPathsPass); Twig Extra documented. See [UPGRADING](UPGRADING.md#to-150).

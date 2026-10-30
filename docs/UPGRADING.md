@@ -35,6 +35,10 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 
 ## Unreleased
 
+`POST /_device/collect` is only registered by the documented import of
+`@NowoDeviceIntelligenceBundle/Resources/config/routes.php` (the Flex recipe adds it). On Symfony >= 7.3 a host
+without that import got the endpoint through `routing.controllers`; add the import if the collector script posts to it.
+
 ## To 1.5.0
 
 From **1.4.1**:
