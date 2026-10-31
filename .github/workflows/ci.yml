@@ -122,6 +122,18 @@ jobs:
           SYMFONY_DEPRECATIONS_HELPER: max[direct]=0
         run: composer test-coverage
 
+      # symfony/asset and symfony/translation are optional for hosts: the framework prepend must not require them.
+      - name: Host kernel without symfony/asset and symfony/translation
+        env:
+          SYMFONY_DEPRECATIONS_HELPER: max[direct]=0
+        run: |
+          composer remove --dev symfony/asset symfony/translation --no-interaction --no-progress
+          if [ -d vendor/symfony/asset ] || [ -d vendor/symfony/translation ]; then
+            echo "symfony/asset or symfony/translation is still installed (pulled by another package)"
+            exit 1
+          fi
+          vendor/bin/phpunit --no-coverage tests/Integration/Kernel
+
   code-style:
     name: Code Style
     runs-on: ubuntu-latest

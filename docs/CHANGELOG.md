@@ -30,6 +30,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **PHP 8.3 hosts can warm their cache again.** The Doctrine entities (`DeviceEntity`, `DeviceObservationEntity`,
+  `DeviceTrustEntity`, `DeviceUserEntity`) were `final`; on PHP 8.3 (no native lazy objects) Doctrine builds its
+  proxies by extending the entity, so `cache:warmup` / kernel boot failed with `Cannot generate lazy ghost: class
+  "Nowo\DeviceIntelligenceBundle\Entity\DeviceEntity" is final`. The entities are no longer `final`. See
+  [UPGRADING](UPGRADING.md#unreleased).
+- **Hosts without `symfony/asset` or `symfony/translation` boot.** The extension always prepended
+  `framework.assets` and `framework.translator`, which enables those features: without the components the container
+  failed to compile (Symfony <= 8.1: `Asset support cannot be enabled as the Asset component is not installed`;
+  Symfony 8.2: `The "framework.assets" configuration is handled by the "asset" extension, which is not registered`).
+  The asset package and the translation path are now only prepended when the matching component is installed.
+
+### Changed
+
+- Rector: `ExplicitNullableObjectInstanceRector` skipped (keeps the `null === $x` style; `rector-dry` is clean again),
+  deprecated skipped rules removed; `rector/rector` dev constraint `^2.8`.
+
+### Tests
+
+- `HostAppKernelTest`: a host kernel with the default Doctrine configuration boots, warms its cache and creates
+  proxies of every bundle entity (PHP 8.3 and 8.4+). The test kernel no longer removes
+  `doctrine.orm.proxy_cache_warmer`. CI also runs the host kernel tests after removing `symfony/asset` and
+  `symfony/translation`.
+
 ## [1.5.1] - 2026-10-30
 
 Bundle routes are opt-in again: controllers are no longer autoconfigured, so a host's routing.controllers import does not expose them (REQ-SF-004 rule 7). See [UPGRADING](UPGRADING.md#to-151).

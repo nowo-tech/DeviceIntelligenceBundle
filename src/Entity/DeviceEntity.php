@@ -11,6 +11,9 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * Persisted device identity. Table prefix is applied by TablePrefixSubscriber.
  *
+ * Not final: on PHP 8.3 Doctrine generates its lazy proxies by extending the entity (native lazy objects need
+ * PHP >= 8.4). Do not extend it in an application; the class is internal to the bundle mapping.
+ *
  * @author Héctor Franco Aceituno <hectorfranco@nowo.tech>
  * @copyright 2026 Nowo.tech
  */
@@ -18,7 +21,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Table(name: 'device')]
 #[ORM\Index(name: 'idx_di_device_os_browser', columns: ['os_family', 'browser_family'])]
 #[ORM\Index(name: 'idx_di_device_last_seen', columns: ['last_seen_at'])]
-final class DeviceEntity
+class DeviceEntity
 {
     #[ORM\Id]
     #[ORM\Column(name: 'id', type: Types::STRING, length: 26, options: ['fixed' => true])]
