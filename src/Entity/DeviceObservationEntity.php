@@ -11,13 +11,16 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * Persisted observation snapshot. Signals are compact derived values, never raw captures.
  *
+ * Not final: on PHP 8.3 Doctrine generates its lazy proxies by extending the entity (native lazy objects need
+ * PHP >= 8.4). Do not extend it in an application; the class is internal to the bundle mapping.
+ *
  * @author Héctor Franco Aceituno <hectorfranco@nowo.tech>
  * @copyright 2026 Nowo.tech
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'observation')]
 #[ORM\Index(name: 'idx_di_obs_device_created', columns: ['device_id', 'created_at'])]
-final class DeviceObservationEntity
+class DeviceObservationEntity
 {
     #[ORM\Id]
     #[ORM\Column(name: 'id', type: Types::STRING, length: 26, options: ['fixed' => true])]

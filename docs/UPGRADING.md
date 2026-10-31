@@ -36,6 +36,18 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 
 ## Unreleased
 
+```bash
+composer update nowo-tech/device-intelligence-bundle
+```
+
+- The Doctrine entities `DeviceEntity`, `DeviceObservationEntity`, `DeviceTrustEntity` and `DeviceUserEntity` are no
+  longer `final`, so Doctrine can generate their proxies on PHP 8.3. If your application removed
+  `doctrine.orm.proxy_cache_warmer` (or disabled the warmup) to work around `Cannot generate lazy ghost: class ... is
+  final`, drop that workaround. The entities are still internal to the bundle mapping: do not extend them.
+- `symfony/asset` and `symfony/translation` are optional: without them the bundle no longer prepends
+  `framework.assets` / `framework.translator`. Install `symfony/asset` if you reference the
+  `nowo_device_intelligence` asset package, and `symfony/translation` for the translated profiler panel.
+
 ## To 1.5.1
 
 From **1.5.0**:

@@ -11,6 +11,9 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * Explicit user-granted device trust. Never granted automatically on login.
  *
+ * Not final: on PHP 8.3 Doctrine generates its lazy proxies by extending the entity (native lazy objects need
+ * PHP >= 8.4). Do not extend it in an application; the class is internal to the bundle mapping.
+ *
  * @author Héctor Franco Aceituno <hectorfranco@nowo.tech>
  * @copyright 2026 Nowo.tech
  */
@@ -18,7 +21,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Table(name: 'device_trust')]
 #[ORM\UniqueConstraint(name: 'uniq_di_device_trust', columns: ['device_id', 'user_identifier'])]
 #[ORM\Index(name: 'idx_di_device_trust_user', columns: ['user_identifier'])]
-final class DeviceTrustEntity
+class DeviceTrustEntity
 {
     #[ORM\Id]
     #[ORM\Column(name: 'id', type: Types::INTEGER)]

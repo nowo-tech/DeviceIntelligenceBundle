@@ -41,6 +41,7 @@ use Nowo\DeviceIntelligenceBundle\Profiler\DeviceIntelligenceDataCollector;
 use Nowo\DeviceIntelligenceBundle\Risk\RiskEngineFactory;
 use Nowo\DeviceIntelligenceBundle\User\SecurityUserIdentifierResolver;
 use Psr\Clock\ClockInterface;
+use Symfony\Component\Asset\Package;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
@@ -52,6 +53,7 @@ use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpKernel\DataCollector\DataCollector;
+use Symfony\Component\Translation\Translator;
 
 /**
  * Processes nowo_device_intelligence config and wires core + Doctrine services.
@@ -70,25 +72,40 @@ final class NowoDeviceIntelligenceExtension extends Extension implements Prepend
     }
 
     /**
-     * Prepends the framework / Twig / Doctrine configuration the bundle relies on.
+     * Prepends the framework configuration the bundle relies on.
+     *
+     * The asset package and the translation path are only prepended when symfony/asset and symfony/translation are
+     * installed: setting `framework.assets` / `framework.translator` enables those features, and without their
+     * component the host kernel fails to compile (Symfony <= 8.1: "Asset support cannot be enabled"; Symfony 8.2:
+     * "The framework.assets configuration is handled by the asset extension, which is not registered").
      */
     public function prepend(ContainerBuilder $container): void
     {
-        if ($container->hasExtension('framework')) {
-            $container->prependExtensionConfig('framework', [
-                'assets' => [
-                    'packages' => [
-                        Configuration::ALIAS => [
-                            'base_path' => '/bundles/nowodeviceintelligence',
-                        ],
+        if (!$container->hasExtension('framework')) {
+            return;
+        }
+
+        $framework = [];
+        if (class_exists(Package::class)) {
+            $framework['assets'] = [
+                'packages' => [
+                    Configuration::ALIAS => [
+                        'base_path' => '/bundles/nowodeviceintelligence',
                     ],
                 ],
-                'translator' => [
-                    'paths' => [
-                        __DIR__.'/../Resources/translations',
-                    ],
+            ];
+        }
+
+        if (class_exists(Translator::class)) {
+            $framework['translator'] = [
+                'paths' => [
+                    __DIR__.'/../Resources/translations',
                 ],
-            ]);
+            ];
+        }
+
+        if ([] !== $framework) {
+            $container->prependExtensionConfig('framework', $framework);
         }
     }
 
