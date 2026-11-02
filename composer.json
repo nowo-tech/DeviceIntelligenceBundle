@@ -133,7 +133,10 @@
     },
     "config": {
         "sort-packages": true,
-        "root-version": "1.0.1-dev"
+        "root-version": "1.0.1-dev",
+        "platform": {
+            "php": "8.3.0"
+        }
     },
     "minimum-stability": "stable",
     "prefer-stable": true,
