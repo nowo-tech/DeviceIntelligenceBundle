@@ -9,6 +9,9 @@ Copy-paste scenarios (checkout step-up, new-device login, trusted devices, coupo
 - [Use cases](#use-cases)
 - [Events](#events)
 - [Security hooks](#security-hooks)
+- [Using it from a DDD / hexagonal application](#using-it-from-a-ddd--hexagonal-application)
+  - [Keeping your domain free of the bundle](#keeping-your-domain-free-of-the-bundle)
+  - [Known limitations](#known-limitations)
 - [Custom risk rules](#custom-risk-rules)
 - [Commands](#commands)
 - [Browser assets](#browser-assets)
@@ -86,6 +89,68 @@ Listen after analyze (the matcher is not mutated):
 ## Security hooks
 
 On `LoginSuccessEvent` / `InteractiveLoginEvent` the bundle associates `UserInterface::getUserIdentifier()` with the current device and increments login velocity. Failed logins increment `login_failure`. Logout **keeps** the observation cookie.
+
+## Using it from a DDD / hexagonal application
+
+DeviceIntelligenceBundle is a bounded context of its own (devices, observations, trust, risk) and is already split
+along hexagonal lines:
+
+- `Nowo\DeviceIntelligence\` (`lib/`) is the framework-free core: domain objects (`Device`, `DeviceId`,
+  `TrustedDevice`, `UserIdentifier`, `RiskAssessment`), services (`DeviceIntelligenceInterface`,
+  `DeviceManagerInterface`, `TrustedDeviceManagerInterface`) and ports (`Nowo\DeviceIntelligence\Port\*`). It only
+  depends on PSR-20 (clock) and PSR-16 (cache).
+- `Nowo\DeviceIntelligenceBundle\` (`src/`) holds the Symfony and Doctrine adapters.
+
+It never references your entities. Users are identified by `UserIdentifier` (a string); the bundle gets it from
+your user object through `UserIdentifierResolverInterface`.
+
+### Keeping your domain free of the bundle
+
+- React to device facts with listeners on the bundle events and translate them into your own domain events or
+  commands. Payloads are core objects (`Analysis`, `Device`, `UserIdentifier`), not Doctrine entities.
+
+| Event | Payload |
+|-------|---------|
+| `NewDeviceDetectedEvent`, `DeviceCreatedEvent`, `DeviceMatchedEvent`, `DeviceObservedEvent` | `Analysis $analysis` |
+| `RiskAssessmentCompletedEvent` / `DeviceRiskCalculatedEvent`, `SuspiciousDeviceEvent` | `Analysis $analysis` |
+| `BeforeRiskAssessmentEvent` | `AnalysisInput $input` |
+| `DeviceTrustedEvent`, `DeviceRevokedEvent` | `Device $device`, `UserIdentifier $user` |
+
+```php
+#[AsEventListener]
+final class NotifyOnNewDevice
+{
+    public function __construct(private readonly CommandBus $bus) {} // your application bus
+
+    public function __invoke(NewDeviceDetectedEvent $event): void
+    {
+        $analysis = $event->analysis;
+        // map Analysis to your own command; keep Nowo types out of the domain
+        $this->bus->dispatch(new WarnAboutNewDevice(/* … */));
+    }
+}
+```
+
+- If your users are not identified by `getUserIdentifier()` (e.g. you want the domain UUID), override the alias
+  `Nowo\DeviceIntelligence\User\UserIdentifierResolverInterface` with your resolver
+  (`resolve(object $user): UserIdentifier`).
+- To keep device data in your own store, implement the four repository ports
+  (`DeviceRepositoryInterface`, `ObservationRepositoryInterface`, `DeviceUserRepositoryInterface`,
+  `TrustedDeviceRepositoryInterface`) and override their aliases. `doctrine.enabled: false` switches to in-memory
+  adapters (tests only, not durable).
+- Add risk signals from your domain with a `RiskRuleInterface` service (`#[AsDeviceRiskRule]`).
+- In controllers, read the request result through the `DeviceContext` argument or the `#[DeviceRisk]` /
+  `#[RequireTrustedDevice]` attributes rather than calling the core directly.
+
+### Known limitations
+
+- GeoIP, metrics, network signals, labeler and privacy processor ports exist in the core but are not exposed as
+  service aliases: the bundle builds `DeviceIntelligence` with the Null/default implementations. Plugging your own
+  currently means redefining the `Nowo\DeviceIntelligence\DeviceIntelligence` service.
+- `ConsentGateInterface` and `IpReputationProviderInterface` are not used yet.
+- The Doctrine mapping is registered even with `doctrine.enabled: false`, and Doctrine ORM is a required package.
+- `DeviceTrustService` (the trust API that dispatches `DeviceTrustedEvent`/`DeviceRevokedEvent`) is final and has
+  no interface; wrap it behind your own port.
 
 ## Custom risk rules
 
