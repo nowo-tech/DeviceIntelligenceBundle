@@ -31,6 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+
+- USAGE: new section "Using it from a DDD / hexagonal application" (where the bundle sits in a hexagonal host, the ports, events and DTOs to build an anti-corruption layer on, and the known limitations).
+
 ## [1.5.2] - 2026-10-31
 
 PHP 8.3 hosts can warm Doctrine proxies (entities no longer final); assets/translator prepend only when the components are installed. See [UPGRADING](UPGRADING.md#to-152).
