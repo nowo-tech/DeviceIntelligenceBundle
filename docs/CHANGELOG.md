@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.6.0] - 2026-11-10](#160---2026-11-10)
 - [[1.5.2] - 2026-10-31](#152---2026-10-31)
 - [[1.5.1] - 2026-10-30](#151---2026-10-30)
 - [[1.5.0] - 2026-10-28](#150---2026-10-28)
@@ -30,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[1.0.0] - 2026-08-23](#100---2026-08-23)
 
 ## [Unreleased]
+
+## [1.6.0] - 2026-11-10
 
 Target 1.6.0. See [UPGRADING](UPGRADING.md#to-160).
 
@@ -368,7 +371,8 @@ First stable release of **Device Intelligence Bundle**.
 - README: canonical badges, FrankenPHP banner, `## Documentation`, `## Tests and coverage`
 - Integrator docs: INSTALLATION, CONFIGURATION, USAGE, SECURITY, CONTRIBUTING, RELEASE, UPGRADING, GITHUB (REQ-DOCS-018)
 
-[Unreleased]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.5.2...HEAD
+[Unreleased]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.5.2...v1.6.0
 [1.5.2]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.5.1...v1.5.2
 [1.5.1]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.4.1...v1.5.0
