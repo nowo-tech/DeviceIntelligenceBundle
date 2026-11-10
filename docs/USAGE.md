@@ -148,7 +148,7 @@ final class NotifyOnNewDevice
 | `Nowo\DeviceIntelligence\Device\DeviceLabelerInterface` | `DefaultDeviceLabeler` | your own "Chrome on macOS" labels |
 | `Nowo\DeviceIntelligence\Signal\Server\NetworkSignalProviderInterface` | `NullNetworkSignalProvider` | VPN / proxy / ASN signals |
 | `Nowo\DeviceIntelligence\Signal\Server\ServerSignalProviderInterface` | `DefaultServerSignalProvider` | extra server-side signals |
-| `Nowo\DeviceIntelligence\Privacy\PrivacyProcessorInterface` | `PrivacyProcessor` | stricter signal filtering |
+| `Nowo\DeviceIntelligence\Privacy\PrivacyProcessorInterface` | `PrivacyProcessor` | a decorator for stricter filtering (see below) |
 | `Nowo\DeviceIntelligence\Matching\Candidate\DeviceCandidateProviderInterface` | `RepositoryCandidateProvider` | candidates from your own index |
 
 ```yaml
@@ -157,6 +157,43 @@ services:
     App\Infrastructure\Device\MaxMindGeoIpProvider: ~
     Nowo\DeviceIntelligence\Port\GeoIpProviderInterface: '@App\Infrastructure\Device\MaxMindGeoIpProvider'
 ```
+
+  Rules for these adapters:
+
+  - **Privacy processor: decorate, don't replace.** The default `PrivacyProcessor` is what drops the high-entropy
+    signals (`audio`, `canvas`, `webgl`, `fonts`) in `strict` mode or without high-entropy consent, and the
+    `user_agent` signal when `store_user_agent` is false. A replacement takes over that filtering of the stored
+    signals entirely. Decorate the default instead and call it first, then filter more:
+
+    ```php
+    use Nowo\DeviceIntelligence\Privacy\PrivacyContext;
+    use Nowo\DeviceIntelligence\Privacy\PrivacyProcessorInterface;
+    use Nowo\DeviceIntelligence\Signal\SignalBag;
+    use Symfony\Component\DependencyInjection\Attribute\AsDecorator;
+    use Symfony\Component\DependencyInjection\Attribute\AutowireDecorated;
+
+    #[AsDecorator(PrivacyProcessorInterface::class)]
+    final readonly class StricterPrivacyProcessor implements PrivacyProcessorInterface
+    {
+        public function __construct(#[AutowireDecorated] private PrivacyProcessorInterface $inner) {}
+
+        public function process(SignalBag $signals, PrivacyContext $context): SignalBag
+        {
+            $signals = $this->inner->process($signals, $context); // keep the bundle's consent / strict / UA rules
+
+            return $signals; // then drop whatever else your policy forbids
+        }
+    }
+    ```
+
+    The IP is hashed and the raw user-agent column is gated by `store_user_agent` outside the processor, so neither
+    depends on it.
+  - **GeoIP and network-signal adapters receive the raw client IP.** Never return it (or anything derived that
+    identifies it) in a signal, and don't log it: network-signal values are stored as returned, so an IP in a signal
+    defeats `hash_ip`.
+  - **Adapters are shared services.** In a long-running worker (FrankenPHP, RoadRunner) an adapter with an in-memory
+    cache or a buffer lives for the whole worker: implement `Symfony\Contracts\Service\ResetInterface` to clear it
+    between requests.
 
 - Add risk signals from your domain with a `RiskRuleInterface` service (`#[AsDeviceRiskRule]`).
 - In controllers, read the request result through the `DeviceContext` argument or the `#[DeviceRisk]` /

@@ -40,6 +40,10 @@ Target 1.6.0. See [UPGRADING](UPGRADING.md#to-160).
   `ServerSignalProviderInterface`, `PrivacyProcessorInterface` and `DeviceCandidateProviderInterface`. The defaults
   are the implementations `DeviceIntelligence::create()` uses, so the analysis is unchanged until an alias is
   overridden (before, plugging a GeoIP or metrics adapter meant redefining the whole `DeviceIntelligence` service).
+- USAGE: rules for these adapters (audit KK): decorate the privacy processor and call the default first (a
+  replacement takes over consent, `strict` mode and `store_user_agent` filtering of the stored signals), GeoIP and
+  network adapters see the raw IP and must not return or log it, adapters with caches implement `ResetInterface`.
+  UPGRADING notes that an existing host alias of one of these interfaces now takes effect.
 
 ### Documentation
 
