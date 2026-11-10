@@ -5,6 +5,7 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.6.0](#to-160)
 - [To 1.5.2](#to-152)
 - [To 1.5.1](#to-151)
 - [To 1.5.0](#to-150)
@@ -36,6 +37,29 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.6.0
+
+From **1.5.2**:
+
+```bash
+composer update nowo-tech/device-intelligence-bundle
+```
+
+- No configuration change and no behaviour change by default.
+- The `Nowo\DeviceIntelligence\DeviceIntelligence` service is now built with its constructor instead of the
+  `DeviceIntelligence::create()` factory, each collaborator resolved through a port alias
+  (`GeoIpProviderInterface`, `MetricsRecorderInterface`, `DeviceLabelerInterface`, `NetworkSignalProviderInterface`,
+  `ServerSignalProviderInterface`, `PrivacyProcessorInterface`, `DeviceCandidateProviderInterface`). The defaults are
+  the same implementations `create()` uses.
+- If you redefined the `DeviceIntelligence` service only to plug a GeoIP, metrics, labeler, network-signal or
+  privacy adapter, override that port alias instead and drop the redefinition (see USAGE, "Using it from a DDD /
+  hexagonal application"). A redefinition keeps working.
+- If your application already aliased one of these interfaces for its own code (up to 1.5.2 the bundle never
+  injected them), that adapter is now used by the analysis. Check your `services.yaml` for aliases of the seven
+  interfaces above.
+- If you plug a privacy processor, decorate the default one and call it first: a replacement takes over the
+  consent, `strict` mode and `store_user_agent` filtering of the stored signals (USAGE).
 
 ## To 1.5.2
 
