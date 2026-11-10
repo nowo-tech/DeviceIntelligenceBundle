@@ -138,15 +138,32 @@ final class NotifyOnNewDevice
   (`DeviceRepositoryInterface`, `ObservationRepositoryInterface`, `DeviceUserRepositoryInterface`,
   `TrustedDeviceRepositoryInterface`) and override their aliases. `doctrine.enabled: false` switches to in-memory
   adapters (tests only, not durable).
+- Plug your own infrastructure into the analysis by overriding the alias of a core port; the others keep their
+  defaults (the same implementations `DeviceIntelligence::create()` uses):
+
+| Port alias | Default | Typical host adapter |
+|------------|---------|----------------------|
+| `Nowo\DeviceIntelligence\Port\GeoIpProviderInterface` | `NullGeoIpProvider` (no country) | MaxMind / IP2Location lookup |
+| `Nowo\DeviceIntelligence\Port\MetricsRecorderInterface` | `NullMetricsRecorder` | StatsD / Prometheus counters |
+| `Nowo\DeviceIntelligence\Device\DeviceLabelerInterface` | `DefaultDeviceLabeler` | your own "Chrome on macOS" labels |
+| `Nowo\DeviceIntelligence\Signal\Server\NetworkSignalProviderInterface` | `NullNetworkSignalProvider` | VPN / proxy / ASN signals |
+| `Nowo\DeviceIntelligence\Signal\Server\ServerSignalProviderInterface` | `DefaultServerSignalProvider` | extra server-side signals |
+| `Nowo\DeviceIntelligence\Privacy\PrivacyProcessorInterface` | `PrivacyProcessor` | stricter signal filtering |
+| `Nowo\DeviceIntelligence\Matching\Candidate\DeviceCandidateProviderInterface` | `RepositoryCandidateProvider` | candidates from your own index |
+
+```yaml
+# config/services.yaml
+services:
+    App\Infrastructure\Device\MaxMindGeoIpProvider: ~
+    Nowo\DeviceIntelligence\Port\GeoIpProviderInterface: '@App\Infrastructure\Device\MaxMindGeoIpProvider'
+```
+
 - Add risk signals from your domain with a `RiskRuleInterface` service (`#[AsDeviceRiskRule]`).
 - In controllers, read the request result through the `DeviceContext` argument or the `#[DeviceRisk]` /
   `#[RequireTrustedDevice]` attributes rather than calling the core directly.
 
 ### Known limitations
 
-- GeoIP, metrics, network signals, labeler and privacy processor ports exist in the core but are not exposed as
-  service aliases: the bundle builds `DeviceIntelligence` with the Null/default implementations. Plugging your own
-  currently means redefining the `Nowo\DeviceIntelligence\DeviceIntelligence` service.
 - `ConsentGateInterface` and `IpReputationProviderInterface` are not used yet.
 - The Doctrine mapping is registered even with `doctrine.enabled: false`, and Doctrine ORM is a required package.
 - `DeviceTrustService` (the trust API that dispatches `DeviceTrustedEvent`/`DeviceRevokedEvent`) is final and has

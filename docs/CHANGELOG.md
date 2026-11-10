@@ -31,6 +31,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Target 1.6.0. See [UPGRADING](UPGRADING.md#to-160).
+
+### Added
+
+- The core ports `DeviceIntelligence` uses are service aliases a host can override one by one:
+  `GeoIpProviderInterface`, `MetricsRecorderInterface`, `DeviceLabelerInterface`, `NetworkSignalProviderInterface`,
+  `ServerSignalProviderInterface`, `PrivacyProcessorInterface` and `DeviceCandidateProviderInterface`. The defaults
+  are the implementations `DeviceIntelligence::create()` uses, so the analysis is unchanged until an alias is
+  overridden (before, plugging a GeoIP or metrics adapter meant redefining the whole `DeviceIntelligence` service).
+
 ### Documentation
 
 - USAGE: new section "Using it from a DDD / hexagonal application" (where the bundle sits in a hexagonal host, the ports, events and DTOs to build an anti-corruption layer on, and the known limitations).

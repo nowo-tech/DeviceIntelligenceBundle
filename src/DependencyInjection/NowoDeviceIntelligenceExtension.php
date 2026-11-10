@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\DependencyInjection;
 
+use Nowo\DeviceIntelligence\Device\DefaultDeviceLabeler;
+use Nowo\DeviceIntelligence\Device\DeviceLabelerInterface;
 use Nowo\DeviceIntelligence\Device\DeviceManager;
 use Nowo\DeviceIntelligence\DeviceIntelligence;
 use Nowo\DeviceIntelligence\DeviceIntelligenceInterface;
@@ -11,19 +13,33 @@ use Nowo\DeviceIntelligence\Infrastructure\InMemoryDeviceRepository;
 use Nowo\DeviceIntelligence\Infrastructure\InMemoryDeviceUserRepository;
 use Nowo\DeviceIntelligence\Infrastructure\InMemoryObservationRepository;
 use Nowo\DeviceIntelligence\Infrastructure\InMemoryTrustedDeviceRepository;
+use Nowo\DeviceIntelligence\Matching\Candidate\DeviceCandidateProviderInterface;
+use Nowo\DeviceIntelligence\Matching\Candidate\RepositoryCandidateProvider;
+use Nowo\DeviceIntelligence\Matching\IndexKeyFactory;
 use Nowo\DeviceIntelligence\Matching\MatchingConfig;
 use Nowo\DeviceIntelligence\Matching\MatchingWeights;
 use Nowo\DeviceIntelligence\Matching\WeightedDeviceMatcher;
 use Nowo\DeviceIntelligence\Port\DeviceRepositoryInterface;
 use Nowo\DeviceIntelligence\Port\DeviceUserRepositoryInterface;
+use Nowo\DeviceIntelligence\Port\GeoIpProviderInterface;
+use Nowo\DeviceIntelligence\Port\MetricsRecorderInterface;
+use Nowo\DeviceIntelligence\Port\NullGeoIpProvider;
+use Nowo\DeviceIntelligence\Port\NullMetricsRecorder;
 use Nowo\DeviceIntelligence\Port\ObservationRepositoryInterface;
 use Nowo\DeviceIntelligence\Port\TrustedDeviceRepositoryInterface;
 use Nowo\DeviceIntelligence\Privacy\PrivacyContext;
 use Nowo\DeviceIntelligence\Privacy\PrivacyMode;
+use Nowo\DeviceIntelligence\Privacy\PrivacyProcessor;
+use Nowo\DeviceIntelligence\Privacy\PrivacyProcessorInterface;
 use Nowo\DeviceIntelligence\Risk\RiskEngine;
 use Nowo\DeviceIntelligence\Risk\RiskLevels;
 use Nowo\DeviceIntelligence\Risk\RiskRuleInterface;
 use Nowo\DeviceIntelligence\Risk\ThresholdRiskDecision;
+use Nowo\DeviceIntelligence\Signal\Normalizer\SignalNormalizerRegistry;
+use Nowo\DeviceIntelligence\Signal\Server\DefaultServerSignalProvider;
+use Nowo\DeviceIntelligence\Signal\Server\NetworkSignalProviderInterface;
+use Nowo\DeviceIntelligence\Signal\Server\NullNetworkSignalProvider;
+use Nowo\DeviceIntelligence\Signal\Server\ServerSignalProviderInterface;
 use Nowo\DeviceIntelligence\User\UserIdentifierResolverInterface;
 use Nowo\DeviceIntelligence\Velocity\CacheVelocityEngine;
 use Nowo\DeviceIntelligence\Velocity\InMemoryVelocityEngine;
@@ -63,6 +79,8 @@ use Symfony\Component\Translation\Translator;
  */
 final class NowoDeviceIntelligenceExtension extends Extension implements PrependExtensionInterface
 {
+    private const SIGNAL_NORMALIZERS = 'nowo_device_intelligence.signal_normalizers';
+
     /**
      * Returns the alias.
      */
@@ -231,16 +249,28 @@ final class NowoDeviceIntelligenceExtension extends Extension implements Prepend
                 (bool) $privacy['store_user_agent'],
             ]);
 
+        $this->registerCorePorts($container);
+
+        // Same collaborators as DeviceIntelligence::create(), each one resolved through its port alias so a host can
+        // swap a single adapter (GeoIP, metrics, labeler, network signals, privacy...) without redefining the service.
         $container->register(DeviceIntelligence::class)
-            ->setFactory([DeviceIntelligence::class, 'create'])
             ->setArguments([
                 new Reference(DeviceRepositoryInterface::class),
                 new Reference(ObservationRepositoryInterface::class),
                 new Reference(DeviceUserRepositoryInterface::class),
                 new Reference(TrustedDeviceRepositoryInterface::class),
                 new Reference(WeightedDeviceMatcher::class),
+                new Reference(DeviceCandidateProviderInterface::class),
+                new Reference(self::SIGNAL_NORMALIZERS),
+                new Reference(PrivacyProcessorInterface::class),
                 new Reference(RiskEngine::class),
+                new Reference(DeviceLabelerInterface::class),
+                new Reference(ServerSignalProviderInterface::class),
+                new Reference(NetworkSignalProviderInterface::class),
+                new Reference(GeoIpProviderInterface::class),
                 new Reference(VelocityEngineInterface::class),
+                new Reference(MetricsRecorderInterface::class),
+                new Reference(IndexKeyFactory::class),
             ])
             ->setShared(false)
             ->setPublic(true);
@@ -273,6 +303,40 @@ final class NowoDeviceIntelligenceExtension extends Extension implements Prepend
         if ($container->hasDefinition('nowo_device_intelligence.simple_cache')) {
             $container->getDefinition('nowo_device_intelligence.simple_cache')
                 ->setArgument(0, new Reference((string) $config['cache']['pool']));
+        }
+    }
+
+    /**
+     * Registers the default adapters of the core ports used by DeviceIntelligence and aliases each port to them.
+     *
+     * The defaults are the implementations DeviceIntelligence::create() hard-codes (Null providers, the default
+     * labeler and privacy processor), so the analysis is unchanged until the host overrides an alias.
+     */
+    private function registerCorePorts(ContainerBuilder $container): void
+    {
+        $container->register(IndexKeyFactory::class)->setPublic(false);
+        $container->register(self::SIGNAL_NORMALIZERS, SignalNormalizerRegistry::class)
+            ->setFactory([SignalNormalizerRegistry::class, 'defaults'])
+            ->setPublic(false);
+        $container->register(RepositoryCandidateProvider::class)
+            ->setArguments([
+                new Reference(DeviceRepositoryInterface::class),
+                new Reference(IndexKeyFactory::class),
+            ])
+            ->setPublic(false);
+        $container->setAlias(DeviceCandidateProviderInterface::class, RepositoryCandidateProvider::class);
+
+        $defaults = [
+            PrivacyProcessorInterface::class => PrivacyProcessor::class,
+            DeviceLabelerInterface::class => DefaultDeviceLabeler::class,
+            ServerSignalProviderInterface::class => DefaultServerSignalProvider::class,
+            NetworkSignalProviderInterface::class => NullNetworkSignalProvider::class,
+            GeoIpProviderInterface::class => NullGeoIpProvider::class,
+            MetricsRecorderInterface::class => NullMetricsRecorder::class,
+        ];
+        foreach ($defaults as $port => $implementation) {
+            $container->register($implementation)->setPublic(false);
+            $container->setAlias($port, $implementation);
         }
     }
 
