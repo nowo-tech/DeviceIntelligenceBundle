@@ -6,6 +6,7 @@ namespace Nowo\DeviceIntelligenceBundle;
 
 use Doctrine\Bundle\DoctrineBundle\DependencyInjection\Compiler\DoctrineOrmMappingsPass;
 use Nowo\DeviceIntelligenceBundle\DependencyInjection\Compiler\DeviceIntelligenceEntityManagerPass;
+use Nowo\DeviceIntelligenceBundle\DependencyInjection\Compiler\PersonalDataBridgePass;
 use Nowo\DeviceIntelligenceBundle\DependencyInjection\Compiler\TwigPathsPass;
 use Nowo\DeviceIntelligenceBundle\DependencyInjection\NowoDeviceIntelligenceExtension;
 use Symfony\Component\DependencyInjection\Compiler\PassConfig;
@@ -28,6 +29,8 @@ final class NowoDeviceIntelligenceBundle extends Bundle
     {
         // REQ-TWIG-001: templates/bundles/NowoDeviceIntelligenceBundle/ first, then the bundle views.
         $container->addCompilerPass(new TwigPathsPass());
+        // 1.9: before UserKit collects the tagged erasers / export providers (TYPE_BEFORE_OPTIMIZATION, priority 0).
+        $container->addCompilerPass(new PersonalDataBridgePass(), PassConfig::TYPE_BEFORE_OPTIMIZATION, 20);
 
         $entityDir = __DIR__.'/Entity';
         if (is_dir($entityDir) && class_exists(DoctrineOrmMappingsPass::class)) {

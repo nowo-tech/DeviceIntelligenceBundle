@@ -13,6 +13,9 @@ Copy-paste scenarios (checkout step-up, new-device login, trusted devices, coupo
   - [Keeping your domain free of the bundle](#keeping-your-domain-free-of-the-bundle)
   - [Standard host or DDD host without Doctrine (1.8)](#standard-host-or-ddd-host-without-doctrine-18)
   - [Known limitations](#known-limitations)
+- [GDPR erasure and export](#gdpr-erasure-and-export)
+  - [UserKit bridge](#userkit-bridge)
+  - [What is and is not erased](#what-is-and-is-not-erased)
 - [Custom risk rules](#custom-risk-rules)
 - [Commands](#commands)
 - [Browser assets](#browser-assets)
@@ -248,6 +251,83 @@ users without the services resetter.
 
 - Doctrine ORM is still a required package (installed, not necessarily configured); it moves to `suggest` in 2.0 (the
   bundle already runs without DoctrineBundle with `doctrine.enabled: false`).
+
+## GDPR erasure and export
+
+Since 1.9 the bundle erases and exports one person's device data through two ports (plain PHP, no Doctrine or HTTP
+types in their signatures), registered with `doctrine.enabled: true` (a host without Doctrine binds its own services
+to the interfaces):
+
+| Service (interface id) | Method |
+|---|---|
+| `Nowo\DeviceIntelligenceBundle\PersonalData\DeviceIntelligencePersonalDataEraserInterface` | `erase(DeviceIntelligencePersonalDataSubject): DeviceIntelligenceErasureResult` |
+| `Nowo\DeviceIntelligenceBundle\PersonalData\DeviceIntelligencePersonalDataExporterInterface` | `export(DeviceIntelligencePersonalDataSubject): list<array<string, mixed>>` |
+
+```php
+use Nowo\DeviceIntelligenceBundle\PersonalData\DeviceIntelligencePersonalDataSubject;
+
+$subject = DeviceIntelligencePersonalDataSubject::fromUserIdentifier($user->getUserIdentifier());
+$rows = $exporter->export($subject);   // JSON-serialisable rows, one per device
+$result = $eraser->erase($subject);     // counts per kind
+$result->toArray();                     // ['observations' => 3, 'device_users' => 3, 'device_trusts' => 2, 'devices' => 2]
+$result->total();                       // 10
+```
+
+- **Subject**: the user identifier as the bundle stores it in `user_identifier` (trimmed like on write, no case
+  folding); empty, longer than 191 bytes or with a NUL byte is rejected (`InvalidArgumentException`).
+- **Exact matching**: the SQL `=` only pre-filters; the stored value is re-checked with `===` in PHP and rows are
+  deleted by primary key in batches of 500. On a MySQL `*_ci` / `*_ai_ci` collation, `Alice` and `alíce` are never
+  erased or exported for `alice`.
+- **Idempotent**: a second `erase()` returns zero counts.
+- **Transactions**: with no transaction open on the bundle's connection, `erase()` runs in its own transaction and
+  dispatches `Nowo\DeviceIntelligenceBundle\Event\DeviceIntelligencePersonalDataErasedEvent` (subject, counts,
+  `erasedAt`) after the commit. Inside your own transaction it joins it and **the event is not dispatched**; the
+  returned result is the outcome. A host transaction on another connection (dedicated `doctrine.entity_manager`) is
+  not the bundle's.
+- **Separate connection**: when the bundle writes through its own entity manager / connection, `erase()` commits on
+  its own; if a later UserKit eraser then fails and UserKit rolls back, the device data stays erased while the rest
+  is restored. Re-running the erasure is safe (idempotent).
+- **Export rows**: `first_seen_at`, `last_seen_at`, `sign_ins`, `os_family`, `browser_family`, `trusted`,
+  `trusted_at`, `trust_expires_at` (ATOM strings or `null`). Never device ids, fingerprints, signals, IP hashes,
+  session ids or raw user agents.
+- **Worker mode**: both services are stateless (`readonly`); a test runs erase/export for two users 1,000 times in one
+  instance.
+
+### UserKit bridge
+
+With `nowo-tech/user-kit-bundle` installed and `personal_data.enabled: true` (default), the bundle registers:
+
+| UserKit SPI | Key | Priority |
+|---|---|---|
+| `nowo_user_kit.personal_data.eraser` | `device_intelligence` | 150 (before the host identity eraser, REQ-DATA-002) |
+| `nowo_user_kit.personal_data.export_provider` | `devices` | 35 |
+
+The eraser erases every distinct subject of the user: the original identifier (UserKit ≥ 1.12
+`ErasureRequest::$originalIdentifier`), the current `getUserIdentifier()`, and `context['previous_email']` when it is
+a non-empty string. Replace that list with `personal_data.subject_resolver` (a service implementing
+`DeviceIntelligencePersonalDataSubjectResolverInterface`). An adapter is not registered when its port is not bound
+(e.g. `doctrine.enabled: false` without your own alias). Set `personal_data.enabled: false` if your application
+already erases these tables.
+
+### What is and is not erased
+
+| Table | Erased |
+|---|---|
+| `observation` | every observation of the person (raw user agent, IP hash, session id, signals) |
+| `device_user` | the person's links |
+| `device_trust` | the person's trust grants (active, expired or revoked) |
+| `device` | only devices of the person that no link, trust grant or observation (anyone's, anonymous included) still references |
+
+Anonymous observations (no user identifier, typically before login) cannot be tied to a person and are kept; they
+expire with the retention cleanup (`CleanupMessage` / the cleanup command). A device whose only remaining references
+are such anonymous observations survives too, with its stored signals and metadata: once the person's links, trusts
+and observations are gone it is pseudonymous residue, removed by the same retention cleanup.
+
+Rows written after the erasure: the erasing request itself writes nothing (with `observe_on_every_request` the
+request subscriber only reads the observation cookie, it never persists). A later `POST /_device/collect` from a
+session that is still authenticated as the erased user, or a later login with the same identifier, stores a new
+observation / link. End the person's sessions in your erasure flow; residual observations are removed by the
+retention cleanup.
 
 ## Custom risk rules
 

@@ -7,6 +7,7 @@
 - [Validation](#validation)
 - [Persistence](#persistence)
 - [Messenger](#messenger)
+- [Personal data (GDPR)](#personal-data-gdpr)
 - [Translations](#translations)
 
 Alias: `nowo_device_intelligence`.
@@ -122,6 +123,22 @@ nowo_device_intelligence:
 ## Messenger
 
 Set `messenger.enabled: true` to register `CleanupMessage` and `RecalculateStabilityMessage` handlers (`#[AsMessageHandler]`). Transport, retries, and `failure_transport` are **host-owned** (`framework.messenger`). Default Symfony retry policy applies when the host uses async transports; the demo/sync bus runs handlers inline with no retry. Handlers are idempotent: cleanup deletes observations older than the cutoff; recalculate overwrites stored stability. Failed async messages should land on the host failure transport — this bundle does not register one.
+
+## Personal data (GDPR)
+
+```yaml
+nowo_device_intelligence:
+    personal_data:
+        enabled: true          # default; false: nothing is registered with UserKit (the ports stay available)
+        subject_resolver: null # optional service id implementing DeviceIntelligencePersonalDataSubjectResolverInterface
+```
+
+- `enabled`: with `nowo-tech/user-kit-bundle` installed, registers the `device_intelligence` eraser (priority 150)
+  and the `devices` export section (priority 35). Without UserKit it has no effect.
+- `subject_resolver`: the subjects the UserKit adapters erase / export for a user. Null: the original and the current
+  user identifier (plus `context['previous_email']` on erasure).
+
+See [USAGE.md#gdpr-erasure-and-export](USAGE.md#gdpr-erasure-and-export).
 
 ## Translations
 
