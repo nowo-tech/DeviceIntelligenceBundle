@@ -311,9 +311,12 @@ final class PersonalDataKernelTest extends TestCase
         return $exporter;
     }
 
-    private function service(string $id): ?object
+    private function service(string $id): object
     {
-        return $this->container()->get($id);
+        $service = $this->container()->get($id);
+        self::assertIsObject($service);
+
+        return $service;
     }
 
     private function container(): ContainerInterface

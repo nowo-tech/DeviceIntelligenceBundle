@@ -24,7 +24,7 @@ final class PersonalDataRows
      * @param class-string $class  a bundle entity with `id` and `userIdentifier` fields
      * @param list<string> $fields extra fields to select (returned under their own name)
      *
-     * @return Generator<int, array<string, mixed>&array{id: int|string}>
+     * @return Generator<int, array<string, mixed>> each row: `id` plus the requested fields
      */
     public static function exact(EntityManagerInterface $em, string $class, string $userIdentifier, array $fields, int $batchSize = DeviceIntelligencePersonalDataEraser::BATCH_SIZE): Generator
     {
@@ -47,7 +47,7 @@ final class PersonalDataRows
                 $query->setParameter('after', $after);
             }
 
-            /** @var list<array<string, mixed>&array{id: int|string, owner: string|null}> $rows */
+            /** @var list<array<string, mixed>> $rows */
             $rows = $query->getArrayResult();
             foreach ($rows as $row) {
                 if ($row['owner'] === $userIdentifier) {
@@ -56,7 +56,7 @@ final class PersonalDataRows
                     yield $row;
                 }
             }
-            $after = [] === $rows ? null : $rows[\count($rows) - 1]['id'];
+            $after = [] === $rows ? null : $rows[\count($rows) - 1]['id'] ?? null;
         } while (\count($rows) === $batchSize);
     }
 }

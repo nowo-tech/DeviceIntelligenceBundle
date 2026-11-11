@@ -70,7 +70,7 @@ final readonly class DeviceIntelligencePersonalDataEraser implements DeviceIntel
         foreach ([DeviceObservationEntity::class, DeviceUserEntity::class, DeviceTrustEntity::class] as $class) {
             $ids = [];
             foreach (PersonalDataRows::exact($em, $class, $userIdentifier, ['deviceId']) as $row) {
-                $ids[] = $row['id'];
+                $ids[] = \is_int($row['id']) ? $row['id'] : (string) $row['id'];
                 $deviceIds[(string) $row['deviceId']] = true;
             }
             $deleted[$class] = $this->deleteByIds($em, $class, $ids);
