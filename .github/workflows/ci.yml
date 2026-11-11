@@ -134,7 +134,8 @@ jobs:
         env:
           SYMFONY_DEPRECATIONS_HELPER: max[direct]=0
         run: |
-          composer remove --dev symfony/asset symfony/translation --no-interaction --no-progress
+          # nowo-tech/user-kit-bundle (GDPR bridge tests) pulls symfony/asset and symfony/translation through UiKit / FormKit.
+          composer remove --dev symfony/asset symfony/translation nowo-tech/user-kit-bundle --no-interaction --no-progress
           if [ -d vendor/symfony/asset ] || [ -d vendor/symfony/translation ]; then
             echo "symfony/asset or symfony/translation is still installed (pulled by another package)"
             exit 1
