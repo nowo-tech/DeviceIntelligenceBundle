@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.7.0] - 2026-11-11](#170---2026-11-11)
 - [[1.6.0] - 2026-11-10](#160---2026-11-10)
 - [[1.5.2] - 2026-10-31](#152---2026-10-31)
 - [[1.5.1] - 2026-10-30](#151---2026-10-30)
@@ -32,7 +33,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Target 1.7.0 (architecture bar, wave W1: standard Symfony and DDD hosts).
+## [1.7.0] - 2026-11-11
+
+Device and trust rows are written with DBAL; the host entity manager is never flushed or reset; real `entity_manager` option. See [UPGRADING](https://github.com/nowo-tech/DeviceIntelligenceBundle/blob/v1.7.0/docs/UPGRADING.md#to-170).
+
 
 ### Security
 
@@ -408,7 +412,8 @@ First stable release of **Device Intelligence Bundle**.
 - README: canonical badges, FrankenPHP banner, `## Documentation`, `## Tests and coverage`
 - Integrator docs: INSTALLATION, CONFIGURATION, USAGE, SECURITY, CONTRIBUTING, RELEASE, UPGRADING, GITHUB (REQ-DOCS-018)
 
-[Unreleased]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.7.0...HEAD
+[1.7.0]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.5.2...v1.6.0
 [1.5.2]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.5.1...v1.5.2
 [1.5.1]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.5.0...v1.5.1

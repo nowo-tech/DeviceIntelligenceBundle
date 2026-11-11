@@ -5,6 +5,7 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.7.0](#to-170)
 - [To 1.6.0](#to-160)
 - [To 1.6.0](#to-160-1)
 - [To 1.5.2](#to-152)
@@ -39,7 +40,7 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 
 ## Unreleased
 
-### To 1.7.0
+## To 1.7.0
 
 From **1.6.0**: no configuration or schema change.
 
