@@ -284,6 +284,9 @@ $result->total();                       // 10
   `erasedAt`) after the commit. Inside your own transaction it joins it and **the event is not dispatched**; the
   returned result is the outcome. A host transaction on another connection (dedicated `doctrine.entity_manager`) is
   not the bundle's.
+- **Separate connection**: when the bundle writes through its own entity manager / connection, `erase()` commits on
+  its own; if a later UserKit eraser then fails and UserKit rolls back, the device data stays erased while the rest
+  is restored. Re-running the erasure is safe (idempotent).
 - **Export rows**: `first_seen_at`, `last_seen_at`, `sign_ins`, `os_family`, `browser_family`, `trusted`,
   `trusted_at`, `trust_expires_at` (ATOM strings or `null`). Never device ids, fingerprints, signals, IP hashes,
   session ids or raw user agents.
@@ -315,8 +318,16 @@ already erases these tables.
 | `device_trust` | the person's trust grants (active, expired or revoked) |
 | `device` | only devices of the person that no link, trust grant or observation (anyone's, anonymous included) still references |
 
-Anonymous observations (no user identifier) cannot be tied to a person and are kept; they expire with the retention
-cleanup (`CleanupMessage` / the cleanup command).
+Anonymous observations (no user identifier, typically before login) cannot be tied to a person and are kept; they
+expire with the retention cleanup (`CleanupMessage` / the cleanup command). A device whose only remaining references
+are such anonymous observations survives too, with its stored signals and metadata: once the person's links, trusts
+and observations are gone it is pseudonymous residue, removed by the same retention cleanup.
+
+Rows written after the erasure: the erasing request itself writes nothing (with `observe_on_every_request` the
+request subscriber only reads the observation cookie, it never persists). A later `POST /_device/collect` from a
+session that is still authenticated as the erased user, or a later login with the same identifier, stores a new
+observation / link. End the person's sessions in your erasure flow; residual observations are removed by the
+retention cleanup.
 
 ## Custom risk rules
 

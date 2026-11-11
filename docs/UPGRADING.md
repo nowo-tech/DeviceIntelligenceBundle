@@ -46,8 +46,12 @@ No configuration or schema change. **Standard hosts: nothing to change.**
 - New GDPR ports (`DeviceIntelligencePersonalDataEraserInterface`, `DeviceIntelligencePersonalDataExporterInterface`),
   see [USAGE.md#gdpr-erasure-and-export](USAGE.md#gdpr-erasure-and-export).
 - With nowo-tech/user-kit-bundle installed, the `device_intelligence` eraser and the `devices` export section register
-  automatically. If your application already erases or exports these tables (e.g. its own UserKit eraser with the same
-  key), set `personal_data.enabled: false` or remove your own.
+  automatically, so an account erasure now also deletes the person's device rows (see the CHANGELOG "Behaviour change").
+- **Export section key clash:** UserKit's `PersonalDataExporter` throws a `LogicException` ("Duplicate personal data
+  export section") when two providers use the same section key, so the whole personal-data export fails after the
+  update if your application already ships a `devices` provider (e.g. Beacon's `DevicesExportProvider`). In the same
+  upgrade, remove your own provider (and your own `device_intelligence` eraser, which would only find nothing), or set
+  `nowo_device_intelligence.personal_data.enabled: false` to keep yours.
 
 ## To 1.8.0
 

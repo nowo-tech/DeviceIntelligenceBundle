@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - [[Unreleased]](#unreleased)
   - [Added](#added)
+  - [Behaviour change](#behaviour-change)
 - [[1.8.0] - 2026-11-11](#180---2026-11-11)
 - [[1.7.0] - 2026-11-11](#170---2026-11-11)
   - [Security](#security)
@@ -94,6 +95,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optional nowo-tech/user-kit-bundle bridge: eraser `device_intelligence` (priority 150) and export section `devices`
   (priority 35); `personal_data.enabled` (default `true`) and `personal_data.subject_resolver` with the
   `DeviceIntelligencePersonalDataSubjectResolverInterface` SPI.
+
+### Behaviour change
+
+- With nowo-tech/user-kit-bundle installed, upgrading alone makes UserKit's account erasure delete the person's
+  observations, device links, trust grants and the devices nobody else references, and adds a `devices` section to the
+  export (it clashes with a host provider using the same key, see UPGRADING). Set `personal_data.enabled: false` if
+  you must keep these records or already erase / export them yourself.
 
 ## [1.8.0] - 2026-11-11
 
