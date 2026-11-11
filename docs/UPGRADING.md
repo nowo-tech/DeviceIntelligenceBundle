@@ -7,7 +7,6 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 - [Unreleased](#unreleased)
 - [To 1.7.0](#to-170)
 - [To 1.6.0](#to-160)
-- [To 1.6.0](#to-160-1)
 - [To 1.5.2](#to-152)
 - [To 1.5.1](#to-151)
 - [To 1.5.0](#to-150)
@@ -44,6 +43,10 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 
 From **1.6.0**: no configuration or schema change.
 
+```bash
+composer update nowo-tech/device-intelligence-bundle
+```
+
 - **Persistence:** the Doctrine repositories write their rows with DBAL (no `flush()`); your own pending changes are
   no longer committed by an analysis. If you relied on that side effect (an entity persisted before a login or a
   request listener and never flushed by your code), flush it yourself. Bundle entities are never left in the identity
@@ -57,14 +60,6 @@ From **1.6.0**: no configuration or schema change.
 - **Consent:** alias `ConsentGateInterface` to your consent service to drop collectors the visitor refused.
 - **Trust API:** type-hint `DeviceTrustServiceInterface` instead of the final `DeviceTrustService`.
 - **2.0 (announced):** `doctrine/orm` and `doctrine/doctrine-bundle` move from `require` to `suggest`.
-
-## To 1.6.0
-
-From **1.5.2**:
-
-```bash
-composer update nowo-tech/device-intelligence-bundle
-```
 
 ## To 1.6.0
 
