@@ -41,14 +41,14 @@ final class DoctrineObservationRepository implements ObservationRepositoryInterf
     public function save(DeviceObservation $observation): void
     {
         $em = $this->entityManager(DeviceObservationEntity::class);
-        $entity = $em->find(DeviceObservationEntity::class, $observation->id->value);
+        $found = $em->find(DeviceObservationEntity::class, $observation->id->value);
         $entity = $this->mapper->toObservationEntity(
             $observation,
-            $entity instanceof DeviceObservationEntity ? $entity : null,
+            $found instanceof DeviceObservationEntity ? $found : null,
         );
-        $em->persist($entity);
-        $em->flush();
+        // 1.7 (rule 6): only this row is written; the entity manager (maybe the host's) is never flushed.
         $this->detachAll($em, [$entity]);
+        DbalEntityWriter::write($em, $entity, $found instanceof DeviceObservationEntity);
     }
 
     /**

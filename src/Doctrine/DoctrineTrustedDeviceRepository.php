@@ -40,9 +40,9 @@ final class DoctrineTrustedDeviceRepository implements TrustedDeviceRepositoryIn
         $em = $this->entityManager(DeviceTrustEntity::class);
         $existing = $this->findEntity($em, $trust->deviceId, $trust->userIdentifier);
         $entity = $this->mapper->toTrustEntity($trust, $existing);
-        $em->persist($entity);
-        $em->flush();
+        // 1.7 (rule 6): only this row is written; the entity manager (maybe the host's) is never flushed.
         $this->detachAll($em, [$entity]);
+        DbalEntityWriter::write($em, $entity, null !== $existing);
     }
 
     /**

@@ -21,11 +21,16 @@ use Nowo\DeviceIntelligence\Observation\ObservationId;
 use Nowo\DeviceIntelligence\Port\DeviceRepositoryInterface;
 use Nowo\DeviceIntelligence\Port\DeviceUserRepositoryInterface;
 use Nowo\DeviceIntelligence\Port\GeoIpProviderInterface;
+use Nowo\DeviceIntelligence\Port\IpReputationProviderInterface;
 use Nowo\DeviceIntelligence\Port\MetricsRecorderInterface;
 use Nowo\DeviceIntelligence\Port\NullGeoIpProvider;
+use Nowo\DeviceIntelligence\Port\NullIpReputationProvider;
 use Nowo\DeviceIntelligence\Port\NullMetricsRecorder;
 use Nowo\DeviceIntelligence\Port\ObservationRepositoryInterface;
 use Nowo\DeviceIntelligence\Port\TrustedDeviceRepositoryInterface;
+use Nowo\DeviceIntelligence\Privacy\AllowAllConsentGate;
+use Nowo\DeviceIntelligence\Privacy\ConsentContext;
+use Nowo\DeviceIntelligence\Privacy\ConsentGateInterface;
 use Nowo\DeviceIntelligence\Privacy\IpHasher;
 use Nowo\DeviceIntelligence\Privacy\PrivacyProcessor;
 use Nowo\DeviceIntelligence\Privacy\PrivacyProcessorInterface;
@@ -64,6 +69,8 @@ final class DeviceIntelligence implements DeviceIntelligenceInterface
         private VelocityEngineInterface $velocity = new InMemoryVelocityEngine(),
         private MetricsRecorderInterface $metrics = new NullMetricsRecorder(),
         private IndexKeyFactory $indexKeys = new IndexKeyFactory(),
+        private ConsentGateInterface $consent = new AllowAllConsentGate(),
+        private IpReputationProviderInterface $ipReputation = new NullIpReputationProvider(),
     ) {
     }
 
@@ -112,6 +119,13 @@ final class DeviceIntelligence implements DeviceIntelligenceInterface
             $bag = $bag->with($signal);
         }
         $bag = $this->privacy->process($bag, $input->privacy);
+        // 1.7: the host's consent gate decides per collector (the default only mirrors the privacy context).
+        $consent = new ConsentContext($input->privacy->mode, $input->privacy->highEntropyConsent);
+        foreach ($bag as $signal) {
+            if (!$this->consent->allows($signal->name->value, $consent)) {
+                $bag = $bag->without($signal->name);
+            }
+        }
         $normalized = SignalBag::empty();
         foreach ($bag as $signal) {
             $normalized = $normalized->with($this->normalizers->normalize($signal));
@@ -123,9 +137,12 @@ final class DeviceIntelligence implements DeviceIntelligenceInterface
         $ipHash = IpHasher::hash($input->clientIp, $input->ipSalt, $input->privacy->hashIp);
         $country = null;
         $geo = null;
+        $reputation = null;
         if (null !== $input->clientIp) {
             $geo = $this->geoIp->locate($input->clientIp);
             $country = $geo?->country;
+            // 1.7: IP reputation as a risk signal (IpReputationRule); null without a provider.
+            $reputation = $this->ipReputation->inspect($input->clientIp);
         }
 
         $placeholderId = DeviceId::generate($input->now);
@@ -221,7 +238,7 @@ final class DeviceIntelligence implements DeviceIntelligenceInterface
             ],
             $trusted,
             $geo,
-            null,
+            $reputation,
             $previous?->country,
             $previous?->ipHash?->value,
             $previous?->sessionIdentifier,

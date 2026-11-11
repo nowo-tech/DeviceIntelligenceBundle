@@ -199,12 +199,25 @@ services:
 - In controllers, read the request result through the `DeviceContext` argument or the `#[DeviceRisk]` /
   `#[RequireTrustedDevice]` attributes rather than calling the core directly.
 
+- **Persistence (1.7):** the Doctrine repositories never flush an entity manager: each row is written with a DBAL
+  `INSERT` / `UPDATE` (inside a SAVEPOINT when your code has a transaction open), so an analysis on login or in a
+  request listener never commits your pending changes. To keep the tables on their own connection, set
+  `nowo_device_intelligence.doctrine.entity_manager: device_intelligence` (mapped on that manager only, also when your
+  default manager has `auto_mapping: true`). With `doctrine.enabled: false` the entities are mapped nowhere and you bind
+  the core repository ports (`DeviceRepositoryInterface`, …) to your own adapters; DoctrineBundle is then not needed.
+- **Consent and reputation (1.7):** alias `Nowo\DeviceIntelligence\Privacy\ConsentGateInterface` to your consent
+  service (asked per collector: `canvas`, `webgl`, `audio`, `fonts`, …) and
+  `Nowo\DeviceIntelligence\Port\IpReputationProviderInterface` to your reputation source (feeds the `ip_reputation`
+  risk rule).
+- **Trust API (1.7):** type-hint `DeviceTrustServiceInterface` (trust / revoke / isTrusted; dispatches
+  `DeviceTrustedEvent` / `DeviceRevokedEvent`).
+- A "host controls the transaction" mode is not needed: the bundle writes single rows without flushing, and they
+  join your transaction when one is open.
+
 ### Known limitations
 
-- `ConsentGateInterface` and `IpReputationProviderInterface` are not used yet.
-- The Doctrine mapping is registered even with `doctrine.enabled: false`, and Doctrine ORM is a required package.
-- `DeviceTrustService` (the trust API that dispatches `DeviceTrustedEvent`/`DeviceRevokedEvent`) is final and has
-  no interface; wrap it behind your own port.
+- Doctrine ORM is still a required package; it moves to `suggest` in 2.0 (the bundle already runs without it with
+  `doctrine.enabled: false`).
 
 ## Custom risk rules
 

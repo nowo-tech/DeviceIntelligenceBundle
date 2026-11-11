@@ -10,6 +10,7 @@ use Nowo\DeviceIntelligence\Risk\Rule\DeviceVelocityRule;
 use Nowo\DeviceIntelligence\Risk\Rule\FingerprintMutationRule;
 use Nowo\DeviceIntelligence\Risk\Rule\ImpossibleTravelRule;
 use Nowo\DeviceIntelligence\Risk\Rule\IpChangeRule;
+use Nowo\DeviceIntelligence\Risk\Rule\IpReputationRule;
 use Nowo\DeviceIntelligence\Risk\Rule\MultipleAccountsRule;
 use Nowo\DeviceIntelligence\Risk\Rule\NewDeviceRule;
 use Nowo\DeviceIntelligence\Risk\Rule\RapidAccountCreationRule;
@@ -43,6 +44,7 @@ final class RiskEngine implements RiskEngineInterface
             new ImpossibleTravelRule(),
             new SessionChangeRule(),
             new IpChangeRule(),
+            new IpReputationRule(),
             new CountryChangeRule(),
             new TrustedDeviceRule(),
         ]);

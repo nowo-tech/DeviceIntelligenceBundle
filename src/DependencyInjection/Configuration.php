@@ -61,6 +61,7 @@ final class Configuration implements ConfigurationInterface
         'impossible_travel',
         'session_change',
         'ip_change',
+        'ip_reputation',
         'country_change',
         'trusted_device',
     ];
@@ -371,8 +372,16 @@ final class Configuration implements ConfigurationInterface
         $node
             ->addDefaultsIfNotSet()
             ->children()
-                ->booleanNode('enabled')->defaultTrue()->end()
+                ->booleanNode('enabled')->defaultTrue()->info('Doctrine repositories and entity mapping. false (1.7): the entities are not mapped at all; the host binds the core repository ports (in-memory defaults).')->end()
                 ->scalarNode('table_prefix')->defaultValue('device_intelligence_')->end()
+                ->scalarNode('entity_manager')
+                    ->info('Doctrine entity manager the device entities are mapped on (1.7), e.g. a dedicated "device_intelligence" manager: mapped there only (also with auto_mapping on the default one) and every read, write and reset of the bundle uses it. Null (default) = the default entity manager.')
+                    ->defaultNull()
+                    ->validate()
+                        ->ifTrue(static fn (mixed $value): bool => null !== $value && (!\is_string($value) || 1 !== preg_match('/^[A-Za-z0-9_]+$/', $value)))
+                        ->thenInvalid('nowo_device_intelligence.doctrine.entity_manager must be the name of a Doctrine entity manager (letters, digits and underscores).')
+                    ->end()
+                ->end()
             ->end();
 
         return $node;

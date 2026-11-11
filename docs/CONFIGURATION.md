@@ -80,8 +80,9 @@ nowo_device_intelligence:
             risk: true
             token: false
     doctrine:
-        enabled: true
+        enabled: true                 # 1.7: false = the entities are mapped on no manager (bind the core repository ports)
         table_prefix: device_intelligence_
+        entity_manager: null          # 1.7: e.g. device_intelligence (dedicated manager, mapped there only)
     cache:
         pool: cache.app
     messenger:

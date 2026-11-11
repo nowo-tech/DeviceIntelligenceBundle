@@ -54,11 +54,11 @@ final class DoctrineDeviceRepository implements DeviceRepositoryInterface
     public function save(Device $device): void
     {
         $em = $this->entityManager(DeviceEntity::class);
-        $entity = $em->find(DeviceEntity::class, $device->id->value);
-        $entity = $this->mapper->toDeviceEntity($device, $entity instanceof DeviceEntity ? $entity : null);
-        $em->persist($entity);
-        $em->flush();
+        $found = $em->find(DeviceEntity::class, $device->id->value);
+        $entity = $this->mapper->toDeviceEntity($device, $found instanceof DeviceEntity ? $found : null);
+        // 1.7 (rule 6): only this row is written; the entity manager (maybe the host's) is never flushed.
         $this->detachAll($em, [$entity]);
+        DbalEntityWriter::write($em, $entity, $found instanceof DeviceEntity);
     }
 
     /**
