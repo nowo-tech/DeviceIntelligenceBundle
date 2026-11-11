@@ -59,6 +59,7 @@
         "friendsofphp/php-cs-fixer": "^3.64",
         "igor-php/igor-php": "^0.9.7 || ^0.10.0",
         "nowo-tech/phpstan-frankenphp": "^1.1",
+        "nowo-tech/user-kit-bundle": "^1.14",
         "phpstan/phpstan": "^2.1",
         "phpstan/phpstan-phpunit": "^2.0",
         "phpstan/phpstan-symfony": "^2.0",
@@ -73,6 +74,7 @@
         "vincentlanglet/twig-cs-fixer": "^3.0 || ^4.0"
     },
     "suggest": {
+        "nowo-tech/user-kit-bundle": "To register the GDPR eraser (device_intelligence) and the export section (devices) with UserKit's personal-data SPI",
         "symfony/asset": "To register the nowo_device_intelligence asset package for the collector script (/bundles/nowodeviceintelligence)",
         "symfony/messenger": "To dispatch cleanup and stability recalculation asynchronously",
         "symfony/translation": "To translate the Web Profiler panel (domain NowoDeviceIntelligenceBundle)",

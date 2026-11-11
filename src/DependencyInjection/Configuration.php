@@ -86,6 +86,7 @@ final class Configuration implements ConfigurationInterface
                 ->append($this->doctrineNode())
                 ->append($this->cacheNode())
                 ->append($this->messengerNode())
+                ->append($this->personalDataNode())
                 ->booleanNode('profiler')->defaultTrue()->end()
                 ->booleanNode('observe_on_every_request')->defaultFalse()->end()
                 ->append($this->tokenCookieNode())
@@ -394,6 +395,30 @@ final class Configuration implements ConfigurationInterface
             ->addDefaultsIfNotSet()
             ->children()
                 ->scalarNode('pool')->defaultValue('cache.app')->cannotBeEmpty()->end()
+            ->end();
+
+        return $node;
+    }
+
+    private function personalDataNode(): ArrayNodeDefinition
+    {
+        $node = (new TreeBuilder('personal_data'))->getRootNode();
+        $node
+            ->info('GDPR erasure / export ports (1.9) and their nowo-tech/user-kit-bundle bridge.')
+            ->addDefaultsIfNotSet()
+            ->children()
+                ->booleanNode('enabled')
+                    ->defaultTrue()
+                    ->info('With UserKit installed, register the "device_intelligence" eraser and the "devices" export section. false: the ports stay available, nothing is registered with UserKit.')
+                ->end()
+                ->scalarNode('subject_resolver')
+                    ->defaultNull()
+                    ->info('Service id of a DeviceIntelligencePersonalDataSubjectResolverInterface used by the UserKit bridge. Null: the user identifier.')
+                    ->validate()
+                        ->ifTrue(static fn (mixed $value): bool => null !== $value && (!\is_string($value) || '' === $value))
+                        ->thenInvalid('nowo_device_intelligence.personal_data.subject_resolver must be a service id or null.')
+                    ->end()
+                ->end()
             ->end();
 
         return $node;

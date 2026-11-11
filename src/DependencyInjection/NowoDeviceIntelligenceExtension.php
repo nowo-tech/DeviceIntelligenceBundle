@@ -50,6 +50,7 @@ use Nowo\DeviceIntelligence\Velocity\InMemoryVelocityEngine;
 use Nowo\DeviceIntelligence\Velocity\VelocityEngineInterface;
 use Nowo\DeviceIntelligenceBundle\Attribute\AsDeviceRiskRule;
 use Nowo\DeviceIntelligenceBundle\Config\DeviceIntelligenceConfig;
+use Nowo\DeviceIntelligenceBundle\DependencyInjection\Compiler\PersonalDataBridgePass;
 use Nowo\DeviceIntelligenceBundle\Doctrine\DoctrineDeviceRepository;
 use Nowo\DeviceIntelligenceBundle\Doctrine\DoctrineDeviceUserRepository;
 use Nowo\DeviceIntelligenceBundle\Doctrine\DoctrineObservationRepository;
@@ -57,9 +58,18 @@ use Nowo\DeviceIntelligenceBundle\Doctrine\DoctrineTrustedDeviceRepository;
 use Nowo\DeviceIntelligenceBundle\Doctrine\TablePrefixSubscriber;
 use Nowo\DeviceIntelligenceBundle\EventSubscriber\RequestStateResetSubscriber;
 use Nowo\DeviceIntelligenceBundle\Infrastructure\SystemClock;
+use Nowo\DeviceIntelligenceBundle\PersonalData\DeviceIntelligencePersonalDataEraser;
+use Nowo\DeviceIntelligenceBundle\PersonalData\DeviceIntelligencePersonalDataEraserInterface;
+use Nowo\DeviceIntelligenceBundle\PersonalData\DeviceIntelligencePersonalDataExporter;
+use Nowo\DeviceIntelligenceBundle\PersonalData\DeviceIntelligencePersonalDataExporterInterface;
+use Nowo\DeviceIntelligenceBundle\PersonalData\DeviceIntelligencePersonalDataSubjectResolverInterface;
+use Nowo\DeviceIntelligenceBundle\PersonalData\UserIdentifierSubjectResolver;
+use Nowo\DeviceIntelligenceBundle\PersonalData\UserKit\DeviceIntelligenceUserKitEraser;
+use Nowo\DeviceIntelligenceBundle\PersonalData\UserKit\DeviceIntelligenceUserKitExportProvider;
 use Nowo\DeviceIntelligenceBundle\Profiler\DeviceIntelligenceDataCollector;
 use Nowo\DeviceIntelligenceBundle\Risk\RiskEngineFactory;
 use Nowo\DeviceIntelligenceBundle\User\SecurityUserIdentifierResolver;
+use Nowo\UserKitBundle\PersonalData\PersonalDataEraserInterface;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\Asset\Package;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
@@ -67,6 +77,7 @@ use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
 use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
@@ -182,7 +193,57 @@ final class NowoDeviceIntelligenceExtension extends Extension implements Prepend
         $profile = $config['profiles'][$config['default_profile']];
         $this->registerCore($container, $config, $profile);
         $this->registerRepositories($container, $config);
+        $this->registerPersonalData($container, $config);
         $this->registerProfiler($container, $config);
+    }
+
+    /**
+     * GDPR erasure / export ports (1.9): Doctrine defaults with `doctrine.enabled` (a host without Doctrine binds its
+     * own), the subject resolver, and the UserKit adapters when UserKit is installed and `personal_data.enabled` is
+     * true. {@see PersonalDataBridgePass} drops an adapter whose port is not bound.
+     *
+     * @param array<string, mixed> $config
+     */
+    private function registerPersonalData(ContainerBuilder $container, array $config): void
+    {
+        if ($config['doctrine']['enabled']) {
+            $container->register(DeviceIntelligencePersonalDataEraser::class)
+                ->setArguments([
+                    new Reference('doctrine'),
+                    new Reference('event_dispatcher', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                    new Reference(ClockInterface::class, ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                ]);
+            $container->setAlias(DeviceIntelligencePersonalDataEraserInterface::class, DeviceIntelligencePersonalDataEraser::class)->setPublic(true);
+            $container->register(DeviceIntelligencePersonalDataExporter::class)
+                ->setArguments([
+                    new Reference('doctrine'),
+                    new Reference(ClockInterface::class, ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                ]);
+            $container->setAlias(DeviceIntelligencePersonalDataExporterInterface::class, DeviceIntelligencePersonalDataExporter::class)->setPublic(true);
+        }
+
+        $personalData = $config['personal_data'];
+        $container->setParameter('nowo_device_intelligence.personal_data.enabled', $personalData['enabled']);
+        $container->register(UserIdentifierSubjectResolver::class);
+        $resolver = \is_string($personalData['subject_resolver']) ? $personalData['subject_resolver'] : UserIdentifierSubjectResolver::class;
+        $container->setAlias(DeviceIntelligencePersonalDataSubjectResolverInterface::class, $resolver)->setPublic(true);
+
+        if (!$personalData['enabled'] || !interface_exists(PersonalDataEraserInterface::class)) {
+            return;
+        }
+
+        $container->register(DeviceIntelligenceUserKitEraser::class)
+            ->setArguments([
+                new Reference(DeviceIntelligencePersonalDataEraserInterface::class),
+                new Reference(DeviceIntelligencePersonalDataSubjectResolverInterface::class),
+            ])
+            ->addTag(PersonalDataBridgePass::ERASER_TAG, ['priority' => DeviceIntelligenceUserKitEraser::PRIORITY]);
+        $container->register(DeviceIntelligenceUserKitExportProvider::class)
+            ->setArguments([
+                new Reference(DeviceIntelligencePersonalDataExporterInterface::class),
+                new Reference(DeviceIntelligencePersonalDataSubjectResolverInterface::class),
+            ])
+            ->addTag(PersonalDataBridgePass::EXPORT_PROVIDER_TAG, ['priority' => DeviceIntelligenceUserKitExportProvider::PRIORITY]);
     }
 
     /**
