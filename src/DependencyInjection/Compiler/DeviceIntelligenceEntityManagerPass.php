@@ -45,6 +45,12 @@ final readonly class DeviceIntelligenceEntityManagerPass implements CompilerPass
             return;
         }
 
+        // 1.8 (rule 8): a host without Doctrine ORM gets a clear message instead of the mapping pass's "Could not find
+        // the manager name parameter".
+        if ($this->validateOnly && $container->hasParameter(NowoDeviceIntelligenceExtension::MAPPING_ENABLED_PARAMETER) && !$container->hasParameter('doctrine.entity_managers')) {
+            throw new InvalidConfigurationException('nowo_device_intelligence.doctrine.enabled is true (the default), but Doctrine ORM is not configured (DoctrineBundle with doctrine.orm). Configure it, or set nowo_device_intelligence.doctrine.enabled: false and bind the core repository ports (DeviceRepositoryInterface, ObservationRepositoryInterface, DeviceUserRepositoryInterface, TrustedDeviceRepositoryInterface) to your own adapters.');
+        }
+
         if (!$container->hasParameter(NowoDeviceIntelligenceExtension::ENTITY_MANAGER_PARAMETER)) {
             return;
         }

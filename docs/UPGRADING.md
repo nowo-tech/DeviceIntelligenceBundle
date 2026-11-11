@@ -5,6 +5,7 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 ## Table of contents
 
 - [Unreleased](#unreleased)
+  - [To 1.8.0](#to-180)
 - [To 1.7.0](#to-170)
 - [To 1.6.0](#to-160)
 - [To 1.5.2](#to-152)
@@ -38,6 +39,20 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+### To 1.8.0
+
+From **1.7.0**: no configuration or schema change. **Standard hosts: nothing to change.**
+
+```bash
+composer update nowo-tech/device-intelligence-bundle
+```
+
+- **DDD hosts without Doctrine ORM (opt-in):** set `doctrine.enabled: false` and alias the four repository ports to
+  your adapters (see USAGE, "Standard host or DDD host without Doctrine"). If you forget `doctrine.enabled: false`, the
+  build now fails with an explicit message instead of "Could not find the manager name parameter".
+- `doctrine/orm` and `doctrine/doctrine-bundle` stay in `require` in 1.x (deprecated since 1.7); 2.0 moves them to
+  `suggest`.
 
 ## To 1.7.0
 
