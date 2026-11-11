@@ -8,12 +8,16 @@ use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Id\AbstractIdGenerator;
+use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\Tools\SchemaTool;
 use Nowo\DeviceIntelligenceBundle\Doctrine\DbalEntityWriter;
 use Nowo\DeviceIntelligenceBundle\Entity\DeviceUserEntity;
+use Nowo\DeviceIntelligenceBundle\Tests\Support\TestDatabase;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -30,8 +34,15 @@ final class DbalEntityWriterTest extends TestCase
         if (\PHP_VERSION_ID >= 80400) {
             $config->enableNativeLazyObjects(true);
         }
-        $this->em = new EntityManager(DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true], $config), $config);
-        (new SchemaTool($this->em))->createSchema($this->em->getMetadataFactory()->getAllMetadata());
+        if (TestDatabase::sequenceIds()) {
+            $config->setIdentityGenerationPreferences([PostgreSQLPlatform::class => ClassMetadata::GENERATOR_TYPE_SEQUENCE]);
+        }
+        $params = null === TestDatabase::url() ? ['driver' => 'pdo_sqlite', 'memory' => true] : TestDatabase::params();
+        $this->em = new EntityManager(DriverManager::getConnection($params, $config), $config);
+        $schema = new SchemaTool($this->em);
+        $metadata = $this->em->getMetadataFactory()->getAllMetadata();
+        $schema->dropSchema($metadata);
+        $schema->createSchema($metadata);
     }
 
     public function testInsertsAndUpdatesWithoutTheUnitOfWork(): void
@@ -42,19 +53,62 @@ final class DbalEntityWriterTest extends TestCase
         $row = $this->em->getConnection()->fetchAssociative('SELECT id, device_id, user_identifier, login_count FROM device_user');
         self::assertIsArray($row);
         self::assertSame('alice', $row['user_identifier']);
+        self::assertSame((int) $row['id'], $entity->getId(), 'the generated id (IDENTITY or SEQUENCE) is set on the entity');
         self::assertSame([], $this->em->getUnitOfWork()->getIdentityMap());
 
-        $entity->setId((int) $row['id']);
+        $second = $this->relation('dev-2', 'alice');
+        DbalEntityWriter::write($this->em, $second, false);
+        self::assertNotSame($entity->getId(), $second->getId());
+
         $entity->setLoginCount(5);
         DbalEntityWriter::write($this->em, $entity, true);
-        self::assertSame(5, (int) $this->em->getConnection()->fetchOne('SELECT login_count FROM device_user'));
+        self::assertSame(5, (int) $this->em->getConnection()->fetchOne('SELECT login_count FROM device_user WHERE id = ?', [$entity->getId()]));
+    }
+
+    public function testIdentityIdIsReadBeforeTheSavepointIsReleased(): void
+    {
+        $connection = $this->em->getConnection();
+        $connection->beginTransaction();
+        $entity = $this->relation('dev-3', 'carol');
+        DbalEntityWriter::write($this->em, $entity, false);
+        $id = $entity->getId();
+        $connection->commit();
+
+        self::assertNotNull($id);
+        self::assertSame('carol', $connection->fetchOne('SELECT user_identifier FROM device_user WHERE id = ?', [$id]));
+    }
+
+    public function testPreInsertGeneratorIdIsWrittenInTheInsert(): void
+    {
+        // A SEQUENCE-like generator on any platform: the id comes first and goes into the INSERT.
+        $metadata = $this->em->getClassMetadata(DeviceUserEntity::class);
+        $generatorType = $metadata->generatorType;
+        $generator = $metadata->idGenerator;
+        $metadata->setIdGeneratorType(ClassMetadata::GENERATOR_TYPE_CUSTOM);
+        $metadata->setIdGenerator(new class extends AbstractIdGenerator {
+            public function generateId(EntityManagerInterface $em, ?object $entity): mixed
+            {
+                return 4242;
+            }
+        });
+
+        try {
+            $entity = $this->relation('dev-4', 'dave');
+            DbalEntityWriter::write($this->em, $entity, false);
+        } finally {
+            $metadata->setIdGeneratorType($generatorType);
+            $metadata->setIdGenerator($generator);
+        }
+
+        self::assertSame(4242, $entity->getId());
+        self::assertSame('dave', $this->em->getConnection()->fetchOne('SELECT user_identifier FROM device_user WHERE id = 4242'));
     }
 
     public function testFailureInsideAHostTransactionRollsBackOnlyTheSavepoint(): void
     {
         $connection = $this->em->getConnection();
         $connection->beginTransaction();
-        $connection->executeStatement("INSERT INTO device_user (device_id, user_identifier, first_seen_at, last_seen_at, login_count) VALUES ('host', 'row', '2026-01-01 00:00:00', '2026-01-01 00:00:00', 0)");
+        DbalEntityWriter::write($this->em, $this->relation('host', 'row'), false);
         DbalEntityWriter::write($this->em, $this->relation('dev-1', 'alice'), false);
 
         try {
@@ -77,6 +131,7 @@ final class DbalEntityWriterTest extends TestCase
         $connection->expects(self::once())->method('createSavepoint');
         $connection->method('insert')->willThrowException($original);
         $connection->method('rollbackSavepoint')->willThrowException(new RuntimeException('savepoint gone'));
+        $connection->method('fetchOne')->willReturn('1');
         $connection->expects(self::never())->method('releaseSavepoint');
 
         $em = $this->createMock(EntityManagerInterface::class);

@@ -266,6 +266,84 @@ jobs:
       - name: PHPStan (level and ignoreErrors from phpstan.neon.dist; fails the build on any error)
         run: composer phpstan --no-interaction
 
+  igor:
+    name: Igor (FrankenPHP worker audit)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Igor worker-state audit (REQ-CS-008)
+        run: composer igor
+
+  database:
+    # Persistence tests on real MySQL / PostgreSQL (audit LI-DI-L1), including PostgreSQL SEQUENCE ids (LI-DI-M1).
+    name: Database tests (${{ matrix.db }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - db: mysql
+            url: 'pdo-mysql://root:root@127.0.0.1:3306/di_test?serverVersion=8.0&charset=utf8mb4'
+            ids: identity
+          - db: postgresql
+            url: 'pdo-pgsql://postgres:postgres@127.0.0.1:5432/di_test?serverVersion=17&charset=utf8'
+            ids: identity
+          - db: postgresql-sequence
+            url: 'pdo-pgsql://postgres:postgres@127.0.0.1:5432/di_test?serverVersion=17&charset=utf8'
+            ids: sequence
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: di_test
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -proot" --health-interval=5s --health-timeout=5s --health-retries=20
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: di_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd="pg_isready -U postgres" --health-interval=5s --health-timeout=5s --health-retries=20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql, pdo_pgsql
+          tools: composer:v2
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Persistence tests
+        env:
+          DI_TEST_DATABASE_URL: ${{ matrix.url }}
+          DI_TEST_ID_GENERATION: ${{ matrix.ids }}
+        run: vendor/bin/phpunit --no-coverage --filter 'DoctrinePersistenceKernelTest|DbalEntityWriterTest'
+
   coverage:
     name: Code Coverage
     runs-on: ubuntu-latest

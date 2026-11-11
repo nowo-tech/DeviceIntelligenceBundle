@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\Doctrine;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DriverManager;
+use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Nowo\DeviceIntelligence\Device\DeviceId;
@@ -225,7 +229,20 @@ final class DoctrineRepositoriesTest extends TestCase
 
         $em = $this->createMock(EntityManagerInterface::class);
         $em->method('createQueryBuilder')->willReturn($qb);
+        // Real class metadata (id generators included) for DbalEntityWriter.
+        $metadata = self::metadata();
+        $em->method('getClassMetadata')->willReturnCallback(static fn (string $class): ClassMetadata => $metadata->getClassMetadata($class));
 
         return $em;
+    }
+
+    private static function metadata(): EntityManager
+    {
+        $config = ORMSetup::createAttributeMetadataConfiguration([\dirname(__DIR__, 3).'/src/Entity'], true);
+        if (\PHP_VERSION_ID >= 80400) {
+            $config->enableNativeLazyObjects(true);
+        }
+
+        return new EntityManager(DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true], $config), $config);
     }
 }

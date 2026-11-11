@@ -34,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Target 1.7.0 (architecture bar, wave W1: standard Symfony and DDD hosts).
 
-### Fixed
+### Security
 
 - **The analysis no longer flushes the host's entity manager.** The Doctrine repositories wrote each device,
   observation, device/user and trust row with `persist()` + `flush()` on the manager that maps the entities — the host's
@@ -42,6 +42,9 @@ Target 1.7.0 (architecture bar, wave W1: standard Symfony and DDD hosts).
   pending at that moment. They now write only their own row with a DBAL `INSERT` / `UPDATE` built from the class
   metadata (`DbalEntityWriter`), inside a SAVEPOINT when the host has a transaction open (a bundle failure never
   aborts the host transaction; the original error is rethrown).
+  With PostgreSQL SEQUENCE ids (DBAL 3, or `identity_generation_preferences: sequence`) the writer generates the id
+  through the entity's ORM generator and writes it in the INSERT; with IDENTITY it reads `lastInsertId()` before the
+  savepoint is released. Persistence tests run on SQLite, MySQL 8.0 and PostgreSQL 17 (identity and sequence) in CI.
 
 ### Added
 
@@ -53,7 +56,8 @@ Target 1.7.0 (architecture bar, wave W1: standard Symfony and DDD hosts).
   privacy processor; the reputation reaches the new **`ip_reputation`** risk rule (Tor / proxy / VPN / hosting and the
   provider's risk; scores 0 without a provider, so default results are unchanged).
 - Kernel tests: standard host (host changes stay pending), host transaction, dedicated manager with `auto_mapping`,
-  `doctrine.enabled: false` with `auto_mapping`, no DoctrineBundle at all, unknown manager.
+  `doctrine.enabled: false` with `auto_mapping`, no DoctrineBundle at all, unknown manager. CI runs the persistence
+  tests on MySQL and PostgreSQL (with a SEQUENCE job) and the Igor worker audit.
 
 ### Changed
 

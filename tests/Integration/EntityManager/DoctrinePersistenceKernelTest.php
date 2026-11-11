@@ -5,18 +5,22 @@ declare(strict_types=1);
 namespace Nowo\DeviceIntelligenceBundle\Tests\Integration\EntityManager;
 
 use DateTimeImmutable;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\DeviceIntelligence\Analysis;
 use Nowo\DeviceIntelligence\AnalysisInput;
+use Nowo\DeviceIntelligence\Device\DeviceManager;
 use Nowo\DeviceIntelligence\DeviceIntelligenceInterface;
 use Nowo\DeviceIntelligence\Infrastructure\InMemoryDeviceRepository;
 use Nowo\DeviceIntelligence\Port\DeviceRepositoryInterface;
 use Nowo\DeviceIntelligence\Signal\SignalBag;
 use Nowo\DeviceIntelligence\User\UserIdentifier;
 use Nowo\DeviceIntelligenceBundle\Entity\DeviceEntity;
+use Nowo\DeviceIntelligenceBundle\Entity\DeviceTrustEntity;
 use Nowo\DeviceIntelligenceBundle\Tests\Integration\EntityManager\Entity\HostNote;
+use Nowo\DeviceIntelligenceBundle\Tests\Support\TestDatabase;
 use Nowo\DeviceIntelligenceBundle\Trust\DeviceTrustService;
 use Nowo\DeviceIntelligenceBundle\Trust\DeviceTrustServiceInterface;
 use PHPUnit\Framework\TestCase;
@@ -49,12 +53,8 @@ final class DoctrinePersistenceKernelTest extends TestCase
 
     public function testStandardHostAnalysisNeverFlushesTheHostManager(): void
     {
-        $this->boot([
-            'dbal' => ['url' => 'sqlite:///'.$this->database('standard')],
-            'orm' => ['auto_mapping' => true, 'mappings' => self::hostMapping()],
-        ]);
-        $host = $this->manager('default');
-        (new SchemaTool($host))->createSchema($host->getMetadataFactory()->getAllMetadata());
+        $this->boot(self::hostDoctrine($this->database('standard'), self::hostMapping()));
+        $host = $this->managerWithSchema('default');
         self::assertSame($host, $this->registry()->getManagerForClass(DeviceEntity::class));
 
         $note = new HostNote('pending host change');
@@ -76,29 +76,70 @@ final class DoctrinePersistenceKernelTest extends TestCase
         $trust->trust($analysis->device, new UserIdentifier('alice'), label: 'Laptop');
         self::assertTrue($trust->isTrusted($analysis->device, new UserIdentifier('alice')));
         self::assertSame(1, (int) $host->getConnection()->fetchOne('SELECT COUNT(*) FROM device_intelligence_device_trust'));
+
+        // Login association (SecurityDeviceSubscriber): a generated id (IDENTITY or SEQUENCE) on device_user (LI-DI-M1).
+        $devices = $this->container()->get(DeviceManager::class);
+        self::assertInstanceOf(DeviceManager::class, $devices);
+        $devices->associate($analysis->device, new UserIdentifier('alice'));
+        $devices->associate($analysis->device, new UserIdentifier('bob'));
+        $devices->associate($analysis->device, new UserIdentifier('alice'));
+        self::assertSame(2, (int) $host->getConnection()->fetchOne('SELECT COUNT(*) FROM device_intelligence_device_user'));
+        self::assertSame(2, $devices->accountCount($analysis->device));
+        $trust->revoke($analysis->device, new UserIdentifier('alice'));
+        self::assertFalse($trust->isTrusted($analysis->device, new UserIdentifier('alice')));
         self::assertSame(0, (int) $host->getConnection()->fetchOne('SELECT COUNT(*) FROM host_note'));
+    }
+
+    /**
+     * SEQUENCE ids (PostgreSQL with DBAL 3, or `identity_generation_preferences: sequence`): the generated id is in the
+     * INSERT, so trust and login association rows are written (LI-DI-M1). Runs where CI points it at PostgreSQL.
+     */
+    public function testSequenceGeneratedIdsAreWritten(): void
+    {
+        if (!TestDatabase::sequenceIds()) {
+            self::markTestSkipped('DI_TEST_ID_GENERATION=sequence (PostgreSQL) only.');
+        }
+
+        $this->boot(self::hostDoctrine($this->database('sequence')));
+        $host = $this->managerWithSchema('default');
+        self::assertTrue($host->getClassMetadata(DeviceTrustEntity::class)->isIdGeneratorSequence());
+
+        $analysis = $this->analyze('erin');
+        $trust = $this->container()->get(DeviceTrustServiceInterface::class);
+        self::assertInstanceOf(DeviceTrustServiceInterface::class, $trust);
+        $trust->trust($analysis->device, new UserIdentifier('erin'));
+        $devices = $this->container()->get(DeviceManager::class);
+        self::assertInstanceOf(DeviceManager::class, $devices);
+        $devices->associate($analysis->device, new UserIdentifier('erin'));
+
+        self::assertTrue($trust->isTrusted($analysis->device, new UserIdentifier('erin')));
+        self::assertSame(1, (int) $host->getConnection()->fetchOne('SELECT COUNT(*) FROM device_intelligence_device_user WHERE id IS NOT NULL'));
     }
 
     public function testInsideAHostTransactionTheRowsFollowTheHost(): void
     {
-        $this->boot([
-            'dbal' => ['url' => 'sqlite:///'.$this->database('tx')],
-            'orm' => ['auto_mapping' => true],
-        ]);
-        $host = $this->manager('default');
-        (new SchemaTool($host))->createSchema($host->getMetadataFactory()->getAllMetadata());
+        $this->boot(self::hostDoctrine($this->database('tx')));
+        $host = $this->managerWithSchema('default');
 
         $host->getConnection()->beginTransaction();
-        $this->analyze(null);
+        $analysis = $this->analyze(null);
+        $devices = $this->container()->get(DeviceManager::class);
+        self::assertInstanceOf(DeviceManager::class, $devices);
+        $devices->associate($analysis->device, new UserIdentifier('frank'));
         self::assertTrue($host->getConnection()->isTransactionActive(), 'the savepoint left the host transaction open');
         self::assertSame(1, (int) $host->getConnection()->fetchOne('SELECT COUNT(*) FROM device_intelligence_device'));
         $host->getConnection()->rollBack();
 
         self::assertSame(0, (int) $host->getConnection()->fetchOne('SELECT COUNT(*) FROM device_intelligence_device'));
+        self::assertSame(0, (int) $host->getConnection()->fetchOne('SELECT COUNT(*) FROM device_intelligence_device_user'));
     }
 
     public function testDedicatedManagerMapsTheEntitiesThereOnly(): void
     {
+        if (null !== TestDatabase::url()) {
+            self::markTestSkipped('Two SQLite databases; the layout does not depend on the platform.');
+        }
+
         $this->boot([
             'dbal' => [
                 'default_connection' => 'default',
@@ -196,6 +237,37 @@ final class DoctrinePersistenceKernelTest extends TestCase
         self::assertInstanceOf(ManagerRegistry::class, $registry);
 
         return $registry;
+    }
+
+    /**
+     * Host Doctrine configuration on SQLite, or on `DI_TEST_DATABASE_URL` (MySQL / PostgreSQL in CI).
+     *
+     * @param array<string, array<string, mixed>> $mappings
+     *
+     * @return array<string, mixed>
+     */
+    private static function hostDoctrine(string $sqliteFile, array $mappings = []): array
+    {
+        $orm = ['auto_mapping' => true, 'mappings' => $mappings];
+        if (TestDatabase::sequenceIds()) {
+            $orm['identity_generation_preferences'] = [PostgreSQLPlatform::class => 'sequence'];
+        }
+
+        return [
+            'dbal' => ['url' => TestDatabase::url() ?? 'sqlite:///'.$sqliteFile],
+            'orm' => $orm,
+        ];
+    }
+
+    private function managerWithSchema(string $name): EntityManagerInterface
+    {
+        $manager = $this->manager($name);
+        $schema = new SchemaTool($manager);
+        $metadata = $manager->getMetadataFactory()->getAllMetadata();
+        $schema->dropSchema($metadata);
+        $schema->createSchema($metadata);
+
+        return $manager;
     }
 
     private function manager(string $name): EntityManagerInterface
