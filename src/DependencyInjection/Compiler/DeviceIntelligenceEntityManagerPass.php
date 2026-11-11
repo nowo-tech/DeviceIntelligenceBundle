@@ -40,7 +40,7 @@ final readonly class DeviceIntelligenceEntityManagerPass implements CompilerPass
 
         // doctrine.enabled: false (rule 8): no manager maps the entities, not even through auto_mapping.
         if (!$this->validateOnly && $container->hasParameter('nowo_device_intelligence.doctrine.enabled') && false === $container->getParameter('nowo_device_intelligence.doctrine.enabled')) {
-            $this->keepOn($container, \array_keys($managers), null);
+            $this->keepOn($container, array_keys($managers), null);
 
             return;
         }
@@ -55,14 +55,14 @@ final readonly class DeviceIntelligenceEntityManagerPass implements CompilerPass
         }
 
         if (!isset($managers[$name])) {
-            throw new InvalidConfigurationException(\sprintf('nowo_device_intelligence.doctrine.entity_manager is "%s", but no such Doctrine entity manager is configured (known: "%s"). Add it under doctrine.orm.entity_managers or remove the option.', $name, \implode('", "', \array_keys($managers))));
+            throw new InvalidConfigurationException(\sprintf('nowo_device_intelligence.doctrine.entity_manager is "%s", but no such Doctrine entity manager is configured (known: "%s"). Add it under doctrine.orm.entity_managers or remove the option.', $name, implode('", "', array_keys($managers))));
         }
 
         if ($this->validateOnly) {
             return;
         }
 
-        $this->keepOn($container, \array_keys($managers), $name);
+        $this->keepOn($container, array_keys($managers), $name);
     }
 
     /**
