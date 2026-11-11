@@ -32,7 +32,7 @@ final class DeviceIntelligenceEntityManagerPassTest extends TestCase
         (new DeviceIntelligenceEntityManagerPass())->process($container);
 
         $defaultCalls = $container->getDefinition('doctrine.orm.default_metadata_driver')->getMethodCalls();
-        self::assertSame(['App\\Entity'], \array_map(static fn (array $call): mixed => $call[1][1], $defaultCalls));
+        self::assertSame(['App\\Entity'], array_map(static fn (array $call): mixed => $call[1][1], $defaultCalls));
         self::assertCount(1, $container->getDefinition('doctrine.orm.device_intelligence_metadata_driver')->getMethodCalls());
     }
 
@@ -43,7 +43,7 @@ final class DeviceIntelligenceEntityManagerPassTest extends TestCase
         (new DeviceIntelligenceEntityManagerPass())->process($container);
 
         $default = $container->getDefinition('doctrine.orm.default_metadata_driver')->getMethodCalls();
-        self::assertSame(['App\\Entity'], \array_map(static fn (array $call): mixed => $call[1][1], $default));
+        self::assertSame(['App\\Entity'], array_map(static fn (array $call): mixed => $call[1][1], $default));
         self::assertSame([], $container->getDefinition('doctrine.orm.device_intelligence_metadata_driver')->getMethodCalls());
     }
 

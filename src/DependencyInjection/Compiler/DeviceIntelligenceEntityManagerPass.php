@@ -82,7 +82,7 @@ final readonly class DeviceIntelligenceEntityManagerPass implements CompilerPass
             $calls = [];
             $maps = false;
             foreach ($chain->getMethodCalls() as $call) {
-                $isBundleDriver = 'addDriver' === $call[0] && \is_string($call[1][1] ?? null) && \str_starts_with($call[1][1], self::ENTITY_NAMESPACE);
+                $isBundleDriver = 'addDriver' === $call[0] && \is_string($call[1][1] ?? null) && str_starts_with($call[1][1], self::ENTITY_NAMESPACE);
                 if ($isBundleDriver && $manager !== $name) {
                     continue;
                 }
