@@ -5,8 +5,8 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.9.0](#to-190)
 - [To 1.8.0](#to-180)
-  - [To 1.8.0](#to-180-1)
 - [To 1.7.0](#to-170)
 - [To 1.6.0](#to-160)
 - [To 1.5.2](#to-152)
@@ -40,6 +40,14 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.9.0
+
+From **1.8.0**:
+
+```bash
+composer update nowo-tech/device-intelligence-bundle
+```
 
 No configuration or schema change. **Standard hosts: nothing to change.**
 
