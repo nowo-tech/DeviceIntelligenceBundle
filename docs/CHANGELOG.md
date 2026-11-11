@@ -8,51 +8,99 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
-  - [Target 1.8.0](#target-180)
+- [[1.8.0] - 2026-11-11](#180---2026-11-11)
 - [[1.7.0] - 2026-11-11](#170---2026-11-11)
+  - [Security](#security)
+  - [Added](#added)
+  - [Changed](#changed-1)
+  - [Deprecated](#deprecated)
 - [[1.6.0] - 2026-11-10](#160---2026-11-10)
+  - [Added](#added-1)
+  - [Documentation](#documentation-1)
 - [[1.5.2] - 2026-10-31](#152---2026-10-31)
+  - [Fixed](#fixed)
+  - [Changed](#changed-2)
+  - [Tests](#tests-1)
 - [[1.5.1] - 2026-10-30](#151---2026-10-30)
+  - [Security](#security-1)
 - [[1.5.0] - 2026-10-28](#150---2026-10-28)
+  - [Changed](#changed-3)
+  - [Documentation](#documentation-2)
 - [[1.4.1] - 2026-10-25](#141---2026-10-25)
+  - [Changed](#changed-4)
 - [[1.4.0] - 2026-10-21](#140---2026-10-21)
+  - [Changed](#changed-5)
 - [[1.3.3] - 2026-10-21](#133---2026-10-21)
+  - [Changed](#changed-6)
 - [[1.3.2] - 2026-10-15](#132---2026-10-15)
+  - [Changed](#changed-7)
 - [[1.3.1] - 2026-10-13](#131---2026-10-13)
+  - [Changed](#changed-8)
 - [[1.3.0] - 2026-10-13](#130---2026-10-13)
+  - [Security](#security-2)
+  - [Fixed](#fixed-1)
+  - [Changed](#changed-9)
 - [[1.2.2] - 2026-10-13](#122---2026-10-13)
+  - [Dependencies](#dependencies)
+  - [Changed](#changed-10)
 - [[1.2.1] - 2026-10-09](#121---2026-10-09)
+  - [Fixed](#fixed-2)
+  - [Dependencies](#dependencies-1)
 - [[1.2.0] - 2026-09-28](#120---2026-09-28)
+  - [Security](#security-3)
+  - [Changed](#changed-11)
 - [[1.1.5] - 2026-09-27](#115---2026-09-27)
+  - [Added](#added-2)
+  - [Changed](#changed-12)
 - [[1.1.4] - 2026-09-24](#114---2026-09-24)
+  - [Fixed](#fixed-3)
+  - [Documentation](#documentation-3)
 - [[1.1.3] - 2026-09-07](#113---2026-09-07)
+  - [Changed](#changed-13)
+  - [Notes](#notes)
 - [[1.1.2] - 2026-09-03](#112---2026-09-03)
+  - [Fixed](#fixed-4)
+  - [Changed](#changed-14)
 - [[1.1.1] - 2026-08-26](#111---2026-08-26)
+  - [Changed](#changed-15)
+  - [Notes](#notes-1)
 - [[1.1.0] - 2026-08-24](#110---2026-08-24)
+  - [Added](#added-3)
+  - [Changed](#changed-16)
+  - [Notes](#notes-2)
+  - [Added](#added-4)
+  - [Documentation](#documentation-4)
+  - [Fixed](#fixed-5)
 - [[1.0.1] - 2026-08-23](#101---2026-08-23)
+  - [Added](#added-5)
+  - [Changed](#changed-17)
+  - [Fixed](#fixed-6)
+  - [Documentation](#documentation-5)
 - [[1.0.0] - 2026-08-23](#100---2026-08-23)
+  - [Added](#added-6)
+  - [Documentation](#documentation-6)
 
 ## [Unreleased]
 
-### Target 1.8.0
+## [1.8.0] - 2026-11-11
 
-Architecture bar W2 (standard Symfony by default, strict DDD opt-in): rule 8, tests on both host kinds.
+Architecture bar W2 (standard Symfony by default, strict DDD opt-in): rule 8, tests on both host kinds. Audit: Appendix LR, A (no findings).
 
-#### Changed
+### Changed
 
 - A host without Doctrine ORM (no DoctrineBundle, or no `doctrine.orm`) that leaves `doctrine.enabled` at `true` now
   gets an explicit build error (configure the ORM, or set `doctrine.enabled: false` and bind the four repository
   ports) instead of the mapping pass's "Could not find the manager name parameter".
 - Standard hosts: no configuration change, same defaults.
 
-#### Tests
+### Tests
 
 - `tests/Integration/Ddd/HostAdaptersKernelTest.php`: a DDD host without DoctrineBundle, the four repository ports
   bound to host stores, the analysis through a host controller and the trust API; a kept-alive kernel serving 600
   requests for two users through `http_kernel` handle / terminate without the services resetter (devices kept in
   the host stores, never mixed, flat memory).
 
-#### Documentation
+### Documentation
 
 - USAGE, "Using it from a DDD / hexagonal application": both paths (standard Doctrine host / host adapters without
   Doctrine) with the configuration of each.
@@ -60,7 +108,6 @@ Architecture bar W2 (standard Symfony by default, strict DDD opt-in): rule 8, te
 ## [1.7.0] - 2026-11-11
 
 Device and trust rows are written with DBAL; the host entity manager is never flushed or reset; real `entity_manager` option. See [UPGRADING](https://github.com/nowo-tech/DeviceIntelligenceBundle/blob/v1.7.0/docs/UPGRADING.md#to-170).
-
 
 ### Security
 
@@ -436,7 +483,8 @@ First stable release of **Device Intelligence Bundle**.
 - README: canonical badges, FrankenPHP banner, `## Documentation`, `## Tests and coverage`
 - Integrator docs: INSTALLATION, CONFIGURATION, USAGE, SECURITY, CONTRIBUTING, RELEASE, UPGRADING, GITHUB (REQ-DOCS-018)
 
-[Unreleased]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.7.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.8.0...HEAD
+[1.8.0]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.5.2...v1.6.0
 [1.5.2]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.5.1...v1.5.2
