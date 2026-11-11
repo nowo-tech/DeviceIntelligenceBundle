@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\Doctrine;
 
+use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
@@ -47,8 +48,13 @@ final class DoctrineRepositoriesTest extends TestCase
 
             return $finds <= 2 ? null : $entity;
         });
-        $em->expects(self::exactly(2))->method('persist');
-        $em->expects(self::exactly(2))->method('flush');
+        // 1.7 (rule 6): the rows are written through DBAL; the entity manager is never persisted to nor flushed.
+        $em->expects(self::never())->method('persist');
+        $em->expects(self::never())->method('flush');
+        $connection = $this->createMock(Connection::class);
+        $connection->expects(self::once())->method('insert');
+        $connection->expects(self::once())->method('update');
+        $em->method('getConnection')->willReturn($connection);
 
         $repo = new DoctrineDeviceRepository($em, $mapper);
         self::assertNull($repo->find($device->id));

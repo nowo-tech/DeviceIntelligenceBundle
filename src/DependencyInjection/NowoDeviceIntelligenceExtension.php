@@ -22,11 +22,15 @@ use Nowo\DeviceIntelligence\Matching\WeightedDeviceMatcher;
 use Nowo\DeviceIntelligence\Port\DeviceRepositoryInterface;
 use Nowo\DeviceIntelligence\Port\DeviceUserRepositoryInterface;
 use Nowo\DeviceIntelligence\Port\GeoIpProviderInterface;
+use Nowo\DeviceIntelligence\Port\IpReputationProviderInterface;
 use Nowo\DeviceIntelligence\Port\MetricsRecorderInterface;
 use Nowo\DeviceIntelligence\Port\NullGeoIpProvider;
+use Nowo\DeviceIntelligence\Port\NullIpReputationProvider;
 use Nowo\DeviceIntelligence\Port\NullMetricsRecorder;
 use Nowo\DeviceIntelligence\Port\ObservationRepositoryInterface;
 use Nowo\DeviceIntelligence\Port\TrustedDeviceRepositoryInterface;
+use Nowo\DeviceIntelligence\Privacy\AllowAllConsentGate;
+use Nowo\DeviceIntelligence\Privacy\ConsentGateInterface;
 use Nowo\DeviceIntelligence\Privacy\PrivacyContext;
 use Nowo\DeviceIntelligence\Privacy\PrivacyMode;
 use Nowo\DeviceIntelligence\Privacy\PrivacyProcessor;
@@ -79,6 +83,15 @@ use Symfony\Component\Translation\Translator;
  */
 final class NowoDeviceIntelligenceExtension extends Extension implements PrependExtensionInterface
 {
+    /** Container parameter holding `doctrine.entity_manager` (null: the default entity manager), 1.7. */
+    public const ENTITY_MANAGER_PARAMETER = 'nowo_device_intelligence.doctrine.entity_manager';
+
+    /**
+     * Defined only when `doctrine.enabled` is true (1.7): the entity mapping pass is registered only then (Symfony's
+     * mapping passes test the presence of their "enabled" parameter, not its value).
+     */
+    public const MAPPING_ENABLED_PARAMETER = 'nowo_device_intelligence.doctrine.mapping_enabled';
+
     private const SIGNAL_NORMALIZERS = 'nowo_device_intelligence.signal_normalizers';
 
     /**
@@ -185,6 +198,11 @@ final class NowoDeviceIntelligenceExtension extends Extension implements Prepend
         $container->setParameter('nowo_device_intelligence.endpoint.path', $config['endpoint']['path']);
         $container->setParameter('nowo_device_intelligence.doctrine.enabled', $config['doctrine']['enabled']);
         $container->setParameter('nowo_device_intelligence.doctrine.table_prefix', $config['doctrine']['table_prefix']);
+        if ($config['doctrine']['enabled']) {
+            $container->setParameter(self::MAPPING_ENABLED_PARAMETER, true);
+        }
+        $entityManagerName = $config['doctrine']['entity_manager'] ?? null;
+        $container->setParameter(self::ENTITY_MANAGER_PARAMETER, \is_string($entityManagerName) && '' !== $entityManagerName && $config['doctrine']['enabled'] ? $entityManagerName : null);
         $container->setParameter('nowo_device_intelligence.cache.pool', $config['cache']['pool']);
         $container->setParameter('nowo_device_intelligence.messenger.enabled', $config['messenger']['enabled']);
         $container->setParameter('nowo_device_intelligence.profiler', $config['profiler']);
@@ -271,6 +289,8 @@ final class NowoDeviceIntelligenceExtension extends Extension implements Prepend
                 new Reference(VelocityEngineInterface::class),
                 new Reference(MetricsRecorderInterface::class),
                 new Reference(IndexKeyFactory::class),
+                new Reference(ConsentGateInterface::class),
+                new Reference(IpReputationProviderInterface::class),
             ])
             ->setShared(false)
             ->setPublic(true);
@@ -333,6 +353,9 @@ final class NowoDeviceIntelligenceExtension extends Extension implements Prepend
             NetworkSignalProviderInterface::class => NullNetworkSignalProvider::class,
             GeoIpProviderInterface::class => NullGeoIpProvider::class,
             MetricsRecorderInterface::class => NullMetricsRecorder::class,
+            // 1.7 (rule 5): consumed by DeviceIntelligence::analyze() (consent per collector, IP reputation rule).
+            ConsentGateInterface::class => AllowAllConsentGate::class,
+            IpReputationProviderInterface::class => NullIpReputationProvider::class,
         ];
         foreach ($defaults as $port => $implementation) {
             $container->register($implementation)->setPublic(false);

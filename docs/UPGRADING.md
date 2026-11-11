@@ -39,6 +39,24 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 
 ## Unreleased
 
+### To 1.7.0
+
+From **1.6.0**: no configuration or schema change.
+
+- **Persistence:** the Doctrine repositories write their rows with DBAL (no `flush()`); your own pending changes are
+  no longer committed by an analysis. If you relied on that side effect (an entity persisted before a login or a
+  request listener and never flushed by your code), flush it yourself. Bundle entities are never left in the identity
+  map.
+- **Optional `doctrine.entity_manager`**: maps the entities on that manager only (declare it under
+  `doctrine.orm.entity_managers`); move the bundle tables to its connection (or point it at the same database).
+- **`doctrine.enabled: false`** no longer maps the entities on any manager (auto_mapping included): drop the bundle
+  tables from your schema diff if you used that combination.
+- **New risk rule `ip_reputation`**: scores only when you alias `IpReputationProviderInterface` to a real provider;
+  disable it under `risk.rules.ip_reputation.enabled: false` if you wire a provider but do not want the score.
+- **Consent:** alias `ConsentGateInterface` to your consent service to drop collectors the visitor refused.
+- **Trust API:** type-hint `DeviceTrustServiceInterface` instead of the final `DeviceTrustService`.
+- **2.0 (announced):** `doctrine/orm` and `doctrine/doctrine-bundle` move from `require` to `suggest`.
+
 ## To 1.6.0
 
 From **1.5.2**:

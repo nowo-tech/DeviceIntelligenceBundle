@@ -32,6 +32,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Target 1.7.0 (architecture bar, wave W1: standard Symfony and DDD hosts).
+
+### Fixed
+
+- **The analysis no longer flushes the host's entity manager.** The Doctrine repositories wrote each device,
+  observation, device/user and trust row with `persist()` + `flush()` on the manager that maps the entities — the host's
+  default manager in a standard host — from request listeners and on login, which also committed whatever the host had
+  pending at that moment. They now write only their own row with a DBAL `INSERT` / `UPDATE` built from the class
+  metadata (`DbalEntityWriter`), inside a SAVEPOINT when the host has a transaction open (a bundle failure never
+  aborts the host transaction; the original error is rethrown).
+
+### Added
+
+- **`doctrine.entity_manager`** option: map the entities on a dedicated entity manager only (also when the default
+  manager has `auto_mapping: true`); the repositories use it; an unknown manager fails the build. Default `null`.
+- **`DeviceTrustServiceInterface`** (trust / revoke / isTrusted), aliased to `DeviceTrustService`.
+- **`ConsentGateInterface`** and **`IpReputationProviderInterface`** are now consumed by the analysis (overridable
+  aliases; defaults `AllowAllConsentGate` / `NullIpReputationProvider`): the gate decides per collector after the
+  privacy processor; the reputation reaches the new **`ip_reputation`** risk rule (Tor / proxy / VPN / hosting and the
+  provider's risk; scores 0 without a provider, so default results are unchanged).
+- Kernel tests: standard host (host changes stay pending), host transaction, dedicated manager with `auto_mapping`,
+  `doctrine.enabled: false` with `auto_mapping`, no DoctrineBundle at all, unknown manager.
+
+### Changed
+
+- **`doctrine.enabled: false`** now maps the entities nowhere (also not through `auto_mapping`); before, the mapping
+  was registered anyway.
+
+### Deprecated
+
+- The hard requirement on `doctrine/orm` / `doctrine/doctrine-bundle`: they move to `suggest` in 2.0 (the core and the
+  bundle already run without them with `doctrine.enabled: false`).
+
 ## [1.6.0] - 2026-11-10
 
 Target 1.6.0. See [UPGRADING](UPGRADING.md#to-160).

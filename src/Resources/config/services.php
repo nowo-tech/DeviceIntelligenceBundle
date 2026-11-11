@@ -36,6 +36,7 @@ use Nowo\DeviceIntelligenceBundle\RateLimiter\SymfonyDeviceRateLimiter;
 use Nowo\DeviceIntelligenceBundle\Request\DeviceContextValueResolver;
 use Nowo\DeviceIntelligenceBundle\Request\TokenDeviceContextFactory;
 use Nowo\DeviceIntelligenceBundle\Trust\DeviceTrustService;
+use Nowo\DeviceIntelligenceBundle\Trust\DeviceTrustServiceInterface;
 use Nowo\DeviceIntelligenceBundle\User\SecurityUserIdentifierResolver;
 use Symfony\Component\Cache\Psr16Cache;
 
@@ -78,6 +79,8 @@ return static function (ContainerConfigurator $container): void {
 
     $services->set(AnalyzeService::class)->share(false);
     $services->set(DeviceTrustService::class);
+    // 1.7 (rule 1): the trust API by interface.
+    $services->alias(DeviceTrustServiceInterface::class, DeviceTrustService::class)->public();
     $services->set(TokenDeviceContextFactory::class);
 
     $services->set(DeviceContextValueResolver::class)

@@ -39,9 +39,9 @@ final class DoctrineDeviceUserRepository implements DeviceUserRepositoryInterfac
         $em = $this->entityManager(DeviceUserEntity::class);
         $existing = $this->findEntity($em, $relation->deviceId, $relation->userIdentifier);
         $entity = $this->mapper->toUserEntity($relation, $existing);
-        $em->persist($entity);
-        $em->flush();
+        // 1.7 (rule 6): only this row is written; the entity manager (maybe the host's) is never flushed.
         $this->detachAll($em, [$entity]);
+        DbalEntityWriter::write($em, $entity, null !== $existing);
     }
 
     /**

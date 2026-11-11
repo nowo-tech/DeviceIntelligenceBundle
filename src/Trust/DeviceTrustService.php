@@ -18,7 +18,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  * @author Héctor Franco Aceituno <hectorfranco@nowo.tech>
  * @copyright 2026 Nowo.tech
  */
-final class DeviceTrustService
+final class DeviceTrustService implements DeviceTrustServiceInterface
 {
     /**
      * Creates the device trust service.
