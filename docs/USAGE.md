@@ -11,6 +11,7 @@ Copy-paste scenarios (checkout step-up, new-device login, trusted devices, coupo
 - [Security hooks](#security-hooks)
 - [Using it from a DDD / hexagonal application](#using-it-from-a-ddd--hexagonal-application)
   - [Keeping your domain free of the bundle](#keeping-your-domain-free-of-the-bundle)
+  - [Standard host or DDD host without Doctrine (1.8)](#standard-host-or-ddd-host-without-doctrine-18)
   - [Known limitations](#known-limitations)
 - [Custom risk rules](#custom-risk-rules)
 - [Commands](#commands)
@@ -136,8 +137,9 @@ final class NotifyOnNewDevice
   (`resolve(object $user): UserIdentifier`).
 - To keep device data in your own store, implement the four repository ports
   (`DeviceRepositoryInterface`, `ObservationRepositoryInterface`, `DeviceUserRepositoryInterface`,
-  `TrustedDeviceRepositoryInterface`) and override their aliases. `doctrine.enabled: false` switches to in-memory
-  adapters (tests only, not durable).
+  `TrustedDeviceRepositoryInterface`) and override their aliases (see
+  [Standard host or DDD host without Doctrine](#standard-host-or-ddd-host-without-doctrine-18)). `doctrine.enabled:
+  false` without your own adapters falls back to in-memory ones (tests only, not durable).
 - Plug your own infrastructure into the analysis by overriding the alias of a core port; the others keep their
   defaults (the same implementations `DeviceIntelligence::create()` uses):
 
@@ -214,10 +216,38 @@ services:
 - A "host controls the transaction" mode is not needed: the bundle writes single rows without flushing, and they
   join your transaction when one is open.
 
+### Standard host or DDD host without Doctrine (1.8)
+
+- **Standard path (default, nothing to configure).** DoctrineBundle with `doctrine.orm`: the bundle maps its four
+  entities (on the default manager, or on `doctrine.entity_manager`) and writes them with DBAL, never flushing yours.
+- **DDD path (opt-in).** No Doctrine ORM in the application: turn the bundle's persistence off and bind the four
+  repository ports to your own adapters. The configuration itself never needs the ORM.
+
+```yaml
+# config/packages/nowo_device_intelligence.yaml — DoctrineBundle not registered
+nowo_device_intelligence:
+    doctrine:
+        enabled: false
+
+# config/services.yaml — your aliases win over the bundle defaults
+services:
+    Nowo\DeviceIntelligence\Port\DeviceRepositoryInterface: '@App\Infrastructure\Device\DeviceStore'
+    Nowo\DeviceIntelligence\Port\ObservationRepositoryInterface: '@App\Infrastructure\Device\ObservationStore'
+    Nowo\DeviceIntelligence\Port\DeviceUserRepositoryInterface: '@App\Infrastructure\Device\DeviceUserStore'
+    Nowo\DeviceIntelligence\Port\TrustedDeviceRepositoryInterface: '@App\Infrastructure\Device\TrustStore'
+```
+
+Without Doctrine ORM and with `doctrine.enabled` left at `true`, the build fails with a message that says exactly
+this (1.8; before, the mapping pass failed with "Could not find the manager name parameter"). Your adapters are shared
+services: in a kept-alive FrankenPHP worker they serve every request, so keep no request or user state in them (or
+implement `ResetInterface` and clear it yourself at the request boundary). The kernel test
+`tests/Integration/Ddd/HostAdaptersKernelTest.php` runs this setup through `http_kernel` for 600 requests and two
+users without the services resetter.
+
 ### Known limitations
 
-- Doctrine ORM is still a required package; it moves to `suggest` in 2.0 (the bundle already runs without it with
-  `doctrine.enabled: false`).
+- Doctrine ORM is still a required package (installed, not necessarily configured); it moves to `suggest` in 2.0 (the
+  bundle already runs without DoctrineBundle with `doctrine.enabled: false`).
 
 ## Custom risk rules
 

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+  - [Target 1.8.0](#target-180)
 - [[1.7.0] - 2026-11-11](#170---2026-11-11)
 - [[1.6.0] - 2026-11-10](#160---2026-11-10)
 - [[1.5.2] - 2026-10-31](#152---2026-10-31)
@@ -32,6 +33,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[1.0.0] - 2026-08-23](#100---2026-08-23)
 
 ## [Unreleased]
+
+### Target 1.8.0
+
+Architecture bar W2 (standard Symfony by default, strict DDD opt-in): rule 8, tests on both host kinds.
+
+#### Changed
+
+- A host without Doctrine ORM (no DoctrineBundle, or no `doctrine.orm`) that leaves `doctrine.enabled` at `true` now
+  gets an explicit build error (configure the ORM, or set `doctrine.enabled: false` and bind the four repository
+  ports) instead of the mapping pass's "Could not find the manager name parameter".
+- Standard hosts: no configuration change, same defaults.
+
+#### Tests
+
+- `tests/Integration/Ddd/HostAdaptersKernelTest.php`: a DDD host without DoctrineBundle, the four repository ports
+  bound to host stores, the analysis through a host controller and the trust API; a kept-alive kernel serving 600
+  requests for two users through `http_kernel` handle / terminate without the services resetter (devices kept in
+  the host stores, never mixed, flat memory).
+
+#### Documentation
+
+- USAGE, "Using it from a DDD / hexagonal application": both paths (standard Doctrine host / host adapters without
+  Doctrine) with the configuration of each.
 
 ## [1.7.0] - 2026-11-11
 
