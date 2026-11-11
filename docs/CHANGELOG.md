@@ -8,14 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+  - [Added](#added)
 - [[1.8.0] - 2026-11-11](#180---2026-11-11)
 - [[1.7.0] - 2026-11-11](#170---2026-11-11)
   - [Security](#security)
-  - [Added](#added)
+  - [Added](#added-1)
   - [Changed](#changed-1)
   - [Deprecated](#deprecated)
 - [[1.6.0] - 2026-11-10](#160---2026-11-10)
-  - [Added](#added-1)
+  - [Added](#added-2)
   - [Documentation](#documentation-1)
 - [[1.5.2] - 2026-10-31](#152---2026-10-31)
   - [Fixed](#fixed)
@@ -50,7 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Security](#security-3)
   - [Changed](#changed-11)
 - [[1.1.5] - 2026-09-27](#115---2026-09-27)
-  - [Added](#added-2)
+  - [Added](#added-3)
   - [Changed](#changed-12)
 - [[1.1.4] - 2026-09-24](#114---2026-09-24)
   - [Fixed](#fixed-3)
@@ -65,22 +66,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Changed](#changed-15)
   - [Notes](#notes-1)
 - [[1.1.0] - 2026-08-24](#110---2026-08-24)
-  - [Added](#added-3)
+  - [Added](#added-4)
   - [Changed](#changed-16)
   - [Notes](#notes-2)
-  - [Added](#added-4)
+  - [Added](#added-5)
   - [Documentation](#documentation-4)
   - [Fixed](#fixed-5)
 - [[1.0.1] - 2026-08-23](#101---2026-08-23)
-  - [Added](#added-5)
+  - [Added](#added-6)
   - [Changed](#changed-17)
   - [Fixed](#fixed-6)
   - [Documentation](#documentation-5)
 - [[1.0.0] - 2026-08-23](#100---2026-08-23)
-  - [Added](#added-6)
+  - [Added](#added-7)
   - [Documentation](#documentation-6)
 
 ## [Unreleased]
+
+### Added
+
+- GDPR personal-data ports: `DeviceIntelligencePersonalDataEraserInterface::erase()` and
+  `DeviceIntelligencePersonalDataExporterInterface::export()` on a `DeviceIntelligencePersonalDataSubject` (user
+  identifier), with `DeviceIntelligenceErasureResult` counts and `DeviceIntelligencePersonalDataErasedEvent` after the
+  commit (not dispatched inside the caller's transaction). Byte-exact matching (a MySQL `*_ci` collation never erases
+  or exports a case or accent variant), idempotent, batched by primary key; devices still referenced by someone else
+  are kept.
+- Optional nowo-tech/user-kit-bundle bridge: eraser `device_intelligence` (priority 150) and export section `devices`
+  (priority 35); `personal_data.enabled` (default `true`) and `personal_data.subject_resolver` with the
+  `DeviceIntelligencePersonalDataSubjectResolverInterface` SPI.
 
 ## [1.8.0] - 2026-11-11
 

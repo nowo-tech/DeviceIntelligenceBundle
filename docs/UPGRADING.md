@@ -41,6 +41,14 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 
 ## Unreleased
 
+No configuration or schema change. **Standard hosts: nothing to change.**
+
+- New GDPR ports (`DeviceIntelligencePersonalDataEraserInterface`, `DeviceIntelligencePersonalDataExporterInterface`),
+  see [USAGE.md#gdpr-erasure-and-export](USAGE.md#gdpr-erasure-and-export).
+- With nowo-tech/user-kit-bundle installed, the `device_intelligence` eraser and the `devices` export section register
+  automatically. If your application already erases or exports these tables (e.g. its own UserKit eraser with the same
+  key), set `personal_data.enabled: false` or remove your own.
+
 ## To 1.8.0
 
 From **1.7.0**: no configuration or schema change. **Standard hosts: nothing to change.**
