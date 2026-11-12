@@ -138,7 +138,8 @@ at the start of every main request, and the 1.7 write path holds no state at all
 
 | Test | What it proves |
 | --- | --- |
-| `tests/Integration/Ddd/HostAdaptersKernelTest.php` (`testKeptAliveKernelServesTwoUsersOnTheHostStores`) | ONE kernel, 600 analyses alternating two users on the host stores, no resetter: each user keeps their own device, the observation counts are per user, 600 writes go through the host adapter, memory stays flat after warm-up (< 2 MiB) |
+| `tests/Integration/EntityManager/DoctrinePersistenceKernelTest.php` (`testKeptAliveKernelWritesTwoUsersThroughDbalWithFlatMemory`) | Doctrine / DBAL path (`DbalEntityWriter` active): ONE kernel, 1,200 engine analyses alternating two users with different signals, no resetter: each user keeps their own device with a growing observation count, the tables hold exactly 2 devices and 1,200 observations, the host's pending change is never flushed and its unit of work does not grow, memory growth < 4 MiB after warm-up (200 requests) |
+| `tests/Integration/Ddd/HostAdaptersKernelTest.php` (`testKeptAliveKernelServesTwoUsersOnTheHostStores`) | host adapters (`doctrine.enabled: false`, so no `DbalEntityWriter`): ONE kernel, 1,200 `http_kernel` handle() + terminate() cycles alternating two users, no resetter: each keeps their own device, observation counts are per user, 1,200 writes go through the host adapter, memory growth < 4 MiB after warm-up |
 | `tests/Integration/PersonalData/PersonalDataKernelTest.php` | the erase / export ports on a booted kernel: SAVEPOINT inside the caller's transaction, dedicated manager on its own connection (no resetter involved) |
 
 Rule 7: the bundle never clears or resets the host's default EntityManager. The repositories resolve the manager through

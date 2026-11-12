@@ -72,24 +72,24 @@ final class HostAdaptersKernelTest extends TestCase
         $seen = [];
         $before = 0;
 
-        for ($i = 0; $i < 600; ++$i) {
+        for ($i = 0; $i < 1200; ++$i) {
             $user = 0 === $i % 2 ? 'alice' : 'bob';
             $result = $this->get($user);
             $seen[$user] ??= $result['device'];
             self::assertSame($seen[$user], $result['device'], 'the host store keeps the device between requests');
             self::assertSame(intdiv($i, 2) + 1, $result['observations'], $user.' #'.$i);
 
-            if (99 === $i) {
+            if (199 === $i) {
                 gc_collect_cycles();
                 $before = memory_get_usage();
             }
         }
         gc_collect_cycles();
-        self::assertLessThan(2 * 1024 * 1024, memory_get_usage() - $before, 'Memory must stay flat over 500 requests.');
+        self::assertLessThan(4 * 1024 * 1024, memory_get_usage() - $before, 'Memory must stay flat after warm-up.');
 
         self::assertNotSame($seen['alice'], $seen['bob']);
         self::assertCount(2, $devices->all());
-        self::assertSame(600, $devices->writes, 'every analysis wrote through the host adapter');
+        self::assertSame(1200, $devices->writes, 'every analysis wrote through the host adapter');
     }
 
     public function testWithoutDoctrineTheDefaultConfigurationFailsClearly(): void
