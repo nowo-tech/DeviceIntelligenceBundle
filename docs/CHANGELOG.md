@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+  - [Fixed](#fixed)
 - [[1.9.0] - 2026-11-11](#190---2026-11-11)
   - [Added](#added)
   - [Behaviour change](#behaviour-change)
@@ -24,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Added](#added-2)
   - [Documentation](#documentation-1)
 - [[1.5.2] - 2026-10-31](#152---2026-10-31)
-  - [Fixed](#fixed)
+  - [Fixed](#fixed-1)
   - [Changed](#changed-2)
   - [Tests](#tests-1)
 - [[1.5.1] - 2026-10-30](#151---2026-10-30)
@@ -44,13 +45,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Changed](#changed-8)
 - [[1.3.0] - 2026-10-13](#130---2026-10-13)
   - [Security](#security-2)
-  - [Fixed](#fixed-1)
+  - [Fixed](#fixed-2)
   - [Changed](#changed-9)
 - [[1.2.2] - 2026-10-13](#122---2026-10-13)
   - [Dependencies](#dependencies)
   - [Changed](#changed-10)
 - [[1.2.1] - 2026-10-09](#121---2026-10-09)
-  - [Fixed](#fixed-2)
+  - [Fixed](#fixed-3)
   - [Dependencies](#dependencies-1)
 - [[1.2.0] - 2026-09-28](#120---2026-09-28)
   - [Security](#security-3)
@@ -59,13 +60,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Added](#added-3)
   - [Changed](#changed-12)
 - [[1.1.4] - 2026-09-24](#114---2026-09-24)
-  - [Fixed](#fixed-3)
+  - [Fixed](#fixed-4)
   - [Documentation](#documentation-3)
 - [[1.1.3] - 2026-09-07](#113---2026-09-07)
   - [Changed](#changed-13)
   - [Notes](#notes)
 - [[1.1.2] - 2026-09-03](#112---2026-09-03)
-  - [Fixed](#fixed-4)
+  - [Fixed](#fixed-5)
   - [Changed](#changed-14)
 - [[1.1.1] - 2026-08-26](#111---2026-08-26)
   - [Changed](#changed-15)
@@ -76,17 +77,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Notes](#notes-2)
   - [Added](#added-5)
   - [Documentation](#documentation-4)
-  - [Fixed](#fixed-5)
+  - [Fixed](#fixed-6)
 - [[1.0.1] - 2026-08-23](#101---2026-08-23)
   - [Added](#added-6)
   - [Changed](#changed-17)
-  - [Fixed](#fixed-6)
+  - [Fixed](#fixed-7)
   - [Documentation](#documentation-5)
 - [[1.0.0] - 2026-08-23](#100---2026-08-23)
   - [Added](#added-7)
   - [Documentation](#documentation-6)
 
 ## [Unreleased]
+
+### Fixed
+
+- DoctrineBundle 3.4: bundle entities resolved to the default manager when a dedicated manager is configured.
+  DoctrineBundle 3.4 `auto_discover_entities` (on by default for a manager without `mappings` and `auto_mapping`, with
+  Symfony 7.3+ and doctrine/orm 3.6+) gives that manager's metadata driver chain a default attribute driver, which
+  claims every `#[ORM\Entity]` class. With `doctrine.entity_manager` set, `getManagerForClass()` then answered the
+  host's default manager, so the bundle repositories (and host-facing code such as `getRepository()`, EntityType or
+  MapEntity) used its database ("no such table: device_intelligence_device"). `DeviceIntelligenceEntityManagerPass`
+  now also registers a driver that maps nothing for the bundle entity namespace, first in the chain of every other
+  manager (of every manager with `doctrine.enabled: false`): `Doctrine\ExcludedEntityNamespaceDriver`, only the public
+  `addDriver()` of the `doctrine.orm.<manager>_metadata_driver` chain. The entities resolve to the configured manager
+  on DoctrineBundle 2.x, 3.3 and 3.4+. Nothing changes without the option. Affected in practice: 1.7.0 to 1.9.0
+  (every release with `doctrine.entity_manager`; all allow `doctrine/doctrine-bundle` `^3.0`) with DoctrineBundle 3.4.0
+  or later.
 
 ## [1.9.0] - 2026-11-11
 

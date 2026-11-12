@@ -7,6 +7,7 @@ namespace Nowo\DeviceIntelligenceBundle\Tests\Integration\EntityManager;
 use DateTimeImmutable;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\DeviceIntelligence\Analysis;
@@ -19,11 +20,13 @@ use Nowo\DeviceIntelligence\Signal\SignalBag;
 use Nowo\DeviceIntelligence\Signal\SignalFactory;
 use Nowo\DeviceIntelligence\User\UserIdentifier;
 use Nowo\DeviceIntelligenceBundle\Entity\DeviceEntity;
+use Nowo\DeviceIntelligenceBundle\Entity\DeviceObservationEntity;
 use Nowo\DeviceIntelligenceBundle\Entity\DeviceTrustEntity;
 use Nowo\DeviceIntelligenceBundle\Tests\Integration\EntityManager\Entity\HostNote;
 use Nowo\DeviceIntelligenceBundle\Tests\Support\TestDatabase;
 use Nowo\DeviceIntelligenceBundle\Trust\DeviceTrustService;
 use Nowo\DeviceIntelligenceBundle\Trust\DeviceTrustServiceInterface;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -169,6 +172,68 @@ final class DoctrinePersistenceKernelTest extends TestCase
         self::assertSame([], $host->getConnection()->createSchemaManager()->listTableNames(), 'nothing on the host database');
     }
 
+    /**
+     * DoctrineBundle 3.4 regression: `auto_discover_entities` (on by default for a manager without `mappings` and
+     * `auto_mapping`) gives the host manager's chain a default attribute driver, which claims every `#[ORM\Entity]`
+     * class, so `getManagerForClass()` answered the host manager and the bundle repositories wrote to its database.
+     * The explicit catch-all default driver reproduces it on every DoctrineBundle version.
+     */
+    #[DataProvider('hostManagersWithADefaultDriver')]
+    public function testDedicatedManagerWinsOverADefaultDriverOfTheHostManager(bool $explicitDefaultDriver): void
+    {
+        if (null !== TestDatabase::url()) {
+            self::markTestSkipped('Two SQLite databases; the layout does not depend on the platform.');
+        }
+
+        $this->boot([
+            'dbal' => [
+                'default_connection' => 'default',
+                'connections' => [
+                    'default' => ['url' => 'sqlite:///'.$this->database('auto-host')],
+                    'device' => ['url' => 'sqlite:///'.$this->database('auto-device')],
+                ],
+            ],
+            'orm' => [
+                'default_entity_manager' => 'default',
+                'entity_managers' => [
+                    'default' => ['connection' => 'default'],
+                    'device_intelligence' => ['connection' => 'device'],
+                ],
+            ],
+        ], ['doctrine' => ['entity_manager' => 'device_intelligence']], $explicitDefaultDriver);
+
+        // Neither manager is initialized yet: DoctrineBundle 3.4 asks the metadata drivers.
+        $device = $this->registry()->getManager('device_intelligence');
+        self::assertSame($device, $this->registry()->getManagerForClass(DeviceEntity::class));
+        self::assertSame($device, $this->registry()->getManagerForClass(DeviceObservationEntity::class));
+
+        $host = $this->manager('default');
+        $device = $this->manager('device_intelligence');
+        self::assertTrue($host->getMetadataFactory()->isTransient(DeviceEntity::class), 'not mapped on the host manager');
+        self::assertSame($device, $this->registry()->getManagerForClass(DeviceEntity::class));
+        (new SchemaTool($device))->createSchema($device->getMetadataFactory()->getAllMetadata());
+
+        $this->analyze('erin');
+
+        self::assertSame(1, (int) $device->getConnection()->fetchOne('SELECT COUNT(*) FROM device_intelligence_device'));
+        self::assertSame(1, $device->getRepository(DeviceEntity::class)->count([]), 'the repository reads the bundle database');
+        self::assertSame([], $host->getConnection()->createSchemaManager()->listTableNames(), 'nothing on the host database');
+        if ($explicitDefaultDriver) {
+            // The host manager keeps its own entities, and only them.
+            self::assertSame([HostNote::class], array_map(static fn (ClassMetadata $metadata): string => $metadata->getName(), $host->getMetadataFactory()->getAllMetadata()));
+            self::assertSame($host, $this->registry()->getManagerForClass(HostNote::class));
+        }
+    }
+
+    /**
+     * @return iterable<string, array{bool}>
+     */
+    public static function hostManagersWithADefaultDriver(): iterable
+    {
+        yield 'host manager without mappings (DoctrineBundle 3.4 auto-discovery)' => [false];
+        yield 'host manager with a catch-all default driver' => [true];
+    }
+
     public function testDisabledDoctrineMapsNothingEvenWithAutoMapping(): void
     {
         $this->boot([
@@ -283,9 +348,9 @@ final class DoctrinePersistenceKernelTest extends TestCase
      * @param array<string, mixed>|null $doctrine
      * @param array<string, mixed>      $bundle
      */
-    private function boot(?array $doctrine, array $bundle = []): void
+    private function boot(?array $doctrine, array $bundle = [], bool $hostDefaultDriver = false): void
     {
-        $this->kernel = new EntityManagerTestKernel($doctrine, $bundle);
+        $this->kernel = new EntityManagerTestKernel($doctrine, $bundle, $hostDefaultDriver);
         $this->kernel->boot();
     }
 
