@@ -1,49 +1,29 @@
 {% if device %}
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <div class="text-muted small">{{ 'demo.panel.device_id'|trans }}</div>
-                    <div class="font-monospace small text-break">{{ device.device.id.value }}</div>
-                </div>
-            </div>
+    <div class="nowo-ui-kpis">
+        <div class="nowo-ui-kpi">
+            <div class="nowo-ui-kpi__label">{{ 'demo.panel.device_id'|trans }}</div>
+            <div class="nowo-ui-kpi__value"><code>{{ device.device.id.value }}</code></div>
         </div>
-        <div class="col-md-2">
-            <div class="card h-100">
-                <div class="card-body">
-                    <div class="text-muted small">{{ 'demo.panel.risk'|trans }}</div>
-                    <div class="fs-4">{{ device.risk.score.value }}</div>
-                    <div class="small">{{ device.risk.level.value }}</div>
-                </div>
-            </div>
+        <div class="nowo-ui-kpi">
+            <div class="nowo-ui-kpi__label">{{ 'demo.panel.risk'|trans }}</div>
+            <div class="nowo-ui-kpi__value">{{ device.risk.score.value }}</div>
+            <div class="nowo-ui-kpi__hint">{{ device.risk.level.value }}</div>
         </div>
-        <div class="col-md-2">
-            <div class="card h-100">
-                <div class="card-body">
-                    <div class="text-muted small">{{ 'demo.panel.confidence'|trans }}</div>
-                    <div class="fs-4">{{ device.match.confidence|number_format(2) }}</div>
-                </div>
-            </div>
+        <div class="nowo-ui-kpi">
+            <div class="nowo-ui-kpi__label">{{ 'demo.panel.confidence'|trans }}</div>
+            <div class="nowo-ui-kpi__value">{{ device.match.confidence|number_format(2) }}</div>
         </div>
-        <div class="col-md-2">
-            <div class="card h-100">
-                <div class="card-body">
-                    <div class="text-muted small">{{ 'demo.panel.new'|trans }}</div>
-                    <div>{{ device.new ? 'demo.yes'|trans : 'demo.no'|trans }}</div>
-                </div>
-            </div>
+        <div class="nowo-ui-kpi">
+            <div class="nowo-ui-kpi__label">{{ 'demo.panel.new'|trans }}</div>
+            <div class="nowo-ui-kpi__value">{{ device.new ? 'demo.yes'|trans : 'demo.no'|trans }}</div>
         </div>
-        <div class="col-md-2">
-            <div class="card h-100">
-                <div class="card-body">
-                    <div class="text-muted small">{{ 'demo.panel.trusted'|trans }}</div>
-                    <div>{{ device.trusted ? 'demo.yes'|trans : 'demo.no'|trans }}</div>
-                </div>
-            </div>
+        <div class="nowo-ui-kpi">
+            <div class="nowo-ui-kpi__label">{{ 'demo.panel.trusted'|trans }}</div>
+            <div class="nowo-ui-kpi__value">{{ device.trusted ? 'demo.yes'|trans : 'demo.no'|trans }}</div>
         </div>
     </div>
     {% if device.risk.reasons is not empty %}
-        <p class="small text-muted mb-4">
+        <p class="nowo-ui-muted">
             {{ 'demo.panel.reasons'|trans }}:
             {% for reason in device.risk.reasons %}
                 {{ reason.label }}{% if not loop.last %}, {% endif %}
@@ -51,5 +31,5 @@
         </p>
     {% endif %}
 {% else %}
-    <div class="alert alert-info">{{ 'demo.panel.missing'|trans }}</div>
+    <div class="nowo-ui-flash nowo-ui-flash--info" role="note">{{ 'demo.panel.missing'|trans }}</div>
 {% endif %}

@@ -22,8 +22,8 @@ export async function signIn(page: Page, user = 'alice'): Promise<void> {
 
 /** Opens one of the demo cases from the pills nav. */
 export async function openCase(page: Page, name: string): Promise<void> {
-  await page.locator('.nav-pills').getByRole('link', { name, exact: true }).click();
-  await expect(page.locator('.nav-pills .nav-link.active')).toHaveText(name);
+  await page.locator('.nowo-ui-tabs').getByRole('link', { name, exact: true }).click();
+  await expect(page.locator('.nowo-ui-tabs .nowo-ui-tabs__item--active')).toHaveText(name);
 }
 
 /** Waits for the Symfony WebProfiler toolbar so it is part of the capture. */
