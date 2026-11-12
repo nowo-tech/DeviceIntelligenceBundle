@@ -17,7 +17,7 @@ test.describe('Device Intelligence demo', () => {
     await collectDevice(page);
     await openCase(page, 'Checkout');
     await page.getByRole('button', { name: 'Pay €42' }).click();
-    await expect(page.locator('.alert-success, .alert-warning, .alert-danger').first()).toBeVisible();
+    await expect(page.locator('.nowo-ui-flash--success, .nowo-ui-flash--warning, .nowo-ui-flash--error').first()).toBeVisible();
   });
 
   test('signed-in user can trust the current browser', async ({ page }) => {
@@ -25,6 +25,6 @@ test.describe('Device Intelligence demo', () => {
     await signIn(page);
     await openCase(page, 'Trust');
     await page.getByRole('button', { name: 'Trust this browser' }).click();
-    await expect(page.locator('.alert-success')).toContainText('now trusted for 90 days');
+    await expect(page.locator('.nowo-ui-flash--success')).toContainText('now trusted for 90 days');
   });
 });

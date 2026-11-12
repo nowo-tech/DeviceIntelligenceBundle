@@ -27,7 +27,7 @@ test.describe('Device Intelligence screenshots', () => {
     await signIn(page);
     await openCase(page, 'Trust');
     await page.getByRole('button', { name: 'Trust this browser' }).click();
-    await expect(page.locator('.alert-success')).toBeVisible();
+    await expect(page.locator('.nowo-ui-flash--success')).toBeVisible();
     await expect(page.locator('#collect-result')).not.toContainText('Waiting for collect()', { timeout: 20_000 });
     await waitForToolbar(page);
     await page.screenshot({ path: resolve(outDir, 'trusted-device.png') });

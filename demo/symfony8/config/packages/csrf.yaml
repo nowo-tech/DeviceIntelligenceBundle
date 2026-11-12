@@ -1,3 +1,18 @@
+# CSRF: stateless tokens (form_login's `authenticate` included); FormKit forms render the CSRF field.
 framework:
+    form:
+        csrf_protection:
+            token_id: submit
+
     csrf_protection:
         enabled: true
+        stateless_token_ids:
+            - submit
+            - authenticate
+            - logout
+            - demo_checkout
+            - demo_trust
+            - demo_revoke
+            - demo_privileged
+            - demo_coupon
+            - demo_export
