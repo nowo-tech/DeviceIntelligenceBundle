@@ -16,6 +16,7 @@ use Nowo\DeviceIntelligence\DeviceIntelligenceInterface;
 use Nowo\DeviceIntelligence\Infrastructure\InMemoryDeviceRepository;
 use Nowo\DeviceIntelligence\Port\DeviceRepositoryInterface;
 use Nowo\DeviceIntelligence\Signal\SignalBag;
+use Nowo\DeviceIntelligence\Signal\SignalFactory;
 use Nowo\DeviceIntelligence\User\UserIdentifier;
 use Nowo\DeviceIntelligenceBundle\Entity\DeviceEntity;
 use Nowo\DeviceIntelligenceBundle\Entity\DeviceTrustEntity;
@@ -198,6 +199,48 @@ final class DoctrinePersistenceKernelTest extends TestCase
         $this->boot(['dbal' => ['url' => 'sqlite:///:memory:'], 'orm' => []], ['doctrine' => ['entity_manager' => 'reports']]);
     }
 
+    /**
+     * FrankenPHP worker mode with the kernel kept alive (FRANKENPHP_RESET_KERNEL=false) on the Doctrine / DBAL path: ONE
+     * booted kernel runs 1,200 analyses for two users through the engine (`DbalEntityWriter` writes every row), the
+     * services resetter is never called. Each user keeps their own device, rows are isolated, the host's pending
+     * change stays pending and its identity map is untouched (rule 7), and memory stays flat after warm-up.
+     */
+    public function testKeptAliveKernelWritesTwoUsersThroughDbalWithFlatMemory(): void
+    {
+        $this->boot(self::hostDoctrine($this->database('kept-alive'), self::hostMapping()));
+        $host = $this->managerWithSchema('default');
+        $note = new HostNote('pending host change');
+        $host->persist($note);
+        $sizeBefore = $host->getUnitOfWork()->size();
+
+        $devices = [];
+        $count = ['alice' => 0, 'bob' => 0];
+        $before = 0;
+        for ($i = 0; $i < 1200; ++$i) {
+            $user = 0 === $i % 2 ? 'alice' : 'bob';
+            $analysis = $this->analyzeAs($user);
+            ++$count[$user];
+            $devices[$user] ??= $analysis->device->id->value;
+            self::assertSame($devices[$user], $analysis->device->id->value, $user.' keeps their device #'.$i);
+            self::assertSame($count[$user], $analysis->device->observationCount, $user.' #'.$i);
+
+            if (199 === $i) {
+                gc_collect_cycles();
+                $before = memory_get_usage();
+            }
+        }
+        gc_collect_cycles();
+        self::assertLessThan(4 * 1024 * 1024, memory_get_usage() - $before, 'Memory must stay flat after warm-up.');
+
+        self::assertNotSame($devices['alice'], $devices['bob']);
+        $connection = $host->getConnection();
+        self::assertSame(2, (int) $connection->fetchOne('SELECT COUNT(*) FROM device_intelligence_device'));
+        self::assertSame(1200, (int) $connection->fetchOne('SELECT COUNT(*) FROM device_intelligence_observation'));
+        self::assertSame(0, (int) $connection->fetchOne('SELECT COUNT(*) FROM host_note'), 'the host change was never flushed');
+        self::assertTrue($host->getUnitOfWork()->isScheduledForInsert($note));
+        self::assertSame($sizeBefore, $host->getUnitOfWork()->size(), 'no bundle row entered the host identity map');
+    }
+
     private function analyze(?string $user): Analysis
     {
         $engine = $this->container()->get(DeviceIntelligenceInterface::class);
@@ -209,6 +252,30 @@ final class DoctrinePersistenceKernelTest extends TestCase
             '203.0.113.7',
             'Mozilla/5.0',
             userIdentifier: null === $user ? null : new UserIdentifier($user),
+        ));
+    }
+
+    private function analyzeAs(string $user): Analysis
+    {
+        $engine = $this->container()->get(DeviceIntelligenceInterface::class);
+        self::assertInstanceOf(DeviceIntelligenceInterface::class, $engine);
+        $now = new DateTimeImmutable();
+        $alice = 'alice' === $user;
+
+        return $engine->analyze(new AnalysisInput(
+            $now,
+            SignalFactory::bagFromClient([
+                'platform' => ['value' => $alice ? 'MacIntel' : 'Win32', 'quality' => 1],
+                'canvas' => ['value' => $alice ? 'aabbccddeeff0011' : '9988776655443322', 'quality' => 0.95],
+                'webgl' => ['value' => $alice ? ['vendor' => 'Apple', 'renderer' => 'Apple GPU'] : ['vendor' => 'NVIDIA', 'renderer' => 'GeForce'], 'quality' => 0.9],
+                'screen' => ['value' => $alice ? ['width' => 1440, 'height' => 900] : ['width' => 1920, 'height' => 1080], 'quality' => 1],
+                'timezone' => ['value' => $alice ? 'Europe/Madrid' : 'Europe/Paris', 'quality' => 1],
+                'hardware_concurrency' => ['value' => $alice ? 8 : 16, 'quality' => 1],
+                'audio' => ['value' => $alice ? '1122334455667788' : '8877665544332211', 'quality' => 0.9],
+            ], $now),
+            $alice ? '203.0.113.7' : '198.51.100.9',
+            $alice ? 'Mozilla/5.0 Chrome/143.0.0.0' : 'Mozilla/5.0 Firefox/140.0',
+            userIdentifier: new UserIdentifier($user),
         ));
     }
 

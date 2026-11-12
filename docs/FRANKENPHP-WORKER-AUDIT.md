@@ -3,8 +3,8 @@
 | Field | Value |
 |-------|-------|
 | Package | `nowo-tech/device-intelligence-bundle` (`symfony-bundle`) |
-| Audited revision | `v1.1.4` |
-| Audit date | 2026-09-24 |
+| Audited revision | `v1.9.0` (first audit `v1.1.4`; 1.7 DBAL writer, host adapters and personal-data ports covered in the kept-alive section) |
+| Audit date | 2026-09-24, refreshed 2026-11-12 |
 | Method | Manual review of every PHP file under `src/` (services, subscribers, controller, Doctrine repositories, Messenger handlers, commands, DI extension, `Resources/config/services.php`) and the framework-agnostic core under `lib/` (autoloaded as `Nowo\DeviceIntelligence\`) |
 | Remediation (2026-09-23/24) | W-01/W-03/W-04 per-request state cleared by the bundle-owned `RequestStateResetSubscriber` (main request, priority 4096) and tagged `kernel.reset`; W-02 Doctrine repositories resolve the manager per call (reset when closed), refresh managed entities on read (`HINT_REFRESH` / `refresh()`), and detach after mapping; W-05 velocity payload pruned on write; `InMemoryVelocityEngine::reset()` for optional shared wiring. Regression tests simulate consecutive requests / two workers / host-held managed entities without `reset()` |
 | **Verdict** | ✅ **Viable under scenario B** — no bundle-owned state survives a main request; Doctrine reads are always fresh. Clearing the host application's own EntityManager remains the host's responsibility |
@@ -122,3 +122,27 @@ No other findings. Request data is always passed as method arguments or stored i
 ## Re-audit triggers
 
 Re-run this audit when a change adds: properties to request-path services (collect controller, subscribers, `DeviceIntelligence`, `DeviceManager`), a cache or memoization in the core, new in-memory adapters, new `kernel.reset` services, a GeoIP / IP reputation / network provider that does HTTP or DNS, or any use of `$_SERVER` / `$_ENV` at runtime.
+
+## Kept-alive kernel, reset false (1.9.0)
+
+**The bundle is safe with kernel reset false** (`FRANKENPHP_RESET_KERNEL=false`, `services_resetter` never called).
+Nothing below relies on `kernel.reset`: the bundle-owned `RequestStateResetSubscriber` clears the request-scoped state
+at the start of every main request, and the 1.7 write path holds no state at all.
+
+| Service | State | Reset mechanism |
+| --- | --- | --- |
+| `Doctrine\DbalEntityWriter` (1.7, device / observation / trust rows) | none (`final`, connection resolved per call) | n/a: plain DBAL `INSERT` / `UPDATE`, inside a SAVEPOINT when the host has a transaction open; no unit of work, no identity map, the host EntityManager is never flushed, cleared or reset |
+| `PersonalData\DeviceIntelligencePersonalDataExporter`, `...Eraser`, `...UserKitEraser` | none (readonly; rows read through DBAL / the repositories and handed back per call) | n/a |
+| Host adapters bound to the core repository ports (`doctrine.enabled: false`, `tests/Support/Host/*`) | owned by the host | the host's own concern; the bundle keeps no copy |
+| Everything in the tables above | see the Summary and Services reviewed tables | unchanged |
+
+| Test | What it proves |
+| --- | --- |
+| `tests/Integration/EntityManager/DoctrinePersistenceKernelTest.php` (`testKeptAliveKernelWritesTwoUsersThroughDbalWithFlatMemory`) | Doctrine / DBAL path (`DbalEntityWriter` active): ONE kernel, 1,200 engine analyses alternating two users with different signals, no resetter: each user keeps their own device with a growing observation count, the tables hold exactly 2 devices and 1,200 observations, the host's pending change is never flushed and its unit of work does not grow, memory growth < 4 MiB after warm-up (200 requests) |
+| `tests/Integration/Ddd/HostAdaptersKernelTest.php` (`testKeptAliveKernelServesTwoUsersOnTheHostStores`) | host adapters (`doctrine.enabled: false`, so no `DbalEntityWriter`): ONE kernel, 1,200 `http_kernel` handle() + terminate() cycles alternating two users, no resetter: each keeps their own device, observation counts are per user, 1,200 writes go through the host adapter, memory growth < 4 MiB after warm-up |
+| `tests/Integration/PersonalData/PersonalDataKernelTest.php` | the erase / export ports on a booted kernel: SAVEPOINT inside the caller's transaction, dedicated manager on its own connection (no resetter involved) |
+
+Rule 7: the bundle never clears or resets the host's default EntityManager. The repositories resolve the manager through
+`ManagerRegistry` per call; the 1.7 changelog line "the host entity manager is
+never flushed or reset" means exactly this (the bundle never resets the host's manager), not that the bundle depends on
+a reset.
