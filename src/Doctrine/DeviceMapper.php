@@ -9,6 +9,7 @@ use Nowo\DeviceIntelligence\Device\Device;
 use Nowo\DeviceIntelligence\Device\DeviceId;
 use Nowo\DeviceIntelligence\Device\DeviceStatus;
 use Nowo\DeviceIntelligence\Device\Stability;
+use Nowo\DeviceIntelligence\Exception\InvalidValueException;
 use Nowo\DeviceIntelligence\Matching\CandidateIndexKey;
 use Nowo\DeviceIntelligence\Matching\Confidence;
 use Nowo\DeviceIntelligence\Observation\DeviceObservation;
@@ -135,7 +136,11 @@ final class DeviceMapper
         }
         $user = null;
         if (null !== $entity->getUserIdentifier() && '' !== $entity->getUserIdentifier()) {
-            $user = new UserIdentifier($entity->getUserIdentifier());
+            try {
+                $user = new UserIdentifier($entity->getUserIdentifier());
+            } catch (InvalidValueException) {
+                // a legacy identifier 1.9.2 refuses (REQ-SEC-006 item 1): the observation stays readable, without a user
+            }
         }
 
         return new DeviceObservation(

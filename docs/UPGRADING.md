@@ -45,6 +45,11 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 From **1.9.1** (target 1.9.2). Doctrine storage on MySQL / MariaDB only (REQ-SEC-006); PostgreSQL, SQLite and the
 in-memory repositories need nothing.
 
+`DeviceTrustServiceInterface::trust()` / `revoke()` (and the trusted-device / device-user repositories' `save()`) may
+now throw `Nowo\DeviceIntelligence\Exception\LookAlikeIdentifierException` on a table that still folds (below); catch it where you call
+them if you want a friendlier message than an error page. A duplicate of exactly the same user (a concurrent request)
+is still reported as the original `UniqueConstraintViolationException`.
+
 **What changes without any action.** Trust and device-user lookups re-check `device_id` and `user_identifier` with
 `===`, so `Jose@`, `josé@` or `jose@ ` never resolve to `jose@`, and a write never updates a look-alike's row. On a
 table that still has a folding collation, the `(device_id, user_identifier)` unique keys reject a second look-alike on
@@ -85,16 +90,39 @@ names below use the default `table_prefix` `device_intelligence_`; adjust them t
     WHERE user_identifier = 'jose@example.com'
     ORDER BY HEX(user_identifier), device_id;
 
-   -- stored identifiers 1.9.2 refuses (edge whitespace, control characters, NBSP, ZWSP, BOM): unreachable from now on
+   -- stored identifiers 1.9.2 refuses: edge spaces; C0 / C1 controls; NBSP, soft hyphen, ALM; U+1680, U+180E;
+   -- U+2000-200F, U+2028-202F, U+205F-206F; U+3000; BOM; U+FFF9-FFFB; tag characters. Unreachable from now on.
+   -- The byte-aligned pattern covers the common cases; the PHP scan below is the authoritative check.
    SELECT id, HEX(user_identifier) AS user_hex
      FROM device_intelligence_device_trust
-    WHERE HEX(user_identifier) REGEXP '^(..)*(0[0-9A-F]|1[0-9A-F]|7F|C2A0|E2808[B-F]|E280A[8-F]|E281A[0-9]|EFBBBF)'
+    WHERE HEX(user_identifier) REGEXP '^(..)*(0[0-9A-F]|1[0-9A-F]|7F|C2[89][0-9A-F]|C2A0|C2AD|D89C|E19A80|E1A08E|E2808[0-9A-F]|E280A[89A-F]|E2819F|E281A[0-9A-F]|E38080|EFBBBF|EFBFB[9AB]|F3A08[01][89AB][0-9A-F])'
        OR HEX(user_identifier) REGEXP '^20|20$';
 
    -- device ids (upper-case ULIDs; anything else is a legacy anomaly)
    SELECT id, HEX(device_id) FROM device_intelligence_device_trust
     WHERE device_id COLLATE utf8mb4_bin NOT REGEXP '^[0-9A-HJKMNP-TV-Z]{26}$';
    ```
+
+   Authoritative scan in PHP (the same rules as `UserIdentifier`, every `Cc` / `Cf` / `Zs` / `Zl` / `Zp` character),
+   e.g. from a one-off command in your application:
+
+   ```php
+   use Nowo\DeviceIntelligence\Exception\InvalidValueException;
+   use Nowo\DeviceIntelligence\User\UserIdentifier;
+
+   foreach (['device_intelligence_device_trust', 'device_intelligence_device_user', 'device_intelligence_observation'] as $table) {
+       foreach ($connection->iterateAssociative("SELECT id, user_identifier FROM $table WHERE user_identifier IS NOT NULL") as $row) {
+           try {
+               new UserIdentifier($row['user_identifier']);
+           } catch (InvalidValueException) {
+               echo $table, ' ', $row['id'], ' ', bin2hex($row['user_identifier']), \PHP_EOL;
+           }
+       }
+   }
+   ```
+
+   Observations with such an identifier stay readable (their user is treated as unknown); device links and trusts
+   with one are no longer listed for anyone.
 
    A group with more than one variant is a set of distinct users the old collation treated as one. Review their
    trusts: a trust row whose owner is not the account that created it should be revoked

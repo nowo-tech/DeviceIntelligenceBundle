@@ -54,6 +54,14 @@ final class DoctrineDeviceUserRepository implements DeviceUserRepositoryInterfac
         try {
             DbalEntityWriter::write($em, $entity, null !== $existing);
         } catch (UniqueConstraintViolationException $error) {
+            // a concurrent insert of exactly this device and user is a plain duplicate, not a look-alike (audit F-DI-2)
+            $concurrent = $this->findEntity($em, $relation->deviceId, $relation->userIdentifier);
+            if (null !== $concurrent) {
+                $this->detachAll($em, [$concurrent]);
+
+                throw $error;
+            }
+
             throw new LookAlikeIdentifierException('A device-user row of a look-alike user identifier blocks this one (folding collation on the unique key): run the ALTER of UPGRADING 1.9.2.', 0, $error);
         }
     }

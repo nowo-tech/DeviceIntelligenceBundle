@@ -108,8 +108,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   SPACE) only for MySQL 5.7 / 8.0.0-8.0.16 or a `server_version` without the patch number, with a logged warning.
 - **`UserIdentifier` refuses unusable values instead of trimming them**: edge whitespace, control or format characters
   (`\n`, ZWSP, BOM, bidi marks), non-ASCII spaces (NBSP) and invalid UTF-8 throw `InvalidValueException`. The default
-  resolver's callers already treat that as "no user" (not trusted, no device link). Legacy rows holding such values are
-  skipped, never mapped onto another user. Device ULIDs are matched with an anchored `/D` pattern.
+  resolver's callers already treat that as "no user" (not trusted, no device link). Legacy device links and trusts
+  holding such values are skipped, never mapped onto another user; legacy observations stay readable with an unknown
+  user. Device ULIDs are matched with an anchored `/D` pattern.
 
 ## [1.9.1] - 2026-11-13
 
