@@ -7,6 +7,7 @@
 {% block nowo_ui_styles %}
     {{ parent() }}
     {{ vite_entry_link_tags('app') }}
+    <style>.nowo-ui-kpi__value code { display: block; font-size: 1rem; overflow-wrap: anywhere; word-break: break-all; }</style>
     {% block stylesheets %}{% endblock %}
 {% endblock %}
 
@@ -15,7 +16,7 @@
     {% set locale_params = app.request.attributes.get('_route_params')|default({}) %}
     <header class="nowo-ui-header" data-testid="demo-masthead">
         <a class="nowo-ui-brand" href="{{ path('homepage', { _locale: app.request.locale }) }}">{{ 'demo.brand'|trans }}</a>
-        <nav class="nowo-ui-menu" aria-label="{{ 'demo.language'|trans }}">
+        <nav class="nowo-ui-header__nav" aria-label="{{ 'demo.language'|trans }}">
             {% if app.user %}
                 <span class="nowo-ui-muted">{{ app.user.userIdentifier }}</span>
                 <a class="nowo-ui-link" href="{{ path('demo_logout') }}">{{ 'demo.logout'|trans }}</a>
