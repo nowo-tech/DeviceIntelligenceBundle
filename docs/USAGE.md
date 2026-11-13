@@ -208,7 +208,8 @@ services:
   `INSERT` / `UPDATE` (inside a SAVEPOINT when your code has a transaction open), so an analysis on login or in a
   request listener never commits your pending changes. To keep the tables on their own connection, set
   `nowo_device_intelligence.doctrine.entity_manager: device_intelligence` (mapped on that manager only, also when your
-  default manager has `auto_mapping: true`). With `doctrine.enabled: false` the entities are mapped nowhere and you bind
+  default manager has `auto_mapping: true` or a default metadata driver such as DoctrineBundle 3.4
+  `auto_discover_entities`; fixed in Unreleased). With `doctrine.enabled: false` the entities are mapped nowhere and you bind
   the core repository ports (`DeviceRepositoryInterface`, …) to your own adapters; DoctrineBundle is then not needed.
 - **Consent and reputation (1.7):** alias `Nowo\DeviceIntelligence\Privacy\ConsentGateInterface` to your consent
   service (asked per collector: `canvas`, `webgl`, `audio`, `fonts`, …) and

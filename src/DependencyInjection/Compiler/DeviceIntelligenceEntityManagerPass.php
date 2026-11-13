@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Nowo\DeviceIntelligenceBundle\DependencyInjection\Compiler;
 
 use Nowo\DeviceIntelligenceBundle\DependencyInjection\NowoDeviceIntelligenceExtension;
+use Nowo\DeviceIntelligenceBundle\Doctrine\ExcludedEntityNamespaceDriver;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
 
 /**
  * Keeps the bundle entities on `doctrine.entity_manager` only (1.7, architecture bar rule 6).
@@ -15,7 +17,10 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
  * DoctrineBundle's `auto_mapping` (the Flex default on the default manager) maps every bundle's `Entity` directory,
  * so with a dedicated manager configured the entities would be mapped twice and `getManagerForClass()` would return
  * the default manager. This pass removes the bundle namespace from the mapping driver chain of every other manager
- * and fails the build when the configured manager does not exist or does not map the entities.
+ * and registers an {@see ExcludedEntityNamespaceDriver} for it there instead (first in the chain), so a default driver
+ * of that chain cannot claim the entities either (DoctrineBundle 3.4 `auto_discover_entities`). Only the public
+ * `addDriver()` of the `doctrine.orm.<manager>_metadata_driver` chain is used. The build fails when the configured
+ * manager does not exist or does not map the entities.
  */
 final readonly class DeviceIntelligenceEntityManagerPass implements CompilerPassInterface
 {
@@ -95,6 +100,11 @@ final readonly class DeviceIntelligenceEntityManagerPass implements CompilerPass
 
                 $maps = $maps || $isBundleDriver;
                 $calls[] = $call;
+            }
+
+            if ($manager !== $name) {
+                // First in the chain: a chain asks its namespace drivers in order, then its default driver.
+                array_unshift($calls, ['addDriver', [new Definition(ExcludedEntityNamespaceDriver::class), self::ENTITY_NAMESPACE]]);
             }
 
             $chain->setMethodCalls($calls);
