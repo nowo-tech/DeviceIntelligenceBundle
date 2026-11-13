@@ -21,6 +21,7 @@ use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\ORM\Tools\ToolEvents;
 use Doctrine\Persistence\ManagerRegistry;
+use LogicException;
 use Nowo\DeviceIntelligenceBundle\Doctrine\ExactCollationListener;
 use Nowo\DeviceIntelligenceBundle\Entity\DeviceEntity;
 use Nowo\DeviceIntelligenceBundle\Entity\DeviceObservationEntity;
@@ -29,6 +30,8 @@ use Nowo\DeviceIntelligenceBundle\Entity\DeviceUserEntity;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
+use Throwable;
 
 /**
  * REQ-SEC-006 (1.9.2): the identity columns get the NO PAD binary collation of the platform in the generated schema.
@@ -67,11 +70,11 @@ final class ExactCollationListenerTest extends TestCase
 
         foreach (['device_trust', 'device_user', 'observation'] as $name) {
             foreach (['device_id', 'user_identifier'] as $column) {
-                $this->assertSame($expected, $tables[$name]->getColumn($column)->getCollation(), $name.'.'.$column);
+                $this->assertSame($expected, self::collationOf($tables[$name], $column), $name.'.'.$column);
             }
         }
-        $this->assertNull($tables['device_trust']->getColumn('label')->getCollation());
-        $this->assertNull($tables['device']->getColumn('id')->getCollation(), 'other entities are left alone');
+        $this->assertNull(self::collationOf($tables['device_trust'], 'label'));
+        $this->assertNull(self::collationOf($tables['device'], 'id'), 'other entities are left alone');
     }
 
     public function testWithoutAnOrmManagerNothingChanges(): void
@@ -81,7 +84,7 @@ final class ExactCollationListenerTest extends TestCase
 
         $tables = $this->generatedTables($registry, null);
 
-        $this->assertNull($tables['device_trust']->getColumn('user_identifier')->getCollation());
+        $this->assertNull(self::collationOf($tables['device_trust'], 'user_identifier'));
     }
 
     public function testCollateInPlaceOnOlderDbal(): void
@@ -89,8 +92,8 @@ final class ExactCollationListenerTest extends TestCase
         $table = $this->generatedTables($this->registryOn(new SQLitePlatform()), null)['device_user'];
 
         $this->assertNull(ExactCollationListener::collate($table, 'user_identifier', 'utf8mb4_nopad_bin', false));
-        $this->assertSame('utf8mb4_nopad_bin', $table->getColumn('user_identifier')->getCollation());
-        $this->assertSame('utf8mb4', $table->getColumn('user_identifier')->getCharset());
+        $this->assertSame('utf8mb4_nopad_bin', self::collationOf($table, 'user_identifier'));
+        $this->assertSame('utf8mb4', self::charsetOf($table, 'user_identifier'));
     }
 
     /**
@@ -112,6 +115,60 @@ final class ExactCollationListenerTest extends TestCase
         }
 
         return $tables;
+    }
+
+    /**
+     * @return iterable<string, array{AbstractPlatform, string|Throwable, string}>
+     */
+    public static function serverVersions(): iterable
+    {
+        yield 'mysql 8.0.16 lacks utf8mb4_0900_bin' => [new MySQL80Platform(), '8.0.16', 'utf8mb4_bin'];
+        yield 'mysql 8.0.17' => [new MySQL80Platform(), '8.0.17', 'utf8mb4_0900_bin'];
+        yield 'mysql 8.0.40 with a suffix' => [new MySQL80Platform(), '8.0.40-0ubuntu0.24.04.1', 'utf8mb4_0900_bin'];
+        yield 'unreadable version: the platform decides' => [new MySQL80Platform(), new RuntimeException('offline'), 'utf8mb4_0900_bin'];
+        yield 'unparsable version: the platform decides' => [new MySQL80Platform(), 'unknown', 'utf8mb4_0900_bin'];
+        yield 'mysql 8.4 platform is not queried' => [new MySQL84Platform(), new LogicException('must not be read'), 'utf8mb4_0900_bin'];
+        yield 'mariadb is not queried' => [new MariaDBPlatform(), new LogicException('must not be read'), 'utf8mb4_nopad_bin'];
+    }
+
+    #[DataProvider('serverVersions')]
+    public function testCollationForConnectionChecksTheMySql80Patch(AbstractPlatform $platform, string|Throwable $version, string $expected): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->method('getDatabasePlatform')->willReturn($platform);
+        if ($version instanceof Throwable) {
+            $connection->method('getServerVersion')->willThrowException($version);
+        } else {
+            $connection->method('getServerVersion')->willReturn($version);
+        }
+
+        $this->assertSame($expected, ExactCollationListener::collationForConnection($connection));
+    }
+
+    private static function collationOf(Table $table, string $column): ?string
+    {
+        $definition = $table->getColumn($column);
+        // @phpstan-ignore function.alreadyNarrowedType (DBAL 3 has no Column::getCollation())
+        if (method_exists($definition, 'getCollation')) {
+            return $definition->getCollation();
+        }
+
+        $options = $definition->getPlatformOptions(); // DBAL 3
+
+        return isset($options['collation']) && \is_string($options['collation']) ? $options['collation'] : null;
+    }
+
+    private static function charsetOf(Table $table, string $column): ?string
+    {
+        $definition = $table->getColumn($column);
+        // @phpstan-ignore function.alreadyNarrowedType (DBAL 3 has no Column::getCharset())
+        if (method_exists($definition, 'getCharset')) {
+            return $definition->getCharset();
+        }
+
+        $options = $definition->getPlatformOptions(); // DBAL 3
+
+        return isset($options['charset']) && \is_string($options['charset']) ? $options['charset'] : null;
     }
 
     private function registryOn(AbstractPlatform $platform): ManagerRegistry

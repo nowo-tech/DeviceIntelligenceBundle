@@ -104,8 +104,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   repositories throw `Nowo\DeviceIntelligence\Exception\LookAlikeIdentifierException` (fail closed); a login keeps
   working, only that device-user link or trust is not recorded until the `ALTER` of UPGRADING.
 - **NO PAD binary collation on `device_id` and `user_identifier`** of `device_trust`, `device_user` and `observation`
-  in the generated schema: `utf8mb4_0900_bin` on MySQL 8.0+, `utf8mb4_nopad_bin` on MariaDB, `utf8mb4_bin` (PAD
-  SPACE) only for MySQL 5.7 or a `server_version` without the patch number, with a logged warning.
+  in the generated schema: `utf8mb4_0900_bin` on MySQL 8.0.17+, `utf8mb4_nopad_bin` on MariaDB, `utf8mb4_bin` (PAD
+  SPACE) only for MySQL 5.7 / 8.0.0-8.0.16 or a `server_version` without the patch number, with a logged warning.
 - **`UserIdentifier` refuses unusable values instead of trimming them**: edge whitespace, control or format characters
   (`\n`, ZWSP, BOM, bidi marks), non-ASCII spaces (NBSP) and invalid UTF-8 throw `InvalidValueException`. The default
   resolver's callers already treat that as "no user" (not trusted, no device link). Legacy rows holding such values are
