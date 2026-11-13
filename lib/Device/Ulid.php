@@ -27,7 +27,7 @@ final readonly class Ulid
 
     public static function isValid(string $value): bool
     {
-        return 1 === preg_match('/^[0-9A-HJKMNP-TV-Z]{26}$/', $value);
+        return 1 === preg_match('/^[0-9A-HJKMNP-TV-Z]{26}$/D', $value);
     }
 
     /**

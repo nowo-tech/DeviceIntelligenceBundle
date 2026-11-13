@@ -55,6 +55,7 @@ use Nowo\DeviceIntelligenceBundle\Doctrine\DoctrineDeviceRepository;
 use Nowo\DeviceIntelligenceBundle\Doctrine\DoctrineDeviceUserRepository;
 use Nowo\DeviceIntelligenceBundle\Doctrine\DoctrineObservationRepository;
 use Nowo\DeviceIntelligenceBundle\Doctrine\DoctrineTrustedDeviceRepository;
+use Nowo\DeviceIntelligenceBundle\Doctrine\ExactCollationListener;
 use Nowo\DeviceIntelligenceBundle\Doctrine\TablePrefixSubscriber;
 use Nowo\DeviceIntelligenceBundle\EventSubscriber\RequestStateResetSubscriber;
 use Nowo\DeviceIntelligenceBundle\Infrastructure\SystemClock;
@@ -448,6 +449,10 @@ final class NowoDeviceIntelligenceExtension extends Extension implements Prepend
             $container->register(TablePrefixSubscriber::class)
                 ->setArguments([$config['doctrine']['table_prefix']])
                 ->addTag('doctrine.event_listener', ['event' => 'loadClassMetadata']);
+            // REQ-SEC-006 (1.9.2): byte-exact NO PAD collation on device_id / user_identifier (MySQL / MariaDB).
+            $container->register(ExactCollationListener::class)
+                ->setArguments([new Reference('doctrine'), new Reference('logger', ContainerInterface::IGNORE_ON_INVALID_REFERENCE)])
+                ->addTag('doctrine.event_listener', ['event' => 'postGenerateSchemaTable']);
 
             $container->setAlias(DeviceRepositoryInterface::class, DoctrineDeviceRepository::class)
                 ->setPublic(true);
