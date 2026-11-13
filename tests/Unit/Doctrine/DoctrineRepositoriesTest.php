@@ -139,8 +139,9 @@ final class DoctrineRepositoriesTest extends TestCase
         $relation = new DeviceUserRelation($device->id, $user, Scenario::now(), Scenario::now(), 1);
         $entity = $mapper->toUserEntity($relation);
         $query = $this->queryMock();
-        $query->method('getOneOrNullResult')->willReturnOnConsecutiveCalls(null, $entity, $entity, null);
-        $query->method('getResult')->willReturn([$entity, 0]);
+        // REQ-SEC-006: lookups read every SQL row (no LIMIT) and keep the byte-identical one
+        $lookAlike = $mapper->toUserEntity(new DeviceUserRelation($device->id, new UserIdentifier('Alice'), Scenario::now(), Scenario::now(), 9));
+        $query->method('getResult')->willReturnOnConsecutiveCalls([], [$lookAlike, $entity], [$lookAlike, $entity], [], [$entity, $lookAlike, 0], [$lookAlike, $entity, 0]);
         $query->method('getSingleScalarResult')->willReturn(1);
         $em = $this->em($query);
 
@@ -149,8 +150,9 @@ final class DoctrineRepositoriesTest extends TestCase
         $repo->save($relation);
         self::assertSame('alice', $repo->find($device->id, $user)?->userIdentifier->value);
         self::assertNull($repo->find(DeviceId::generate(Scenario::now()), new UserIdentifier('bob')));
-        self::assertCount(1, $repo->forDevice($device->id));
-        self::assertCount(1, $repo->forUser($user));
+        // forDevice lists every user of the device (Alice is a distinct account); forUser only alice's own rows
+        self::assertSame(['alice', 'Alice'], array_map(static fn (DeviceUserRelation $r): string => $r->userIdentifier->value, $repo->forDevice($device->id)));
+        self::assertSame(['alice'], array_map(static fn (DeviceUserRelation $r): string => $r->userIdentifier->value, $repo->forUser($user)));
         self::assertSame(1, $repo->countAll());
     }
 
@@ -165,8 +167,8 @@ final class DoctrineRepositoriesTest extends TestCase
         $activeE = $mapper->toTrustEntity($active);
         $expE = $mapper->toTrustEntity($expired);
         $query = $this->queryMock();
-        $query->method('getOneOrNullResult')->willReturnOnConsecutiveCalls(null, $activeE, $expE, new stdClass());
-        $query->method('getResult')->willReturn([$activeE, $expE, 'nope']);
+        $lookAlikeE = $mapper->toTrustEntity(new TrustedDevice($device->id, new UserIdentifier('alicé'), $now, null, null, 'attacker'));
+        $query->method('getResult')->willReturnOnConsecutiveCalls([], [$lookAlikeE, $activeE], [$expE], [new stdClass()], [$lookAlikeE], [$activeE, $lookAlikeE, $expE, 'nope']);
         $query->method('getSingleScalarResult')->willReturn(2);
         $em = $this->em($query);
 
@@ -175,8 +177,10 @@ final class DoctrineRepositoriesTest extends TestCase
         self::assertNotNull($repo->findActive($device->id, $user, $now));
         self::assertNull($repo->findActive($device->id, $user, $now));
         self::assertNull($repo->findActive($device->id, $user, $now));
+        self::assertNull($repo->findActive($device->id, $user, $now), 'a look-alike row is never the user\'s trust');
         $forUser = $repo->forUser($user, $now);
         self::assertCount(1, $forUser);
+        self::assertSame('laptop', $forUser[0]->label);
         self::assertSame(2, $repo->countAll());
     }
 

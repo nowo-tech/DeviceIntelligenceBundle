@@ -15,7 +15,6 @@ final class DeviceIntelligencePersonalDataSubjectTest extends TestCase
     public function testKeepsTheValueAsTheBundleStoresIt(): void
     {
         self::assertSame('Alice@Example.com', DeviceIntelligencePersonalDataSubject::fromUserIdentifier('Alice@Example.com')->userIdentifier, 'no case folding');
-        self::assertSame('alice', DeviceIntelligencePersonalDataSubject::fromUserIdentifier("  alice\n")->userIdentifier, 'trimmed like UserIdentifier on write');
         self::assertSame(str_repeat('a', 191), DeviceIntelligencePersonalDataSubject::fromUserIdentifier(str_repeat('a', 191))->userIdentifier);
     }
 
@@ -28,6 +27,10 @@ final class DeviceIntelligencePersonalDataSubjectTest extends TestCase
         yield 'blank' => ['   '];
         yield 'too long' => [str_repeat('a', 192)];
         yield 'NUL byte' => ["alice\0bob"];
+        yield 'edge whitespace (REQ-SEC-006, never trimmed)' => ["  alice\n"];
+        yield 'trailing space' => ['alice '];
+        yield 'NBSP' => ["alice\u{00A0}"];
+        yield 'ZWSP' => ["ali\u{200B}ce"];
     }
 
     #[DataProvider('invalid')]

@@ -105,6 +105,29 @@ final class ValueObjectsTest extends TestCase
         TimeWindow::parse('nope');
     }
 
+    /**
+     * REQ-SEC-006 (1.9.2): unusable identifiers are refused, never trimmed into another user.
+     */
+    public function testUserIdentifierRefusesUnusableValues(): void
+    {
+        foreach (['', ' bob', 'bob ', "bob\n", "\tbob", "b\nob", "bob\0", "bob\u{00A0}", "bob\u{200B}", "\u{FEFF}bob", "bob\u{202E}", "bob\u{2028}", "bob\u{3000}", "bob\x80", str_repeat('a', 192)] as $value) {
+            try {
+                new UserIdentifier($value);
+                self::fail('Accepted '.json_encode($value));
+            } catch (InvalidValueException) {
+                $this->addToAssertionCount(1);
+            }
+        }
+        // distinct users, kept byte for byte
+        self::assertSame('Bob Smith', (new UserIdentifier('Bob Smith'))->value);
+        self::assertSame('bób@example.com', (new UserIdentifier('bób@example.com'))->value);
+        self::assertFalse((new UserIdentifier('Bob'))->equals(new UserIdentifier('bob')));
+        self::assertSame(str_repeat('a', 191), (new UserIdentifier(str_repeat('a', 191)))->value);
+        // device ULIDs: anchored with /D, a trailing newline is not a ULID
+        self::assertFalse(Ulid::isValid(str_repeat('A', 26)."\n"));
+        self::assertTrue(Ulid::isValid(str_repeat('A', 26)));
+    }
+
     public function testNullPortsAndLabelerAndVelocity(): void
     {
         self::assertNull((new NullGeoIpProvider())->locate('1.1.1.1'));

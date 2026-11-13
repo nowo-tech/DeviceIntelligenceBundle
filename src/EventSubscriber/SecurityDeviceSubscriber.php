@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\DeviceIntelligenceBundle\EventSubscriber;
 
 use Nowo\DeviceIntelligence\Device\DeviceManager;
+use Nowo\DeviceIntelligence\Exception\LookAlikeIdentifierException;
 use Nowo\DeviceIntelligence\User\UserIdentifierResolverInterface;
 use Nowo\DeviceIntelligence\Velocity\VelocityEngineInterface;
 use Nowo\DeviceIntelligenceBundle\Request\DeviceContext;
@@ -111,7 +112,18 @@ final class SecurityDeviceSubscriber implements EventSubscriberInterface
 
             return;
         }
-        $this->devices->associate($context->device(), $identifier);
+        try {
+            $this->devices->associate($context->device(), $identifier);
+        } catch (LookAlikeIdentifierException) {
+            // REQ-SEC-006: a look-alike user's row holds the folding unique key; the link is not stored (fail closed),
+            // the login itself goes on
+            $this->logger?->warning('device_intelligence.login_associate_refused', [
+                'device_id' => $context->device()->id->value,
+                'reason' => 'look_alike_user_identifier',
+            ]);
+
+            return;
+        }
         $this->velocity->increment('login', $context->device());
         $this->logger?->info('device_intelligence.login_associated', [
             'device_id' => $context->device()->id->value,

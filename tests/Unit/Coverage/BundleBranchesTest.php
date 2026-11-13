@@ -10,9 +10,11 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Nowo\DeviceIntelligence\AnalysisInput;
+use Nowo\DeviceIntelligence\Device\DeviceId;
 use Nowo\DeviceIntelligence\Device\DeviceManager;
 use Nowo\DeviceIntelligence\DeviceIntelligence;
 use Nowo\DeviceIntelligence\Exception\InvalidValueException;
+use Nowo\DeviceIntelligence\Exception\LookAlikeIdentifierException;
 use Nowo\DeviceIntelligence\Infrastructure\FrozenClock;
 use Nowo\DeviceIntelligence\Infrastructure\InMemoryDeviceRepository;
 use Nowo\DeviceIntelligence\Infrastructure\InMemoryDeviceUserRepository;
@@ -31,9 +33,11 @@ use Nowo\DeviceIntelligence\Risk\RiskResult;
 use Nowo\DeviceIntelligence\Risk\RiskRuleInterface;
 use Nowo\DeviceIntelligence\Signal\SignalBag;
 use Nowo\DeviceIntelligence\Signal\SignalFactory;
+use Nowo\DeviceIntelligence\User\DeviceUserRelation;
 use Nowo\DeviceIntelligence\User\UserIdentifier;
 use Nowo\DeviceIntelligence\User\UserIdentifierResolverInterface;
 use Nowo\DeviceIntelligence\Velocity\InMemoryVelocityEngine;
+use Nowo\DeviceIntelligence\Velocity\VelocityEngineInterface;
 use Nowo\DeviceIntelligenceBundle\Attribute\AsDeviceRiskRule;
 use Nowo\DeviceIntelligenceBundle\Command\DeviceShowCommand;
 use Nowo\DeviceIntelligenceBundle\Command\RiskTestCommand;
@@ -68,6 +72,7 @@ use Nowo\DeviceIntelligenceBundle\Tests\Support\ProcessedConfig;
 use Nowo\DeviceIntelligenceBundle\Tests\Support\Scenario;
 use Nowo\DeviceIntelligenceBundle\User\SecurityUserIdentifierResolver;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Psr\SimpleCache\CacheInterface;
 use ReflectionClass;
@@ -353,6 +358,54 @@ final class BundleBranchesTest extends TestCase
         );
         $failing->onLoginSuccess($login);
         $this->addToAssertionCount(1);
+    }
+
+    /**
+     * REQ-SEC-006 (1.9.2): a look-alike user's row on a folding unique key refuses the device link; the login goes on.
+     */
+    public function testSecuritySubscriberLogsARefusedLookAlikeLink(): void
+    {
+        $now = Scenario::now();
+        $devices = new InMemoryDeviceRepository();
+        $trusts = new InMemoryTrustedDeviceRepository();
+        $refusing = new class implements DeviceUserRepositoryInterface {
+            public function save(DeviceUserRelation $relation): void
+            {
+                throw new LookAlikeIdentifierException('look-alike');
+            }
+
+            public function forDevice(DeviceId $deviceId): array
+            {
+                return [];
+            }
+
+            public function forUser(UserIdentifier $user): array
+            {
+                return [];
+            }
+
+            public function find(DeviceId $deviceId, UserIdentifier $user): ?DeviceUserRelation
+            {
+                return null;
+            }
+        };
+        $engine = DeviceIntelligence::create($devices, new InMemoryObservationRepository(), new InMemoryDeviceUserRepository(), $trusts);
+        $analysis = $engine->analyze(new AnalysisInput($now, SignalBag::empty()));
+        $stack = new RequestStack();
+        $request = Request::create('/');
+        $request->attributes->set('_device', new DeviceContext($analysis));
+        $stack->push($request);
+        $velocity = $this->createMock(VelocityEngineInterface::class);
+        $velocity->expects(self::never())->method('increment');
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects(self::once())->method('warning')->with('device_intelligence.login_associate_refused', self::callback(
+            static fn (array $context): bool => 'look_alike_user_identifier' === $context['reason'],
+        ));
+
+        $subscriber = new SecurityDeviceSubscriber(new DeviceManager($devices, $refusing, $trusts, new FrozenClock($now)), new SecurityUserIdentifierResolver(), $velocity, $stack, $logger);
+        $login = $this->createMock(LoginSuccessEvent::class);
+        $login->method('getUser')->willReturn(new InMemoryUser('bob', null));
+        $subscriber->onLoginSuccess($login);
     }
 
     public function testHttpBranches(): void

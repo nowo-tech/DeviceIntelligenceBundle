@@ -345,6 +345,48 @@ jobs:
           DI_TEST_ID_GENERATION: ${{ matrix.ids }}
         run: vendor/bin/phpunit --no-coverage --filter 'DoctrinePersistenceKernelTest|DbalEntityWriterTest|PersonalDataKernelTest'
 
+  look-alike-identifiers:
+    name: Look-alike user identifiers on MySQL 8.4 and MariaDB 11.4 (REQ-SEC-006)
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: ci-placeholder
+          MYSQL_DATABASE: di_test
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -pci-placeholder" --health-interval=5s --health-timeout=5s --health-retries=30
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_ROOT_PASSWORD: ci-placeholder
+          MARIADB_DATABASE: di_test
+        ports: ['3307:3306']
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval=5s --health-timeout=5s --health-retries=30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql, pdo_sqlite
+          tools: composer:v2
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Look-alike tests (SQLite NOCASE, MySQL 8.4, MariaDB 11.4)
+        env:
+          DEVICE_INTELLIGENCE_TEST_MYSQL_URL: mysql://root:ci-placeholder@127.0.0.1:3306/di_test?serverVersion=8.4.0&charset=utf8mb4
+          DEVICE_INTELLIGENCE_TEST_MARIADB_URL: mysql://root:ci-placeholder@127.0.0.1:3307/di_test?serverVersion=11.4.0-MariaDB&charset=utf8mb4
+        run: vendor/bin/phpunit --no-coverage tests/Integration/LookAlike
+
   coverage:
     name: Code Coverage
     runs-on: ubuntu-latest
