@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\EventSubscriber;
 
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Nowo\DeviceIntelligence\Device\DeviceManager;
 use Nowo\DeviceIntelligence\Exception\LookAlikeIdentifierException;
 use Nowo\DeviceIntelligence\User\UserIdentifierResolverInterface;
@@ -120,6 +121,14 @@ final class SecurityDeviceSubscriber implements EventSubscriberInterface
             $this->logger?->warning('device_intelligence.login_associate_refused', [
                 'device_id' => $context->device()->id->value,
                 'reason' => 'look_alike_user_identifier',
+            ]);
+
+            return;
+        } catch (UniqueConstraintViolationException) {
+            // the same user logging in twice at once (two tabs, a mobile retry) raced this write: the link exists, so
+            // the login must not end in an error page after the credentials were accepted
+            $this->logger?->info('device_intelligence.login_associate_raced', [
+                'device_id' => $context->device()->id->value,
             ]);
 
             return;

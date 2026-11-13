@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\Coverage;
 
+use Doctrine\DBAL\Driver\AbstractException as AbstractDriverException;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\LoadClassMetadataEventArgs;
 use Doctrine\ORM\Mapping\ClassMetadata;
@@ -95,6 +97,7 @@ use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\User\InMemoryUser;
 use Symfony\Component\Security\Http\Event\InteractiveLoginEvent;
 use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
+use Throwable;
 
 /**
  * Remaining bundle branches for ≥99% line coverage.
@@ -361,17 +364,46 @@ final class BundleBranchesTest extends TestCase
     }
 
     /**
+     * F-DI-5: a concurrent duplicate of the same user (two tabs) must not end the login with an error.
+     */
+    public function testSecuritySubscriberSurvivesARacedDeviceLink(): void
+    {
+        $duplicate = new UniqueConstraintViolationException(new class('duplicate') extends AbstractDriverException {}, null);
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects(self::once())->method('info')->with('device_intelligence.login_associate_raced', self::anything());
+
+        $this->associateThrowing($duplicate, $logger);
+    }
+
+    /**
      * REQ-SEC-006 (1.9.2): a look-alike user's row on a folding unique key refuses the device link; the login goes on.
      */
     public function testSecuritySubscriberLogsARefusedLookAlikeLink(): void
     {
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects(self::once())->method('warning')->with('device_intelligence.login_associate_refused', self::callback(
+            static fn (array $context): bool => 'look_alike_user_identifier' === $context['reason'],
+        ));
+
+        $this->associateThrowing(new LookAlikeIdentifierException('look-alike'), $logger);
+    }
+
+    /**
+     * Runs a successful login whose device-user write throws $error; the velocity engine must stay untouched.
+     */
+    private function associateThrowing(Throwable $error, LoggerInterface $logger): void
+    {
         $now = Scenario::now();
         $devices = new InMemoryDeviceRepository();
         $trusts = new InMemoryTrustedDeviceRepository();
-        $refusing = new class implements DeviceUserRepositoryInterface {
+        $refusing = new class($error) implements DeviceUserRepositoryInterface {
+            public function __construct(private readonly Throwable $error)
+            {
+            }
+
             public function save(DeviceUserRelation $relation): void
             {
-                throw new LookAlikeIdentifierException('look-alike');
+                throw $this->error;
             }
 
             public function forDevice(DeviceId $deviceId): array
@@ -397,10 +429,6 @@ final class BundleBranchesTest extends TestCase
         $stack->push($request);
         $velocity = $this->createMock(VelocityEngineInterface::class);
         $velocity->expects(self::never())->method('increment');
-        $logger = $this->createMock(LoggerInterface::class);
-        $logger->expects(self::once())->method('warning')->with('device_intelligence.login_associate_refused', self::callback(
-            static fn (array $context): bool => 'look_alike_user_identifier' === $context['reason'],
-        ));
 
         $subscriber = new SecurityDeviceSubscriber(new DeviceManager($devices, $refusing, $trusts, new FrozenClock($now)), new SecurityUserIdentifierResolver(), $velocity, $stack, $logger);
         $login = $this->createMock(LoginSuccessEvent::class);

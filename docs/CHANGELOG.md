@@ -100,6 +100,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   device rewrote the attacker's row. Affects 1.0.0 to 1.9.1 with Doctrine storage on MySQL / MariaDB. Every lookup
   (`findActive`, `save`, `forUser`, and `find` / `forUser` / `forDevice` / `save` of `DoctrineDeviceUserRepository`)
   now reads every row the SQL filter returns, without `LIMIT`, and keeps only the byte-identical one (`===`).
+- **A concurrent duplicate login no longer fails the request.** A second simultaneous login of the same user on the
+  same device (two tabs, a mobile retry) could race the device-link write; the rethrown unique violation then ended
+  `LoginSuccessEvent` with an error after the credentials had been accepted. It is logged
+  (`device_intelligence.login_associate_raced`) and the login continues: the link the other request wrote is already
+  there. Present since 1.0.0.
 - **A write never overwrites a look-alike's row.** When a unique key on a folding collation rejects the new row, the
   repositories throw `Nowo\DeviceIntelligence\Exception\LookAlikeIdentifierException` (fail closed); a login keeps
   working, only that device-user link or trust is not recorded until the `ALTER` of UPGRADING.
