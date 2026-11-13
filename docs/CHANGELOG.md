@@ -103,6 +103,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   on DoctrineBundle 2.x, 3.3 and 3.4+. Nothing changes without the option. Affected in practice: 1.7.0 to 1.9.0
   (every release with `doctrine.entity_manager`; all allow `doctrine/doctrine-bundle` `^3.0`) with DoctrineBundle 3.4.0
   or later.
+### Changed
+
+- Demo uses the UiKit base style and FormKit forms (REQ-DEMO-014/015).
 
 ## [1.9.0] - 2026-11-11
 

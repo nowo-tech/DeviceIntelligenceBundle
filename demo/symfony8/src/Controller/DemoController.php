@@ -6,6 +6,8 @@ namespace App\Controller;
 
 use App\Form\CsrfOnlyType;
 use App\Form\LoginType;
+use DateTimeImmutable;
+use LogicException;
 use Nowo\DeviceIntelligence\User\UserIdentifier;
 use Nowo\DeviceIntelligenceBundle\RateLimiter\DeviceRateLimiterInterface;
 use Nowo\DeviceIntelligenceBundle\Request\DeviceContext;
@@ -14,10 +16,10 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
-
-use function in_array;
 
 /**
  * Multi-case demo: collect, checkout step-up, login, trust, privileged, coupon, export, alerts.
@@ -86,7 +88,7 @@ final class DemoController extends AbstractController
     #[Route('/logout', name: 'demo_logout', methods: ['GET'])]
     public function logout(): never
     {
-        throw new \LogicException('Handled by the security logout listener.');
+        throw new LogicException('Handled by the security logout listener.');
     }
 
     #[Route('/{_locale}/checkout/pay', name: 'demo_checkout_pay', requirements: ['_locale' => self::LOCALE], methods: ['POST'])]
@@ -127,7 +129,7 @@ final class DemoController extends AbstractController
         $this->trust->trust(
             $device->device(),
             new UserIdentifier($user->getUserIdentifier()),
-            new \DateTimeImmutable('+90 days'),
+            new DateTimeImmutable('+90 days'),
             'Demo · '.$user->getUserIdentifier(),
         );
         $this->addFlash('success', 'demo.flash.trusted');
@@ -273,12 +275,12 @@ final class DemoController extends AbstractController
     }
 
     /**
-     * @return array{login_form: FormInterface<mixed>, login_error: \Symfony\Component\Security\Core\Exception\AuthenticationException|null}
+     * @return array{login_form: FormInterface<mixed>, login_error: AuthenticationException|null}
      */
     private function loginPageVars(Request $request, ?AuthenticationUtils $auth): array
     {
         if (!$auth instanceof AuthenticationUtils) {
-            throw new \LogicException('AuthenticationUtils required for login.');
+            throw new LogicException('AuthenticationUtils required for login.');
         }
 
         return [
@@ -305,7 +307,7 @@ final class DemoController extends AbstractController
 
     private function redirectToCase(string $locale, string $case): Response
     {
-        if (!in_array($case, self::CASES, true)) {
+        if (!\in_array($case, self::CASES, true)) {
             return $this->redirectToRoute('homepage', ['_locale' => $locale]);
         }
 
@@ -366,8 +368,6 @@ final class DemoController extends AbstractController
     private function trustFormOptions(): array
     {
         return [
-            'attr' => ['class' => 'd-inline'],
-            'submit_row_attr' => ['class' => 'd-inline-block mb-0 me-2'],
         ];
     }
 
@@ -377,9 +377,7 @@ final class DemoController extends AbstractController
     private function revokeFormOptions(): array
     {
         return [
-            'attr' => ['class' => 'd-inline'],
-            'submit_attr' => ['class' => 'btn btn-outline-danger'],
-            'submit_row_attr' => ['class' => 'd-inline-block mb-0'],
+            'submit_attr' => ['class' => 'nowo-ui-btn nowo-ui-btn--danger'],
         ];
     }
 
@@ -396,7 +394,7 @@ final class DemoController extends AbstractController
         $form = $this->createActionForm($request->getLocale(), $route, $submitLabel, $csrfTokenId, $extraOptions);
         $form->handleRequest($request);
         if (!$form->isSubmitted() || !$form->isValid()) {
-            throw $this->createAccessDeniedException('Invalid CSRF token.');
+            throw new UnprocessableEntityHttpException('Invalid CSRF token.');
         }
     }
 }

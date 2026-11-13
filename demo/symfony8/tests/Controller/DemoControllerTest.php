@@ -26,7 +26,7 @@ final class DemoControllerTest extends WebTestCase
         self::assertSelectorTextContains('html', 'A Device ID is not a credential');
         self::assertSelectorExists('script[src*="/build/"]');
         self::assertSelectorExists('#collect-result');
-        self::assertSelectorExists('.nav-pills');
+        self::assertSelectorExists('.nowo-ui-tabs');
     }
 
     public function testSpanishHomePage(): void
@@ -62,9 +62,9 @@ final class DemoControllerTest extends WebTestCase
         $crawler = $client->request('GET', $path);
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorExists('.nav-pills .nav-link.active');
-        self::assertSame($activeHref, $crawler->filter('.nav-pills .nav-link.active')->attr('href'));
-        self::assertSelectorExists(sprintf('a.dropdown-item[href="%s"]', str_replace('/en', '/es', $path)));
+        self::assertSelectorExists('.nowo-ui-tabs .nowo-ui-tabs__item--active');
+        self::assertSame($activeHref, $crawler->filter('.nowo-ui-tabs .nowo-ui-tabs__item--active')->attr('href'));
+        self::assertSelectorExists(sprintf('a.nowo-ui-link[href="%s"]', str_replace('/en', '/es', $path)));
     }
 
     public function testUnknownPathIsNotACase(): void
@@ -117,7 +117,7 @@ final class DemoControllerTest extends WebTestCase
         $client->submit($form);
         self::assertResponseRedirects();
         $client->followRedirect();
-        self::assertSelectorExists('.alert-warning');
+        self::assertSelectorExists('.nowo-ui-flash--warning');
     }
 
     public function testCouponRateLimit(): void
@@ -131,7 +131,7 @@ final class DemoControllerTest extends WebTestCase
             $client->submit($form);
             self::assertResponseRedirects();
             $crawler = $client->followRedirect();
-            if ($crawler->filter('.alert-danger')->count() > 0) {
+            if ($crawler->filter('.nowo-ui-flash--error')->count() > 0) {
                 $sawBlock = true;
             }
         }
