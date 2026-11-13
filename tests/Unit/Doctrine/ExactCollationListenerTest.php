@@ -27,10 +27,12 @@ use Nowo\DeviceIntelligenceBundle\Entity\DeviceEntity;
 use Nowo\DeviceIntelligenceBundle\Entity\DeviceObservationEntity;
 use Nowo\DeviceIntelligenceBundle\Entity\DeviceTrustEntity;
 use Nowo\DeviceIntelligenceBundle\Entity\DeviceUserEntity;
+use PDO;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use stdClass;
 use Throwable;
 
 /**
@@ -143,6 +145,29 @@ final class ExactCollationListenerTest extends TestCase
         }
 
         $this->assertSame($expected, ExactCollationListener::collationForConnection($connection));
+    }
+
+    /**
+     * DBAL 3 keeps Connection::getServerVersion() private: the native connection is asked instead.
+     */
+    public function testServerVersionFallsBackToTheNativeConnection(): void
+    {
+        $pdo = new PDO('sqlite::memory:');
+        $dbal3 = new class($pdo) {
+            public function __construct(private readonly mixed $native)
+            {
+            }
+
+            public function getNativeConnection(): mixed
+            {
+                return $this->native;
+            }
+        };
+        $this->assertSame($pdo->getAttribute(PDO::ATTR_SERVER_VERSION), ExactCollationListener::serverVersion($dbal3));
+
+        $unknownDriver = new $dbal3(new stdClass());
+        $this->assertNull(ExactCollationListener::serverVersion($unknownDriver));
+        $this->assertNull(ExactCollationListener::serverVersion(new stdClass()));
     }
 
     private static function collationOf(Table $table, string $column): ?string
