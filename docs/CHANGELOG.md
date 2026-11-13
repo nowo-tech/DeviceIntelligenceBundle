@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.9.2] - 2026-11-13](#192---2026-11-13)
+  - [Security](#security)
 - [[1.9.1] - 2026-11-13](#191---2026-11-13)
   - [Fixed](#fixed)
   - [Changed](#changed)
@@ -19,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Tests](#tests)
   - [Documentation](#documentation)
 - [[1.7.0] - 2026-11-11](#170---2026-11-11)
-  - [Security](#security)
+  - [Security](#security-1)
   - [Added](#added-1)
   - [Changed](#changed-2)
   - [Deprecated](#deprecated)
@@ -31,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Changed](#changed-3)
   - [Tests](#tests-1)
 - [[1.5.1] - 2026-10-30](#151---2026-10-30)
-  - [Security](#security-1)
+  - [Security](#security-2)
 - [[1.5.0] - 2026-10-28](#150---2026-10-28)
   - [Changed](#changed-4)
   - [Documentation](#documentation-2)
@@ -46,7 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[1.3.1] - 2026-10-13](#131---2026-10-13)
   - [Changed](#changed-9)
 - [[1.3.0] - 2026-10-13](#130---2026-10-13)
-  - [Security](#security-2)
+  - [Security](#security-3)
   - [Fixed](#fixed-2)
   - [Changed](#changed-10)
 - [[1.2.2] - 2026-10-13](#122---2026-10-13)
@@ -56,7 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Fixed](#fixed-3)
   - [Dependencies](#dependencies-1)
 - [[1.2.0] - 2026-09-28](#120---2026-09-28)
-  - [Security](#security-3)
+  - [Security](#security-4)
   - [Changed](#changed-12)
 - [[1.1.5] - 2026-09-27](#115---2026-09-27)
   - [Added](#added-3)
@@ -90,6 +92,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Documentation](#documentation-6)
 
 ## [Unreleased]
+
+## [1.9.2] - 2026-11-13
 
 ### Security
 
@@ -559,7 +563,8 @@ First stable release of **Device Intelligence Bundle**.
 - README: canonical badges, FrankenPHP banner, `## Documentation`, `## Tests and coverage`
 - Integrator docs: INSTALLATION, CONFIGURATION, USAGE, SECURITY, CONTRIBUTING, RELEASE, UPGRADING, GITHUB (REQ-DOCS-018)
 
-[Unreleased]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.9.1...HEAD
+[Unreleased]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.9.2...HEAD
+[1.9.2]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.9.1...v1.9.2
 [1.9.1]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.7.0...v1.8.0

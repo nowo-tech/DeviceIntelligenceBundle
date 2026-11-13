@@ -5,6 +5,7 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.9.2](#to-192)
 - [To 1.9.1](#to-191)
 - [To 1.9.0](#to-190)
 - [To 1.8.0](#to-180)
@@ -41,6 +42,14 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.9.2
+
+From **1.9.1**:
+
+```bash
+composer update nowo-tech/device-intelligence-bundle
+```
 
 From **1.9.1** (target 1.9.2). Doctrine storage on MySQL / MariaDB only (REQ-SEC-006); PostgreSQL, SQLite and the
 in-memory repositories need nothing.
