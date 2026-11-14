@@ -106,6 +106,15 @@ final class DeviceMapperTest extends TestCase
         self::assertSame(22, $back->riskScore);
         self::assertSame('alice@example.test', $back->userIdentifier?->value);
 
+        // audit F-DI-1: a legacy observation whose identifier 1.9.2 refuses stays readable, without a user
+        foreach (["bob@example.com\u{00A0}", ' bob@example.com', "bob\u{200B}@example.com"] as $legacy) {
+            $entity = $mapper->toObservationEntity($observation);
+            $entity->setUserIdentifier($legacy);
+            $legacyBack = $mapper->toObservation($entity);
+            self::assertNull($legacyBack->userIdentifier, json_encode($legacy) ?: '');
+            self::assertSame($obsId->value, $legacyBack->id->value);
+        }
+
         $rel = new DeviceUserRelation($deviceId, $user, $now, $now, 4);
         $relBack = $mapper->toUserRelation($mapper->toUserEntity($rel));
         self::assertSame(4, $relBack->loginCount);

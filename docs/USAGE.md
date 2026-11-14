@@ -274,8 +274,9 @@ $result->toArray();                     // ['observations' => 3, 'device_users' 
 $result->total();                       // 10
 ```
 
-- **Subject**: the user identifier as the bundle stores it in `user_identifier` (trimmed like on write, no case
-  folding); empty, longer than 191 bytes or with a NUL byte is rejected (`InvalidArgumentException`).
+- **Subject**: the user identifier exactly as the bundle stores it in `user_identifier` (never trimmed, no case
+  folding); empty, longer than 191 bytes, edge whitespace, control / format characters (NUL, ZWSP, BOM, bidi marks)
+  or non-ASCII spaces (NBSP) are rejected (`InvalidArgumentException`, 1.9.2).
 - **Exact matching**: the SQL `=` only pre-filters; the stored value is re-checked with `===` in PHP and rows are
   deleted by primary key in batches of 500. On a MySQL `*_ci` / `*_ai_ci` collation, `Alice` and `alíce` are never
   erased or exported for `alice`.

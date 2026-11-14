@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.9.2] - 2026-11-13](#192---2026-11-13)
+  - [Security](#security)
 - [[1.9.1] - 2026-11-13](#191---2026-11-13)
   - [Fixed](#fixed)
   - [Changed](#changed)
@@ -19,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Tests](#tests)
   - [Documentation](#documentation)
 - [[1.7.0] - 2026-11-11](#170---2026-11-11)
-  - [Security](#security)
+  - [Security](#security-1)
   - [Added](#added-1)
   - [Changed](#changed-2)
   - [Deprecated](#deprecated)
@@ -31,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Changed](#changed-3)
   - [Tests](#tests-1)
 - [[1.5.1] - 2026-10-30](#151---2026-10-30)
-  - [Security](#security-1)
+  - [Security](#security-2)
 - [[1.5.0] - 2026-10-28](#150---2026-10-28)
   - [Changed](#changed-4)
   - [Documentation](#documentation-2)
@@ -46,7 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [[1.3.1] - 2026-10-13](#131---2026-10-13)
   - [Changed](#changed-9)
 - [[1.3.0] - 2026-10-13](#130---2026-10-13)
-  - [Security](#security-2)
+  - [Security](#security-3)
   - [Fixed](#fixed-2)
   - [Changed](#changed-10)
 - [[1.2.2] - 2026-10-13](#122---2026-10-13)
@@ -56,7 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Fixed](#fixed-3)
   - [Dependencies](#dependencies-1)
 - [[1.2.0] - 2026-09-28](#120---2026-09-28)
-  - [Security](#security-3)
+  - [Security](#security-4)
   - [Changed](#changed-12)
 - [[1.1.5] - 2026-09-27](#115---2026-09-27)
   - [Added](#added-3)
@@ -95,6 +97,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - docs: demo screenshots regenerated on the UiKit base style
 - demo: opt into UiKit 2.51 `nowo_ui_kit.base_stylesheet`, use `nowo-ui-header__nav` for the masthead nav, screenshots regenerated with the themed shell
+
+## [1.9.2] - 2026-11-13
+
+### Security
+
+- **Trusted-device rows are no longer resolved across look-alike users (REQ-SEC-006).** `DoctrineTrustedDeviceRepository`
+  looked a trust up with SQL alone and `LIMIT 1`. On the default MySQL / MariaDB collations `josé@`, `Jose@` and (PAD
+  SPACE) `jose@ ` equal `jose@`, so an attacker who trusted their own device as `josé@` and then logged in there as
+  `jose@` passed `isTrusted()` and `#[RequireTrustedDevice]` with their own row; `jose@` trusting or revoking that
+  device rewrote the attacker's row. Affects 1.0.0 to 1.9.1 with Doctrine storage on MySQL / MariaDB. Every lookup
+  (`findActive`, `save`, `forUser`, and `find` / `forUser` / `forDevice` / `save` of `DoctrineDeviceUserRepository`)
+  now reads every row the SQL filter returns, without `LIMIT`, and keeps only the byte-identical one (`===`).
+- **A concurrent duplicate login no longer fails the request.** A second simultaneous login of the same user on the
+  same device (two tabs, a mobile retry) could race the device-link write; the rethrown unique violation then ended
+  `LoginSuccessEvent` with an error after the credentials had been accepted. It is logged
+  (`device_intelligence.login_associate_raced`) and the login continues: the link the other request wrote is already
+  there. Present since 1.0.0.
+- **A write never overwrites a look-alike's row.** When a unique key on a folding collation rejects the new row, the
+  repositories throw `Nowo\DeviceIntelligence\Exception\LookAlikeIdentifierException` (fail closed); a login keeps
+  working, only that device-user link or trust is not recorded until the `ALTER` of UPGRADING.
+- **NO PAD binary collation on `device_id` and `user_identifier`** of `device_trust`, `device_user` and `observation`
+  in the generated schema: `utf8mb4_0900_bin` on MySQL 8.0.17+, `utf8mb4_nopad_bin` on MariaDB, `utf8mb4_bin` (PAD
+  SPACE) only for MySQL 5.7 / 8.0.0-8.0.16 or a `server_version` without the patch number, with a logged warning.
+- **`UserIdentifier` refuses unusable values instead of trimming them**: edge whitespace, control or format characters
+  (`\n`, ZWSP, BOM, bidi marks), non-ASCII spaces (NBSP) and invalid UTF-8 throw `InvalidValueException`. The default
+  resolver's callers already treat that as "no user" (not trusted, no device link). Legacy device links and trusts
+  holding such values are skipped, never mapped onto another user; legacy observations stay readable with an unknown
+  user. Device ULIDs are matched with an anchored `/D` pattern.
 
 ## [1.9.1] - 2026-11-13
 
@@ -538,7 +568,8 @@ First stable release of **Device Intelligence Bundle**.
 - README: canonical badges, FrankenPHP banner, `## Documentation`, `## Tests and coverage`
 - Integrator docs: INSTALLATION, CONFIGURATION, USAGE, SECURITY, CONTRIBUTING, RELEASE, UPGRADING, GITHUB (REQ-DOCS-018)
 
-[Unreleased]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.9.1...HEAD
+[Unreleased]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.9.2...HEAD
+[1.9.2]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.9.1...v1.9.2
 [1.9.1]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/nowo-tech/DeviceIntelligenceBundle/compare/v1.7.0...v1.8.0

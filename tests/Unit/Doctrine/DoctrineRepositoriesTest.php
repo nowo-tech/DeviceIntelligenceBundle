@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Nowo\DeviceIntelligenceBundle\Tests\Unit\Doctrine;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Driver\AbstractException;
 use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
@@ -13,6 +15,7 @@ use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Nowo\DeviceIntelligence\Device\DeviceId;
+use Nowo\DeviceIntelligence\Exception\LookAlikeIdentifierException;
 use Nowo\DeviceIntelligence\Observation\ObservationId;
 use Nowo\DeviceIntelligence\Privacy\IpHash;
 use Nowo\DeviceIntelligence\Signal\SignalName;
@@ -139,8 +142,9 @@ final class DoctrineRepositoriesTest extends TestCase
         $relation = new DeviceUserRelation($device->id, $user, Scenario::now(), Scenario::now(), 1);
         $entity = $mapper->toUserEntity($relation);
         $query = $this->queryMock();
-        $query->method('getOneOrNullResult')->willReturnOnConsecutiveCalls(null, $entity, $entity, null);
-        $query->method('getResult')->willReturn([$entity, 0]);
+        // REQ-SEC-006: lookups read every SQL row (no LIMIT) and keep the byte-identical one
+        $lookAlike = $mapper->toUserEntity(new DeviceUserRelation($device->id, new UserIdentifier('Alice'), Scenario::now(), Scenario::now(), 9));
+        $query->method('getResult')->willReturnOnConsecutiveCalls([], [$lookAlike, $entity], [$lookAlike, $entity], [], [$entity, $lookAlike, 0], [$lookAlike, $entity, 0]);
         $query->method('getSingleScalarResult')->willReturn(1);
         $em = $this->em($query);
 
@@ -149,8 +153,9 @@ final class DoctrineRepositoriesTest extends TestCase
         $repo->save($relation);
         self::assertSame('alice', $repo->find($device->id, $user)?->userIdentifier->value);
         self::assertNull($repo->find(DeviceId::generate(Scenario::now()), new UserIdentifier('bob')));
-        self::assertCount(1, $repo->forDevice($device->id));
-        self::assertCount(1, $repo->forUser($user));
+        // forDevice lists every user of the device (Alice is a distinct account); forUser only alice's own rows
+        self::assertSame(['alice', 'Alice'], array_map(static fn (DeviceUserRelation $r): string => $r->userIdentifier->value, $repo->forDevice($device->id)));
+        self::assertSame(['alice'], array_map(static fn (DeviceUserRelation $r): string => $r->userIdentifier->value, $repo->forUser($user)));
         self::assertSame(1, $repo->countAll());
     }
 
@@ -165,8 +170,8 @@ final class DoctrineRepositoriesTest extends TestCase
         $activeE = $mapper->toTrustEntity($active);
         $expE = $mapper->toTrustEntity($expired);
         $query = $this->queryMock();
-        $query->method('getOneOrNullResult')->willReturnOnConsecutiveCalls(null, $activeE, $expE, new stdClass());
-        $query->method('getResult')->willReturn([$activeE, $expE, 'nope']);
+        $lookAlikeE = $mapper->toTrustEntity(new TrustedDevice($device->id, new UserIdentifier('alicé'), $now, null, null, 'attacker'));
+        $query->method('getResult')->willReturnOnConsecutiveCalls([], [$lookAlikeE, $activeE], [$expE], [new stdClass()], [$lookAlikeE], [$activeE, $lookAlikeE, $expE, 'nope']);
         $query->method('getSingleScalarResult')->willReturn(2);
         $em = $this->em($query);
 
@@ -175,9 +180,63 @@ final class DoctrineRepositoriesTest extends TestCase
         self::assertNotNull($repo->findActive($device->id, $user, $now));
         self::assertNull($repo->findActive($device->id, $user, $now));
         self::assertNull($repo->findActive($device->id, $user, $now));
+        self::assertNull($repo->findActive($device->id, $user, $now), 'a look-alike row is never the user\'s trust');
         $forUser = $repo->forUser($user, $now);
         self::assertCount(1, $forUser);
+        self::assertSame('laptop', $forUser[0]->label);
         self::assertSame(2, $repo->countAll());
+    }
+
+    /**
+     * Audit F-DI-2: a unique violation is labelled a look-alike only when no row of exactly this device and user exists;
+     * a concurrent duplicate of the same user is rethrown as it is.
+     */
+    public function testUniqueViolationIsLabelledOnlyWithoutAnExactRow(): void
+    {
+        $mapper = new DeviceMapper();
+        $device = Scenario::device();
+        $user = new UserIdentifier('alice');
+        $now = Scenario::now();
+        $trust = new TrustedDevice($device->id, $user, $now, null, null, 'laptop');
+        $relation = new DeviceUserRelation($device->id, $user, $now, $now, 1);
+        $duplicate = new UniqueConstraintViolationException(new class('duplicate') extends AbstractException {}, null);
+
+        foreach ([[], [$mapper->toTrustEntity($trust)]] as $afterwards) {
+            $query = $this->queryMock();
+            $query->method('getResult')->willReturnOnConsecutiveCalls([], $afterwards);
+            $em = $this->em($query);
+            $connection = $this->createMock(Connection::class);
+            $connection->method('insert')->willThrowException($duplicate);
+            $em->method('getConnection')->willReturn($connection);
+            try {
+                (new DoctrineTrustedDeviceRepository($em, $mapper))->save($trust);
+                self::fail('The write must fail.');
+            } catch (LookAlikeIdentifierException $error) {
+                self::assertSame([], $afterwards);
+                self::assertSame($duplicate, $error->getPrevious());
+            } catch (UniqueConstraintViolationException $error) {
+                self::assertNotSame([], $afterwards);
+                self::assertSame($duplicate, $error);
+            }
+        }
+
+        foreach ([[], [$mapper->toUserEntity($relation)]] as $afterwards) {
+            $query = $this->queryMock();
+            $query->method('getResult')->willReturnOnConsecutiveCalls([], $afterwards);
+            $em = $this->em($query);
+            $connection = $this->createMock(Connection::class);
+            $connection->method('insert')->willThrowException($duplicate);
+            $em->method('getConnection')->willReturn($connection);
+            try {
+                (new DoctrineDeviceUserRepository($em, $mapper))->save($relation);
+                self::fail('The write must fail.');
+            } catch (LookAlikeIdentifierException) {
+                self::assertSame([], $afterwards);
+            } catch (UniqueConstraintViolationException $error) {
+                self::assertNotSame([], $afterwards);
+                self::assertSame($duplicate, $error);
+            }
+        }
     }
 
     public function testEntityIdsAndMapperSkipsUnknownSignals(): void

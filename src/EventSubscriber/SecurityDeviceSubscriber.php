@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\EventSubscriber;
 
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Nowo\DeviceIntelligence\Device\DeviceManager;
+use Nowo\DeviceIntelligence\Exception\LookAlikeIdentifierException;
 use Nowo\DeviceIntelligence\User\UserIdentifierResolverInterface;
 use Nowo\DeviceIntelligence\Velocity\VelocityEngineInterface;
 use Nowo\DeviceIntelligenceBundle\Request\DeviceContext;
@@ -111,7 +113,26 @@ final class SecurityDeviceSubscriber implements EventSubscriberInterface
 
             return;
         }
-        $this->devices->associate($context->device(), $identifier);
+        try {
+            $this->devices->associate($context->device(), $identifier);
+        } catch (LookAlikeIdentifierException) {
+            // REQ-SEC-006: a look-alike user's row holds the folding unique key; the link is not stored (fail closed),
+            // the login itself goes on
+            $this->logger?->warning('device_intelligence.login_associate_refused', [
+                'device_id' => $context->device()->id->value,
+                'reason' => 'look_alike_user_identifier',
+            ]);
+
+            return;
+        } catch (UniqueConstraintViolationException) {
+            // the same user logging in twice at once (two tabs, a mobile retry) raced this write: the link exists, so
+            // the login must not end in an error page after the credentials were accepted
+            $this->logger?->info('device_intelligence.login_associate_raced', [
+                'device_id' => $context->device()->id->value,
+            ]);
+
+            return;
+        }
         $this->velocity->increment('login', $context->device());
         $this->logger?->info('device_intelligence.login_associated', [
             'device_id' => $context->device()->id->value,
