@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\PersonalData\UserKit;
 
-use InvalidArgumentException;
 use Nowo\DeviceIntelligenceBundle\PersonalData\DeviceIntelligencePersonalDataEraserInterface;
 use Nowo\DeviceIntelligenceBundle\PersonalData\DeviceIntelligencePersonalDataSubject;
 use Nowo\DeviceIntelligenceBundle\PersonalData\DeviceIntelligencePersonalDataSubjectResolverInterface;
@@ -56,11 +55,9 @@ final readonly class DeviceIntelligenceUserKitEraser implements PersonalDataEras
 
         $previous = $request->context['previous_email'] ?? null;
         if (\is_string($previous) && '' !== $previous) {
-            try {
-                $subject = DeviceIntelligencePersonalDataSubject::fromUserIdentifier($previous);
+            // Values the bundle could not have stored give no subject.
+            foreach (DeviceIntelligencePersonalDataSubject::forPersonalDataRequest($previous) as $subject) {
                 $subjects[$subject->userIdentifier] = $subject;
-            } catch (InvalidArgumentException) {
-                // Not a value the bundle could have stored.
             }
         }
 

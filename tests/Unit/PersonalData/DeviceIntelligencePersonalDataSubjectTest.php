@@ -40,6 +40,41 @@ final class DeviceIntelligencePersonalDataSubjectTest extends TestCase
         DeviceIntelligencePersonalDataSubject::fromUserIdentifier($value);
     }
 
+    /**
+     * RE1-L1: GDPR requests still reach what releases before 1.9.2 stored (raw, and trimmed with PHP trim()), byte for
+     * byte; a usable identifier gives exactly itself.
+     *
+     * @return iterable<string, array{string, list<string>}>
+     */
+    public static function personalDataRequests(): iterable
+    {
+        yield 'usable: itself only' => ['alice', ['alice']];
+        yield 'internal NBSP (stored as is)' => ["ana\u{00A0}lopez", ["ana\u{00A0}lopez"]];
+        yield 'internal ZWSP (stored as is)' => ["ali\u{200B}ce", ["ali\u{200B}ce"]];
+        yield 'edge space: raw and the trimmed value stored' => ['bob ', ['bob ', 'bob']];
+        yield 'edge tab and newline' => ["\tcarol\n", ["\tcarol\n", 'carol']];
+        yield 'edge NBSP is not trimmed by trim()' => ["dave\u{00A0}", ["dave\u{00A0}"]];
+        yield 'blank: nothing' => ['   ', []];
+        yield 'empty: nothing' => ['', []];
+        yield 'NUL inside: nothing' => ["a\0b", []];
+        yield 'trailing NUL: only the trimmed value' => ["erin\0", ['erin']];
+        yield 'too long raw, storable trimmed' => [str_repeat('a', 191).' ', [str_repeat('a', 191)]];
+        yield 'too long' => [str_repeat('a', 192), []];
+        yield 'invalid UTF-8' => ["al\xFFice", []];
+    }
+
+    /**
+     * @param list<string> $expected
+     */
+    #[DataProvider('personalDataRequests')]
+    public function testForPersonalDataRequestMatchesLegacyStoredValuesExactly(string $value, array $expected): void
+    {
+        self::assertSame($expected, array_map(
+            static fn (DeviceIntelligencePersonalDataSubject $subject): string => $subject->userIdentifier,
+            DeviceIntelligencePersonalDataSubject::forPersonalDataRequest($value),
+        ));
+    }
+
     public function testErasureResultCounts(): void
     {
         $result = new DeviceIntelligenceErasureResult(3, 2, 1, 4);
