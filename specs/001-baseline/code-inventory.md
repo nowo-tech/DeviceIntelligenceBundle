@@ -1,8 +1,8 @@
 # Device Intelligence Bundle — baseline code inventory
 
 **Package**: `nowo-tech/device-intelligence-bundle`  
-**Last audited**: 2026-10-20  
-**Production units**: **208/208**  
+**Last audited**: 2026-11-16 (1.7 private EM, 1.9 GDPR ports, 1.9.2 exact ids)  
+**Production units**: **227/227**  
 **Audit command**: count `lib/**/*.php` + `src/**/*.php` + `src/**/*.twig` + `src/**/*.svg` + `src/Resources/translations/*.yaml` + `src/Resources/assets/src/**/*.ts` (exclude `src/Resources/assets/tests/**`).
 
 ## Scope notes
@@ -20,20 +20,21 @@
 | --- | ---: |
 | Matching & risk | 67 |
 | Core domain | 17 |
-| Ports & infra | 23 |
+| Ports & infra | 24 |
 | Privacy | 9 |
+| Personal data (GDPR) | 11 |
 | Guards | 4 |
 | CLI | 6 |
-| Bundle & DI | 6 |
+| Bundle & DI | 9 |
 | HTTP collect | 8 |
-| Doctrine | 11 |
-| Events | 17 |
+| Doctrine | 14 |
+| Events | 18 |
 | Request context | 6 |
 | Messenger | 4 |
 | Profiler | 3 |
 | i18n | 7 |
 | Browser SDK | 20 |
-| **Total** | **208** |
+| **Total** | **227** |
 
 ## Matching & risk
 
@@ -140,6 +141,7 @@
 | `lib/Infrastructure/InMemoryDeviceUserRepository.php` | Ports & infra | FR-CORE-001 |
 | `lib/Infrastructure/InMemoryObservationRepository.php` | Ports & infra | FR-CORE-001 |
 | `lib/Infrastructure/InMemoryTrustedDeviceRepository.php` | Ports & infra | FR-CORE-001 |
+| `src/Trust/DeviceTrustServiceInterface.php` | Ports & infra | FR-TRUST-001 |
 | `lib/Port/DeviceRepositoryInterface.php` | Ports & infra | FR-CORE-001 |
 | `lib/Port/DeviceUserRepositoryInterface.php` | Ports & infra | FR-CORE-001 |
 | `lib/Port/GeoIpProviderInterface.php` | Ports & infra | FR-CORE-001 |
@@ -171,6 +173,22 @@
 | `lib/Privacy/PrivacyProcessor.php` | Privacy | FR-PRIV-001 |
 | `lib/Privacy/PrivacyProcessorInterface.php` | Privacy | FR-PRIV-001 |
 
+## Personal data (GDPR)
+
+| Source path | Spec section | Requirement ID(s) |
+| --- | --- | --- |
+| `src/PersonalData/DeviceIntelligenceErasureResult.php` | Personal data | FR-GDPR-001 |
+| `src/PersonalData/DeviceIntelligencePersonalDataEraser.php` | Personal data | FR-GDPR-001 |
+| `src/PersonalData/DeviceIntelligencePersonalDataEraserInterface.php` | Personal data | FR-GDPR-001 |
+| `src/PersonalData/DeviceIntelligencePersonalDataExporter.php` | Personal data | FR-GDPR-001 |
+| `src/PersonalData/DeviceIntelligencePersonalDataExporterInterface.php` | Personal data | FR-GDPR-001 |
+| `src/PersonalData/DeviceIntelligencePersonalDataSubject.php` | Personal data | FR-GDPR-001 |
+| `src/PersonalData/DeviceIntelligencePersonalDataSubjectResolverInterface.php` | Personal data | FR-GDPR-001 |
+| `src/PersonalData/PersonalDataRows.php` | Personal data | FR-GDPR-001, FR-ORM-003 |
+| `src/PersonalData/UserIdentifierSubjectResolver.php` | Personal data | FR-GDPR-001 |
+| `src/PersonalData/UserKit/DeviceIntelligenceUserKitEraser.php` | Personal data | FR-GDPR-002 |
+| `src/PersonalData/UserKit/DeviceIntelligenceUserKitExportProvider.php` | Personal data | FR-GDPR-002 |
+
 ## Guards
 
 | Source path | Spec section | Requirement ID(s) |
@@ -201,6 +219,9 @@
 | `src/NowoDeviceIntelligenceBundle.php` | Bundle & DI | FR-BUNDLE-001, FR-CFG-001, FR-DI-001 |
 | `src/Resources/config/routes.php` | Bundle & DI | FR-BUNDLE-001, FR-CFG-001, FR-DI-001 |
 | `src/Resources/config/services.php` | Bundle & DI | FR-BUNDLE-001, FR-CFG-001, FR-DI-001 |
+| `src/DependencyInjection/Compiler/TwigPathsPass.php` | Bundle & DI | FR-TWIG-001 |
+| `src/DependencyInjection/Compiler/DeviceIntelligenceEntityManagerPass.php` | Bundle & DI | FR-ORM-002 |
+| `src/DependencyInjection/Compiler/PersonalDataBridgePass.php` | Bundle & DI | FR-GDPR-002 |
 
 ## HTTP collect
 
@@ -230,6 +251,9 @@
 | `src/Entity/DeviceObservationEntity.php` | Doctrine | FR-ORM-001 |
 | `src/Entity/DeviceTrustEntity.php` | Doctrine | FR-ORM-001 |
 | `src/Entity/DeviceUserEntity.php` | Doctrine | FR-ORM-001 |
+| `src/Doctrine/DbalEntityWriter.php` | Doctrine | FR-ORM-002, FR-WORKER-001 |
+| `src/Doctrine/ExcludedEntityNamespaceDriver.php` | Doctrine | FR-ORM-002 |
+| `src/Doctrine/ExactCollationListener.php` | Doctrine | FR-ORM-003 |
 
 ## Events
 
@@ -246,6 +270,7 @@
 | `src/Event/NewDeviceDetectedEvent.php` | Events | FR-EVT-001 |
 | `src/Event/RiskAssessmentCompletedEvent.php` | Events | FR-EVT-001 |
 | `src/Event/SuspiciousDeviceEvent.php` | Events | FR-EVT-001 |
+| `src/Event/DeviceIntelligencePersonalDataErasedEvent.php` | Events | FR-GDPR-001 |
 | `src/EventSubscriber/AnalyzeSubscriber.php` | Events | FR-EVT-001 |
 | `src/EventSubscriber/ControllerAttributeSubscriber.php` | Events | FR-EVT-001 |
 | `src/EventSubscriber/DeviceRequestSubscriber.php` | Events | FR-EVT-001 |

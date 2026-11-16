@@ -98,6 +98,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - docs: demo screenshots regenerated on the UiKit base style
 - demo: opt into UiKit 2.51 `nowo_ui_kit.base_stylesheet`, use `nowo-ui-header__nav` for the masthead nav, screenshots regenerated with the themed shell
 
+### Documentation
+
+- Spec Kit baseline (REQ-SPECKIT-003): `specs/001-baseline` maps the 1.7 private entity manager classes, the 1.9 GDPR ports and UserKit bridge, the 1.9.2 exact-collation listener and `DeviceTrustServiceInterface` (227/227 units).
+
 ## [1.9.2] - 2026-11-13
 
 ### Security
