@@ -43,6 +43,30 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 
 ## Unreleased
 
+From **1.9.2**: no change needed.
+
+GDPR erasure and export (the `nowo_device_intelligence.personal_data` ports and the UserKit `device_intelligence`
+eraser / `devices` export section) reach again the rows that releases before 1.9.2 stored for identifiers 1.9.2
+refuses. 1.9.2 skipped those users, so their rows stayed in the database after an erasure request and were missing
+from an export (audit RE1-L1). The default subject resolver and the UserKit eraser's `previous_email` now use
+`DeviceIntelligencePersonalDataSubject::forPersonalDataRequest()`:
+
+- an identifier 1.9.2 accepts matches exactly itself, as before;
+- an identifier 1.9.2 refuses (an internal NBSP, ZWSP, bidi mark or tab; edge whitespace) matches its raw value and,
+  when different, its `trim()`med value, which is what earlier releases stored for it. Each is compared byte for byte
+  (`===`), never through the column collation, so look-alikes (`ana lopez` for `ana\u{00A0}lopez`, `Bob` for
+  `bob `) are never erased or exported.
+
+Only erasure and export change; trust, device-user and observation reads and writes keep the strict 1.9.2 rules.
+
+If your application has both a user `bob` and a user `bob ` (edge space), releases before 1.9.2 already stored both
+under `bob`, so the rows cannot be told apart: an erasure or export for `bob ` now also covers `bob`'s rows. Check
+for such pairs before you erase (they are rare, and the scan below lists the refused identifiers). A custom
+`personal_data.subject_resolver` that builds subjects with `fromUserIdentifier()` keeps the 1.9.2 behaviour; switch
+it to `forPersonalDataRequest()` to reach the legacy rows.
+
+To check after an erasure that no row is left, run the scan of [To 1.9.2](#to-192) step 1 again.
+
 ## To 1.9.2
 
 From **1.9.1**:
@@ -100,7 +124,8 @@ names below use the default `table_prefix` `device_intelligence_`; adjust them t
     ORDER BY HEX(user_identifier), device_id;
 
    -- stored identifiers 1.9.2 refuses: edge spaces; C0 / C1 controls; NBSP, soft hyphen, ALM; U+1680, U+180E;
-   -- U+2000-200F, U+2028-202F, U+205F-206F; U+3000; BOM; U+FFF9-FFFB; tag characters. Unreachable from now on.
+   -- U+2000-200F, U+2028-202F, U+205F-206F; U+3000; BOM; U+FFF9-FFFB; tag characters. Unreachable from now on
+   -- (GDPR erasure and export reach them again since 1.9.3, see Unreleased).
    -- The byte-aligned pattern covers the common cases; the PHP scan below is the authoritative check.
    SELECT id, HEX(user_identifier) AS user_hex
      FROM device_intelligence_device_trust

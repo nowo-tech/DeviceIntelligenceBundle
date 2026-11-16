@@ -41,6 +41,11 @@ final class UserKitAdaptersTest extends TestCase
             $adapter->erase(new ErasureRequest(new stdClass(), context: ['previous_email' => $previous]));
         }
         self::assertSame([], $eraser->erased, 'values the bundle cannot have stored are ignored');
+
+        // RE1-L1: identifiers 1.9.2 refuses still reach what earlier releases stored.
+        $eraser->erased = [];
+        $adapter->erase(new ErasureRequest(new InMemoryUser("ana\u{00A0}lopez", null), context: ['previous_email' => 'old@example.com '], originalIdentifier: 'bob '));
+        self::assertSame(['bob ', 'bob', "ana\u{00A0}lopez", 'old@example.com ', 'old@example.com'], $eraser->erased);
     }
 
     public function testExportProviderSectionAndRows(): void

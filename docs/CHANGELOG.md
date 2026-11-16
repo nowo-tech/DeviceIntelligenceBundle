@@ -93,6 +93,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- GDPR erasure and export reach again the rows stored before 1.9.2 for user identifiers that 1.9.2 refuses (an internal NBSP or ZWSP, or edge whitespace that earlier releases trimmed on write). 1.9.2 skipped such users in the default subject resolver and the UserKit eraser's `previous_email`, so an erasure request left their device rows in the database and an export omitted them (audit RE1-L1). New `DeviceIntelligencePersonalDataSubject::forPersonalDataRequest()` matches the raw value and its trimmed variant, each byte for byte; look-alikes are never matched, and normal reads and writes keep the strict rules. See UPGRADING.
+
 ### Changed
 
 - docs: demo screenshots regenerated on the UiKit base style

@@ -24,12 +24,14 @@ use Nowo\DeviceIntelligenceBundle\Event\DeviceIntelligencePersonalDataErasedEven
 use Nowo\DeviceIntelligenceBundle\PersonalData\DeviceIntelligencePersonalDataEraserInterface;
 use Nowo\DeviceIntelligenceBundle\PersonalData\DeviceIntelligencePersonalDataExporterInterface;
 use Nowo\DeviceIntelligenceBundle\PersonalData\DeviceIntelligencePersonalDataSubject;
+use Nowo\DeviceIntelligenceBundle\PersonalData\UserIdentifierSubjectResolver;
 use Nowo\DeviceIntelligenceBundle\Tests\Integration\EntityManager\EntityManagerTestKernel;
 use Nowo\DeviceIntelligenceBundle\Tests\Support\Scenario;
 use Nowo\DeviceIntelligenceBundle\Tests\Support\TestDatabase;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\Security\Core\User\InMemoryUser;
 
 /**
  * GDPR ports (1.9) through a real kernel, on SQLite and, in CI, on MySQL and PostgreSQL (`DI_TEST_DATABASE_URL`):
@@ -185,6 +187,72 @@ final class PersonalDataKernelTest extends TestCase
         self::assertTrue($host->isTransactionActive());
         $host->rollBack();
         self::assertSame(0, $this->linksOfAlice($device->getConnection()));
+    }
+
+    /**
+     * RE1-L1: rows stored before 1.9.2 for identifiers 1.9.2 refuses (an internal NBSP kept as is; an edge space
+     * trimmed on write) are still exported and erased through the default subject resolver, byte for byte: the
+     * look-alikes `ana lopez` (plain space) and `Carl` keep their rows. Runs on SQLite and, in CI, MySQL and PostgreSQL.
+     */
+    public function testGdprRequestsReachRowsStoredForLegacyIdentifiers(): void
+    {
+        $connection = $this->bootStandard('legacy');
+        $nbsp = "ana\u{00A0}lopez";
+        $at = time();
+        $now = self::date($at);
+        $devices = $this->service(DeviceRepositoryInterface::class);
+        $observations = $this->service(ObservationRepositoryInterface::class);
+        $links = $this->service(DeviceUserRepositoryInterface::class);
+        $trusts = $this->service(TrustedDeviceRepositoryInterface::class);
+        \assert($devices instanceof DeviceRepositoryInterface && $observations instanceof ObservationRepositoryInterface && $links instanceof DeviceUserRepositoryInterface && $trusts instanceof TrustedDeviceRepositoryInterface);
+        $use = static function (string $os, string $user, bool $trusted) use ($devices, $observations, $links, $trusts, $now): void {
+            $device = Scenario::device($now, os: $os);
+            $devices->save($device);
+            $links->save(new DeviceUserRelation($device->id, new UserIdentifier($user), $now, $now, 1));
+            $observations->save(Scenario::observation($device, now: $now, user: new UserIdentifier($user)));
+            if ($trusted) {
+                $trusts->save(new TrustedDevice($device->id, new UserIdentifier($user), $now, null, null, 'Laptop'));
+            }
+        };
+        $use('macos', 'legacy-nbsp', true);
+        $use('windows', 'carl', false);
+        $use('linux', 'ana lopez', true);
+        $use('android', 'Carl', false);
+        // What releases before 1.9.2 wrote: the NBSP identifier as is (1.9.2 can no longer store it).
+        foreach (['observation', 'device_user', 'device_trust'] as $table) {
+            $connection->executeStatement('UPDATE device_intelligence_'.$table.' SET user_identifier = ? WHERE user_identifier = ?', [$nbsp, 'legacy-nbsp']);
+        }
+
+        $resolver = new UserIdentifierSubjectResolver();
+        $export = function (InMemoryUser $user) use ($resolver): array {
+            $rows = [];
+            foreach ($resolver->subjectsFor($user, null) as $subject) {
+                array_push($rows, ...$this->exporter()->export($subject));
+            }
+
+            return $rows;
+        };
+        $erase = function (InMemoryUser $user) use ($resolver): int {
+            $total = 0;
+            foreach ($resolver->subjectsFor($user, null) as $subject) {
+                $total += $this->eraser()->erase($subject)->total();
+            }
+
+            return $total;
+        };
+
+        $ana = new InMemoryUser($nbsp, null);
+        $carl = new InMemoryUser('carl ', null);
+        self::assertSame(['macos'], array_column($export($ana), 'os_family'));
+        self::assertSame(['windows'], array_column($export($carl), 'os_family'), 'the row 1.9.1 stored trimmed');
+
+        self::assertSame(4, $erase($ana), 'observation, link, trust and the device');
+        self::assertSame(3, $erase($carl), 'observation, link and the device');
+        self::assertSame(['Carl', 'ana lopez'], $this->rawUsers($connection, 'device_user'), 'look-alikes are never erased');
+        self::assertSame(['Carl', 'ana lopez'], $this->rawUsers($connection, 'observation'));
+        self::assertSame(['ana lopez'], $this->rawUsers($connection, 'device_trust'));
+        self::assertSame([], $export($ana));
+        self::assertSame(0, $erase($ana), 'idempotent');
     }
 
     public function testPortsAreAbsentWithoutDoctrine(): void
@@ -373,6 +441,19 @@ final class PersonalDataKernelTest extends TestCase
     private function users(Connection $connection, string $table): array
     {
         $users = array_values(array_unique(array_filter($this->column($connection, 'SELECT user_identifier FROM device_intelligence_'.$table.' WHERE user_identifier IS NOT NULL'))));
+        sort($users, \SORT_STRING);
+
+        return $users;
+    }
+
+    /**
+     * Distinct stored user identifiers of a table as stored (not trimmed), sorted byte-wise.
+     *
+     * @return list<string>
+     */
+    private function rawUsers(Connection $connection, string $table): array
+    {
+        $users = array_values(array_unique(array_map(static fn (mixed $value): string => (string) $value, $connection->fetchFirstColumn('SELECT user_identifier FROM device_intelligence_'.$table.' WHERE user_identifier IS NOT NULL'))));
         sort($users, \SORT_STRING);
 
         return $users;

@@ -31,6 +31,19 @@ final class UserIdentifierSubjectResolverTest extends TestCase
     }
 
     /**
+     * RE1-L1: identifiers 1.9.2 refuses still reach the rows earlier releases stored (raw and trimmed, byte for byte).
+     */
+    public function testLegacyIdentifiersStillResolveForGdprRequests(): void
+    {
+        $resolver = new UserIdentifierSubjectResolver();
+
+        self::assertSame(["ana\u{00A0}lopez"], self::values($resolver->subjectsFor(new InMemoryUser("ana\u{00A0}lopez", null), null)));
+        self::assertSame(['bob ', 'bob'], self::values($resolver->subjectsFor(new InMemoryUser('bob ', null), null)));
+        self::assertSame(["ali\u{200B}ce", 'anon-2'], self::values($resolver->subjectsFor(new InMemoryUser('anon-2', null), "ali\u{200B}ce")));
+        self::assertSame(['bob ', 'bob'], self::values($resolver->subjectsFor(new InMemoryUser('bob', null), 'bob ')), 'each value once');
+    }
+
+    /**
      * @param list<DeviceIntelligencePersonalDataSubject> $subjects
      *
      * @return list<string>
