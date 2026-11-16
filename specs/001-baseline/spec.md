@@ -68,6 +68,9 @@ Probabilistic **device intelligence** for Symfony: weighted matching (not a mono
 ### Persistence & messenger
 
 - **FR-ORM-001**: Device, observation, device-user, trust entities.
+- **FR-ORM-002**: (1.7) Bundle entities live on `doctrine.entity_manager` only: `DeviceIntelligenceEntityManagerPass` registers `ExcludedEntityNamespaceDriver` (maps nothing) for the bundle namespace on every other manager, and `DbalEntityWriter` writes one entity with a DBAL INSERT / UPDATE from its metadata, so request listeners and login never flush the host's entity manager.
+- **FR-ORM-003**: (1.9.2, REQ-SEC-006) `ExactCollationListener` gives `user_identifier` / `device_id` of `device_trust`, `device_user` and `observation` a byte-exact collation on MySQL / MariaDB; `PersonalDataRows` re-checks every row with `===` after the SQL pre-filter.
+- **FR-TRUST-001**: (1.7) `DeviceTrustServiceInterface` is the trust API port (trust, revoke, is-trusted); implementations dispatch the trust events.
 - **FR-MSG-001**: `CleanupHandler` / `RecalculateStabilityHandler` with `#[AsMessageHandler]`; retry and `failure_transport` are host-owned (`framework.messenger`).
 
 ### Twig & profiler
@@ -78,6 +81,11 @@ Probabilistic **device intelligence** for Symfony: weighted matching (not a mono
 ### Privacy
 
 - **FR-PRIV-001**: Default `privacy.hash_ip: true`; raw IP not stored; logs never include full signal bags.
+
+### Personal data (GDPR, 1.9)
+
+- **FR-GDPR-001**: `DeviceIntelligencePersonalDataEraserInterface` (art. 17: observations, device-user links, trust grants, then devices nothing else references) and `DeviceIntelligencePersonalDataExporterInterface` (art. 15 / 20, read-only arrays) take a `DeviceIntelligencePersonalDataSubject`; defaults run on the bundle's entity manager, `DeviceIntelligenceErasureResult` counts deleted rows, `DeviceIntelligencePersonalDataErasedEvent` fires after commit only when the erasure ran in its own transaction; `UserIdentifierSubjectResolver` is the default `DeviceIntelligencePersonalDataSubjectResolverInterface`.
+- **FR-GDPR-002**: UserKit bridge: `DeviceIntelligenceUserKitEraser` and `DeviceIntelligenceUserKitExportProvider` (section `devices`) register when user-kit-bundle is installed and `personal_data.enabled`; `PersonalDataBridgePass` keeps them only when their port is bound.
 
 ### Guards & CLI
 
@@ -107,7 +115,7 @@ Probabilistic **device intelligence** for Symfony: weighted matching (not a mono
 
 ## Success Criteria
 
-- **SC-001**: Production inventory **208/208** (`specs/001-baseline/code-inventory.md`).
+- **SC-001**: Production inventory **227/227** (`specs/001-baseline/code-inventory.md`).
 - **SC-002**: Config keys match `docs/CONFIGURATION.md`.
 - **SC-003**: `make qa` / PHPUnit / PHPStan / Vitest pass in CI.
 
