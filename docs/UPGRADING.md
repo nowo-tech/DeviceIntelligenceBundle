@@ -60,8 +60,13 @@ from an export (audit RE1-L1). The default subject resolver and the UserKit eras
 Only erasure and export change; trust, device-user and observation reads and writes keep the strict 1.9.2 rules.
 
 If your application has both a user `bob` and a user `bob ` (edge space), releases before 1.9.2 already stored both
-under `bob`, so the rows cannot be told apart: an erasure or export for `bob ` now also covers `bob`'s rows. Check
-for such pairs before you erase (they are rare, and the scan below lists the refused identifiers). A custom
+under `bob`, so the rows cannot be told apart: an erasure for `bob ` now also deletes `bob`'s rows, and an Art. 15
+export for `bob ` also includes `bob`'s device rows (first / last seen, sign-ins, OS and browser family, trust dates). Check
+for such pairs before you erase or export: list your users whose identifier differs from its `trim()`med value and
+look up whether a user with the trimmed identifier also exists (for example
+`SELECT u.id FROM app_user u JOIN app_user t ON t.username = TRIM(u.username) WHERE u.username <> TRIM(u.username)`,
+adapted to your user table; compare in binary on MySQL). They are rare; the scan in [To 1.9.2](#to-192) lists the
+refused identifiers stored by this bundle. A custom
 `personal_data.subject_resolver` that builds subjects with `fromUserIdentifier()` keeps the 1.9.2 behaviour; switch
 it to `forPersonalDataRequest()` to reach the legacy rows.
 
