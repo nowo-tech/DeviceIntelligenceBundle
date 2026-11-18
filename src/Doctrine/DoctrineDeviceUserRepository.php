@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Doctrine;
 
-use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\DeviceIntelligence\Device\DeviceId;
 use Nowo\DeviceIntelligence\Exception\InvalidValueException;
 use Nowo\DeviceIntelligence\Exception\LookAlikeIdentifierException;
-use Nowo\DeviceIntelligence\Port\DeviceUserRepositoryInterface;
+use Nowo\DeviceIntelligence\Port\AtomicDeviceUserRepositoryInterface;
 use Nowo\DeviceIntelligence\User\DeviceUserRelation;
 use Nowo\DeviceIntelligence\User\UserIdentifier;
 use Nowo\DeviceIntelligenceBundle\Entity\DeviceUserEntity;
@@ -27,9 +27,11 @@ use Nowo\DeviceIntelligenceBundle\Entity\DeviceUserEntity;
  * @author Héctor Franco Aceituno <hectorfranco@nowo.tech>
  * @copyright 2026 Nowo.tech
  */
-final class DoctrineDeviceUserRepository implements DeviceUserRepositoryInterface
+final class DoctrineDeviceUserRepository implements AtomicDeviceUserRepositoryInterface
 {
     use ResolvesEntityManagerTrait;
+
+    private const LOOK_ALIKE_MESSAGE = 'A device-user row of a look-alike user identifier blocks this one (folding collation on the unique key): run the ALTER of UPGRADING 1.9.2.';
 
     /**
      * Creates the doctrine device user repository.
@@ -41,29 +43,34 @@ final class DoctrineDeviceUserRepository implements DeviceUserRepositoryInterfac
     }
 
     /**
-     * Persists the device/user relation.
+     * Persists the device/user relation: written over the row of exactly this device and user, or inserted (1.10,
+     * REQ-RUNTIME-003 rule 4: one UPDATE by id or one INSERT; a concurrent save of the same pair is not an error).
+     * Logins go through {@see self::recordLogin()}, which counts in storage.
      */
     public function save(DeviceUserRelation $relation): void
     {
         $em = $this->entityManager(DeviceUserEntity::class);
-        $existing = $this->findEntity($em, $relation->deviceId, $relation->userIdentifier);
-        $entity = $this->mapper->toUserEntity($relation, $existing);
         // 1.7 (rule 6): only this row is written; the entity manager (maybe the host's) is never flushed.
-        $this->detachAll($em, [$entity]);
+        DbalEntityWriter::upsert($em, DeviceUserEntity::class, $this->keys($relation->deviceId, $relation->userIdentifier), $this->mapper->toUserEntity($relation), [
+            'firstSeenAt' => $relation->firstSeenAt,
+            'lastSeenAt' => $relation->lastSeenAt,
+            'loginCount' => $relation->loginCount,
+        ], [], self::LOOK_ALIKE_MESSAGE);
+    }
 
-        try {
-            DbalEntityWriter::write($em, $entity, null !== $existing);
-        } catch (UniqueConstraintViolationException $error) {
-            // a concurrent insert of exactly this device and user is a plain duplicate, not a look-alike (audit F-DI-2)
-            $concurrent = $this->findEntity($em, $relation->deviceId, $relation->userIdentifier);
-            if (null !== $concurrent) {
-                $this->detachAll($em, [$concurrent]);
+    /**
+     * Records one login (1.10, see {@see AtomicDeviceUserRepositoryInterface::recordLogin()}): `login_count + 1` and
+     * the last-seen time in one UPDATE, or the first link; two logins at once both count.
+     */
+    public function recordLogin(DeviceId $deviceId, UserIdentifier $user, DateTimeImmutable $at): DeviceUserRelation
+    {
+        $em = $this->entityManager(DeviceUserEntity::class);
+        $first = new DeviceUserRelation($deviceId, $user, $at, $at, 1);
+        DbalEntityWriter::upsert($em, DeviceUserEntity::class, $this->keys($deviceId, $user), $this->mapper->toUserEntity($first), [
+            'lastSeenAt' => $at,
+        ], ['loginCount' => 1], self::LOOK_ALIKE_MESSAGE);
 
-                throw $error;
-            }
-
-            throw new LookAlikeIdentifierException('A device-user row of a look-alike user identifier blocks this one (folding collation on the unique key): run the ALTER of UPGRADING 1.9.2.', 0, $error);
-        }
+        return $this->find($deviceId, $user) ?? $first;
     }
 
     /**
@@ -112,6 +119,14 @@ final class DoctrineDeviceUserRepository implements DeviceUserRepositoryInterfac
         $this->detachAll($em, [$entity]);
 
         return $relation;
+    }
+
+    /**
+     * @return array{deviceId: string, userIdentifier: string}
+     */
+    private function keys(DeviceId $deviceId, UserIdentifier $user): array
+    {
+        return ['deviceId' => $deviceId->value, 'userIdentifier' => $user->value];
     }
 
     /**

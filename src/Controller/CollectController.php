@@ -12,11 +12,16 @@ use Nowo\DeviceIntelligenceBundle\Http\Exception\CollectValidationException;
 use Nowo\DeviceIntelligenceBundle\Http\ObservationTokenIssuer;
 use Nowo\DeviceIntelligenceBundle\RateLimiter\DeviceRateLimiterInterface;
 use Nowo\DeviceIntelligenceBundle\Request\DeviceContext;
+use Nowo\TransactionContract\TransientStorageFailure;
+use Nowo\TransactionDoctrine\ConflictCode;
+use Nowo\TransactionDoctrine\Symfony\Conflict\ConflictResponsePolicy;
+use Nowo\TransactionDoctrine\TransientFailureClassifier;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Throwable;
 
 /**
  * POST collect endpoint. Route name: nowo_device_intelligence_collect.
@@ -26,6 +31,8 @@ use Symfony\Component\Routing\Attribute\Route;
  */
 final class CollectController
 {
+    private ConflictResponsePolicy $conflictPolicy;
+
     /**
      * Creates the collect controller.
      */
@@ -37,7 +44,9 @@ final class CollectController
         private DeviceIntelligenceConfig $config,
         private DeviceRateLimiterInterface $limiter,
         private LoggerInterface $logger,
+        ?ConflictResponsePolicy $conflictPolicy = null,
     ) {
+        $this->conflictPolicy = $conflictPolicy ?? new ConflictResponsePolicy();
     }
 
     /**
@@ -74,7 +83,15 @@ final class CollectController
         }
 
         $input = $this->inputs->fromRequest($request, $payload);
-        $analysis = $this->analyze->analyze($input);
+        try {
+            $analysis = $this->analyze->analyze($input);
+        } catch (Throwable $failure) {
+            if (!self::isLockConflict($failure)) {
+                throw $failure;
+            }
+
+            return $this->conflict($request, $failure);
+        }
         $context = new DeviceContext($analysis, false);
         $request->attributes->set('_device', $context);
 
@@ -116,5 +133,49 @@ final class CollectController
         $response->headers->setCookie($cookie);
 
         return $response;
+    }
+
+    /**
+     * 1.10 (REQ-RUNTIME-003 rule 6): a lock conflict of the analysis write unit. `{"error": "conflict", "code": ...}`
+     * with the policy's status (409 by default, 503 when configured) and `X-Conflict-Code`:
+     * - CONFLICT_001 + `Retry-After` when nothing of the request was committed (the unit rolled back as a whole);
+     * - CONFLICT_002, no `Retry-After`, when something was committed earlier in the request (transaction-doctrine's
+     *   request watermark) or the commit outcome is unknown (a lost savepoint).
+     */
+    private function conflict(Request $request, Throwable $failure): JsonResponse
+    {
+        $code = ConflictCode::forRequest($request, $failure);
+        $hint = null;
+        for ($current = $failure; $current instanceof Throwable; $current = $current->getPrevious()) {
+            if ($current instanceof TransientStorageFailure) {
+                $hint = $current->retryAfterSeconds();
+
+                break;
+            }
+        }
+        $this->logger->notice('device_intelligence.collect_conflict', [
+            'channel' => 'device_intelligence',
+            'code' => $code->value,
+            'exception' => $failure::class,
+        ]);
+
+        return new JsonResponse(['error' => 'conflict', 'code' => $code->value], $this->conflictPolicy->status, $this->conflictPolicy->headersFor($code, null !== $hint && $hint > 0 ? $hint : null));
+    }
+
+    /**
+     * A deadlock, lock wait timeout or serialization failure (MySQL 1213 / 1205, MariaDB 1020, PostgreSQL 40001 /
+     * 40P01 / 55P03), anywhere in the chain or wrapped in the contract's TransientStorageFailure, or a lost savepoint.
+     * Unique violations and lost connections are not conflicts.
+     */
+    private static function isLockConflict(Throwable $failure): bool
+    {
+        for ($current = $failure; $current instanceof Throwable; $current = $current->getPrevious()) {
+            if ($current instanceof TransientStorageFailure) {
+                return true;
+            }
+        }
+        $classifier = new TransientFailureClassifier();
+
+        return $classifier->isTransient($failure) || $classifier->isCommitOutcomeUnknown($failure);
     }
 }

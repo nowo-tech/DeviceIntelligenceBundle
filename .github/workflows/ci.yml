@@ -288,37 +288,38 @@ jobs:
       - name: Igor worker-state audit (REQ-CS-008)
         run: composer igor
 
+  # REQ-RUNTIME-003: persistence and two-connection race tests on real MySQL 8.4, MariaDB 11.4 and PostgreSQL 16 (IDENTITY
+  # and SEQUENCE ids, audits LI-DI-L1 / LI-DI-M1), on DBAL 3 and DBAL 4.
   database:
-    # Persistence tests on real MySQL / PostgreSQL (audit LI-DI-L1), including PostgreSQL SEQUENCE ids (LI-DI-M1).
-    name: Database tests (${{ matrix.db }})
+    name: Databases (MySQL 8.4, MariaDB 11.4, PostgreSQL 16) - DBAL ${{ matrix.dbal }}
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - db: mysql
-            url: 'pdo-mysql://root:root@127.0.0.1:3306/di_test?serverVersion=8.0&charset=utf8mb4'
-            ids: identity
-          - db: postgresql
-            url: 'pdo-pgsql://postgres:postgres@127.0.0.1:5432/di_test?serverVersion=17&charset=utf8'
-            ids: identity
-          - db: postgresql-sequence
-            url: 'pdo-pgsql://postgres:postgres@127.0.0.1:5432/di_test?serverVersion=17&charset=utf8'
-            ids: sequence
+        dbal: ['3', '4']
 
     services:
       mysql:
-        image: mysql:8.0
+        image: mysql:8.4
         env:
-          MYSQL_ROOT_PASSWORD: root
+          MYSQL_ROOT_PASSWORD: ci-placeholder
           MYSQL_DATABASE: di_test
         ports: ['3306:3306']
         options: >-
-          --health-cmd="mysqladmin ping -proot" --health-interval=5s --health-timeout=5s --health-retries=20
-      postgres:
-        image: postgres:17-alpine
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -pci-placeholder" --health-interval=5s --health-timeout=5s --health-retries=30
+      mariadb:
+        image: mariadb:11.4
         env:
-          POSTGRES_PASSWORD: postgres
+          MARIADB_ROOT_PASSWORD: ci-placeholder
+          MARIADB_DATABASE: di_test
+        ports: ['3307:3306']
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval=5s --health-timeout=5s --health-retries=30
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: ci-placeholder
           POSTGRES_DB: di_test
         ports: ['5432:5432']
         options: >-
@@ -332,18 +333,79 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: pdo_mysql, pdo_pgsql
+          extensions: pdo_mysql, pdo_pgsql, pdo_sqlite
           tools: composer:v2
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-interaction
 
-      - name: Persistence tests
+      - name: Use DBAL 3
+        if: matrix.dbal == '3'
+        run: |
+          composer update doctrine/dbal --with "doctrine/dbal:^3.8.2" --with-all-dependencies --prefer-dist --no-progress --no-interaction
+          composer show doctrine/dbal
+
+      - name: Persistence tests on MySQL, MariaDB, PostgreSQL and PostgreSQL with SEQUENCE ids
+        timeout-minutes: 10
+        run: |
+          set -e
+          for target in \
+            'identity pdo-mysql://root:ci-placeholder@127.0.0.1:3306/di_test?serverVersion=8.4.0&charset=utf8mb4' \
+            'identity pdo-mysql://root:ci-placeholder@127.0.0.1:3307/di_test?serverVersion=11.4.0-MariaDB&charset=utf8mb4' \
+            'identity pdo-pgsql://postgres:ci-placeholder@127.0.0.1:5432/di_test?serverVersion=16&charset=utf8' \
+            'sequence pdo-pgsql://postgres:ci-placeholder@127.0.0.1:5432/di_test?serverVersion=16&charset=utf8'; do
+            echo "::group::${target%%\?*}"
+            DI_TEST_ID_GENERATION="${target%% *}" DI_TEST_DATABASE_URL="${target#* }" \
+              vendor/bin/phpunit --no-coverage --filter 'DoctrinePersistenceKernelTest|DbalEntityWriterTest|PersonalDataKernelTest'
+            echo "::endgroup::"
+          done
+
+      - name: Two-connection races and conflict answers (REQ-RUNTIME-003)
+        timeout-minutes: 10
         env:
-          DI_TEST_DATABASE_URL: ${{ matrix.url }}
-          DI_TEST_ID_GENERATION: ${{ matrix.ids }}
-        run: vendor/bin/phpunit --no-coverage --filter 'DoctrinePersistenceKernelTest|DbalEntityWriterTest|PersonalDataKernelTest'
+          DEVICE_INTELLIGENCE_TEST_MYSQL_URL: mysql://root:ci-placeholder@127.0.0.1:3306/di_test?serverVersion=8.4.0&charset=utf8mb4
+          DEVICE_INTELLIGENCE_TEST_MARIADB_URL: mysql://root:ci-placeholder@127.0.0.1:3307/di_test?serverVersion=11.4.0-MariaDB&charset=utf8mb4
+          DEVICE_INTELLIGENCE_TEST_PGSQL_URL: pgsql://postgres:ci-placeholder@127.0.0.1:5432/di_test?serverVersion=16
+        run: vendor/bin/phpunit --no-coverage --fail-on-skipped tests/Integration/Concurrency
+
+  # Dependency floor: the code must work with the LOWEST nowo-tech/transaction-* versions composer.json allows (a host
+  # can run `composer update nowo-tech/device-intelligence-bundle` without updating them), and the demo lock must install
+  # what the bundle requires (the demo installs from its lock, so a requirement added later is never installed and the
+  # demo fails with "class not found").
+  deps-floor:
+    name: Dependency floor (nowo-tech/transaction-* lowest, demo lock)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Demo lock satisfies the bundle's nowo-tech requirements
+        run: python3 .scripts/check-demo-lock.py . --only 'nowo-tech/*'
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_sqlite
+          tools: composer:v2
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Downgrade nowo-tech/transaction-* to the lowest allowed versions
+        run: |
+          composer update 'nowo-tech/transaction-*' --prefer-lowest --prefer-dist --no-progress --no-interaction
+          composer show 'nowo-tech/transaction-*'
+
+      - name: PHPStan at the floor
+        run: composer phpstan --no-interaction
+
+      - name: Test suite at the floor
+        timeout-minutes: 10
+        run: vendor/bin/phpunit --no-coverage
 
   look-alike-identifiers:
     name: Look-alike user identifiers on MySQL 8.4 and MariaDB 11.4 (REQ-SEC-006)

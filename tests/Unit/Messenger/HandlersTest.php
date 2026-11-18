@@ -16,6 +16,7 @@ use Nowo\DeviceIntelligence\Matching\CandidateIndexKey;
 use Nowo\DeviceIntelligence\Matching\Confidence;
 use Nowo\DeviceIntelligence\Observation\DeviceObservation;
 use Nowo\DeviceIntelligence\Observation\ObservationId;
+use Nowo\DeviceIntelligence\Port\AtomicDeviceRepositoryInterface;
 use Nowo\DeviceIntelligence\Signal\SignalBag;
 use Nowo\DeviceIntelligenceBundle\Messenger\CleanupHandler;
 use Nowo\DeviceIntelligenceBundle\Messenger\CleanupMessage;
@@ -139,6 +140,27 @@ final class HandlersTest extends TestCase
         $saved = $devices->find($id);
         self::assertNotNull($saved);
         self::assertNotSame(0.5, $saved->stability());
+    }
+
+    /**
+     * 1.10 (REQ-RUNTIME-003 rule 4): with an atomic repository only the stability is written, never the whole device
+     * read before (a concurrent analysis keeps its count and last-seen time).
+     */
+    public function testRecalculateWritesOnlyTheStabilityThroughAnAtomicRepository(): void
+    {
+        $now = new DateTimeImmutable('2026-08-23T12:00:00Z');
+        $id = DeviceId::generate($now);
+        $device = new Device($id, $now, $now, 2, new Confidence(0.8), new Stability(0.5), DeviceStatus::Active, new CandidateIndexKey('linux', 'chrome', 'other', 'desktop', 'UTC', 'abcd'), 'Chrome on Linux', [], SignalBag::empty());
+        $observations = new InMemoryObservationRepository();
+        foreach ([$now->modify('-1 hour'), $now] as $at) {
+            $observations->save(new DeviceObservation(ObservationId::generate($at), $id, $at, 1, '1.0.0', null, null, null, null, null, null, SignalBag::empty(), 10, false, 1));
+        }
+        $devices = $this->createMock(AtomicDeviceRepositoryInterface::class);
+        $devices->method('find')->willReturn($device);
+        $devices->expects(self::never())->method('save');
+        $devices->expects(self::once())->method('saveStability')->with($id, self::callback(static fn (Stability $s): bool => 0.5 !== $s->value));
+
+        self::assertSame(1, (new RecalculateStabilityHandler($devices, $observations))(new RecalculateStabilityMessage($id->value)));
     }
 
     public function testRecalculateNoopsWithoutHistory(): void

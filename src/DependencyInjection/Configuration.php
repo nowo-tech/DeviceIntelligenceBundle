@@ -6,7 +6,9 @@ namespace Nowo\DeviceIntelligenceBundle\DependencyInjection;
 
 use InvalidArgumentException;
 use Nowo\DeviceIntelligence\Matching\MatchingWeights;
+use Nowo\DeviceIntelligenceBundle\Doctrine\DeviceIntelligenceTransactionRunner;
 use Nowo\DeviceIntelligenceBundle\RateLimiter\SymfonyDeviceRateLimiter;
+use Nowo\TransactionDoctrine\Symfony\Conflict\ConflictResponsePolicy;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
@@ -83,6 +85,7 @@ final class Configuration implements ConfigurationInterface
                 ->scalarNode('default_profile')->defaultValue(self::DEFAULT_PROFILE)->cannotBeEmpty()->end()
                 ->append($this->profilesNode())
                 ->append($this->endpointNode())
+                ->append($this->conflictResponseNode())
                 ->append($this->doctrineNode())
                 ->append($this->cacheNode())
                 ->append($this->messengerNode())
@@ -382,6 +385,39 @@ final class Configuration implements ConfigurationInterface
                         ->ifTrue(static fn (mixed $value): bool => null !== $value && (!\is_string($value) || 1 !== preg_match('/^[A-Za-z0-9_]+$/', $value)))
                         ->thenInvalid('nowo_device_intelligence.doctrine.entity_manager must be the name of a Doctrine entity manager (letters, digits and underscores).')
                     ->end()
+                ->end()
+                ->integerNode('lock_timeout_ms')
+                    ->info('1.10 (REQ-RUNTIME-003): PostgreSQL lock_timeout of the bundle\'s own write transactions (the analysis unit), in milliseconds; 0 = the server\'s. MySQL / MariaDB use innodb_lock_wait_timeout.')
+                    ->defaultValue(DeviceIntelligenceTransactionRunner::LOCK_TIMEOUT_MS)
+                    ->min(0)
+                ->end()
+            ->end();
+
+        return $node;
+    }
+
+    /**
+     * 1.10 (REQ-RUNTIME-003 rule 6): answer of the collect endpoint to a lock conflict.
+     */
+    private function conflictResponseNode(): ArrayNodeDefinition
+    {
+        $node = (new TreeBuilder('conflict_response'))->getRootNode();
+        $node
+            ->info('1.10 (REQ-RUNTIME-003): answer of the collect endpoint to a lock conflict (deadlock, lock wait timeout, serialization failure). Unset: nowo-tech/transaction-doctrine\'s conflict_response when that bundle is registered, else 409 with Retry-After 1.')
+            ->addDefaultsIfNotSet()
+            ->children()
+                ->integerNode('status')
+                    ->info('409 (default; X-Conflict-Code CONFLICT_001 / CONFLICT_002) or 503. Null: follow transaction-doctrine, else 409.')
+                    ->defaultNull()
+                    ->validate()
+                        ->ifTrue(static fn (mixed $v): bool => null !== $v && !\in_array($v, ConflictResponsePolicy::STATUSES, true))
+                        ->thenInvalid('nowo_device_intelligence.conflict_response.status must be 409 or 503, got %s.')
+                    ->end()
+                ->end()
+                ->integerNode('retry_after')
+                    ->info('Retry-After seconds of a CONFLICT_001 answer. Null: follow transaction-doctrine, else 1.')
+                    ->defaultNull()
+                    ->min(0)
                 ->end()
             ->end();
 

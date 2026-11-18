@@ -8,6 +8,7 @@ use Nowo\DeviceIntelligence\Device\Device;
 use Nowo\DeviceIntelligence\Device\DeviceId;
 use Nowo\DeviceIntelligence\Device\Stability;
 use Nowo\DeviceIntelligence\Infrastructure\InMemoryDeviceRepository;
+use Nowo\DeviceIntelligence\Port\AtomicDeviceRepositoryInterface;
 use Nowo\DeviceIntelligence\Port\DeviceRepositoryInterface;
 use Nowo\DeviceIntelligence\Port\ObservationRepositoryInterface;
 use Nowo\DeviceIntelligenceBundle\Doctrine\DoctrineDeviceRepository;
@@ -65,6 +66,12 @@ final class RecalculateStabilityHandler
         $newest = $history[0];
         $report = $device->compare($newest);
         $next = 0.88 * $device->stability() + 0.12 * (1 - $report->mutationScore());
+        if ($this->devices instanceof AtomicDeviceRepositoryInterface) {
+            // 1.10 (REQ-RUNTIME-003 rule 4): the stability alone, so a concurrent analysis keeps its count and last-seen time
+            $this->devices->saveStability($device->id, Stability::clamp($next));
+
+            return true;
+        }
         $updated = new Device(
             $device->id,
             $device->firstSeenAt,

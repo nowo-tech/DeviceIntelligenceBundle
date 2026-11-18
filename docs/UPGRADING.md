@@ -44,6 +44,36 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 
 ## Unreleased
 
+```bash
+composer update nowo-tech/device-intelligence-bundle --with-dependencies
+```
+
+The release requires `nowo-tech/transaction-contract` ^1.0 and `nowo-tech/transaction-doctrine` ^1.6 (pulled in by
+Composer). It has no schema change. See [CONCURRENCY.md](CONCURRENCY.md).
+
+- **Collect endpoint: 409 on lock conflicts.** A deadlock, lock-wait timeout or serialization failure while the
+  observation is stored now answers 409, where it used to answer 500. The answer is
+  `{"error": "conflict", "code": "CONFLICT_001"}`, with `X-Conflict-Code` and `Retry-After`, or `CONFLICT_002` without
+  `Retry-After`. The bundled browser client treats any non-2xx as a failed collect, as before. To keep a 503, set
+  `conflict_response.status: 503`. Cross-origin callers that read the code must list `X-Conflict-Code` in
+  `Access-Control-Expose-Headers`.
+- **Analysis order.** The device row is now written after the risk assessment, in the same transaction as the
+  observation. A custom risk rule or event listener that reads a *new* device back from the repository during the
+  assessment no longer finds it. Use the `Device` in the `RiskContext` or the event instead.
+- **Revocation of an inactive trust.** Revoking an expired or already revoked trust now sets only `revoked_at`. It
+  keeps the stored trusted-at time, expiry and label, which earlier releases reset.
+- **Concurrent duplicates are no longer errors.** With the Doctrine repositories, a concurrent first save of the same
+  device and user updates the row the other request stored. The `device_intelligence.login_associate_raced` log line
+  is therefore no longer emitted for them. Custom adapters that throw `UniqueConstraintViolationException` are still
+  handled as before.
+- **Custom repository adapters.** Implement the optional `Atomic*RepositoryInterface` ports
+  (`Nowo\DeviceIntelligence\Port`) to get the atomic login count, revocation and observation count. Without them,
+  the previous read-modify-write is kept.
+- **Host transactions.** Inside an open host transaction, every bundle write runs in its own savepoint. A conflict in
+  the analysis unit is rethrown as `Nowo\TransactionContract\TransientStorageFailure` with nothing of the unit
+  committed. On host routes the bundle does not answer it: register transaction-doctrine's Symfony bundle (or map it
+  yourself) to answer 409.
+
 ## To 1.9.3
 
 From **1.9.2**:

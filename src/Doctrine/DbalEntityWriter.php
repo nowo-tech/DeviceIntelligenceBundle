@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Doctrine;
 
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
+use Doctrine\DBAL\Platforms\SQLitePlatform;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\QuoteStrategy;
+use Nowo\DeviceIntelligence\Exception\LookAlikeIdentifierException;
 use Throwable;
 
 /**
@@ -37,6 +41,9 @@ final class DbalEntityWriter
 {
     private const SAVEPOINT = 'nowo_device_intelligence_write';
 
+    /** INSERTs an upsert tries when the row keeps being deleted between its INSERT and its UPDATE (erasure, cleanup). */
+    private const UPSERT_ATTEMPTS = 3;
+
     /**
      * @param bool $exists true: UPDATE the row of the entity's identifier; false: INSERT it
      */
@@ -53,12 +60,7 @@ final class DbalEntityWriter
         $preInsertId = !$exists && !$postInsertId && !$metadata->isIdentifierNatural();
 
         $table = $quotes->getTableName($metadata, $platform);
-        $savepoint = $connection->isTransactionActive();
-        if ($savepoint) {
-            $connection->createSavepoint(self::SAVEPOINT);
-        }
-
-        try {
+        self::inSavepoint($connection, static function () use ($em, $metadata, $quotes, $platform, $connection, $entity, $exists, $table, $idField, $idColumn, $idType, $postInsertId, $preInsertId): void {
             if ($preInsertId) {
                 // SEQUENCE / custom generator: the id must be in the INSERT (the column has no default).
                 $metadata->setFieldValue($entity, $idField, $metadata->idGenerator->generateId($em, $entity));
@@ -75,10 +77,166 @@ final class DbalEntityWriter
                     $metadata->setFieldValue($entity, $idField, \in_array($idType, ['integer', 'smallint'], true) ? (int) $id : $id);
                 }
             }
+        });
+    }
+
+    /**
+     * UPDATEs the given fields of the row with identifier $id, and adds $increment[field] to counter columns in the same
+     * statement (`n = n + :delta`, never a value read earlier). Returns the number of rows the server reports (MySQL and
+     * MariaDB count changed rows only: 0 also means "found, nothing changed" unless an increment is given).
+     *
+     * @param class-string         $class
+     * @param array<string, mixed> $set       field => value
+     * @param array<string, int>   $increment field => delta
+     */
+    public static function update(EntityManagerInterface $em, string $class, int|string $id, array $set, array $increment = []): int
+    {
+        $metadata = $em->getClassMetadata($class);
+        $connection = $em->getConnection();
+        $platform = $connection->getDatabasePlatform();
+        $quotes = $em->getConfiguration()->getQuoteStrategy();
+        $idField = $metadata->getSingleIdentifierFieldName();
+
+        $assignments = [];
+        $params = [];
+        $types = [];
+        foreach ($set as $field => $value) {
+            $assignments[] = $quotes->getColumnName($field, $metadata, $platform).' = ?';
+            $params[] = $value;
+            $types[] = $metadata->getTypeOfField($field) ?? 'string';
+        }
+        foreach ($increment as $field => $delta) {
+            $column = $quotes->getColumnName($field, $metadata, $platform);
+            $assignments[] = $column.' = '.$column.' + ?';
+            $params[] = $delta;
+            $types[] = 'integer';
+        }
+        $params[] = $id;
+        $types[] = $metadata->getTypeOfField($idField) ?? 'string';
+
+        $sql = 'UPDATE '.$quotes->getTableName($metadata, $platform).' SET '.implode(', ', $assignments)
+            .' WHERE '.$quotes->getColumnName($idField, $metadata, $platform).' = ?';
+
+        return self::inSavepoint($connection, static fn (): int => (int) $connection->executeStatement($sql, $params, $types));
+    }
+
+    /**
+     * Writes the row of business key $keys without a read-modify-write (REQ-RUNTIME-003 rule 4, 1.10): when the row
+     * exists, an {@see self::update()} by its id with $set and $increment; otherwise an INSERT of $new. A concurrent
+     * INSERT of the same key (unique violation) is not an error: the row it stored is found with a locking read and
+     * updated. When no byte-identical row holds the key after a unique violation, a look-alike's row does (folding
+     * collation): LookAlikeIdentifierException, nothing written (fail closed, REQ-SEC-006).
+     *
+     * @param class-string          $class
+     * @param array<string, string> $keys      field => exact value of the unique business key
+     * @param array<string, mixed>  $set       field => value written on an existing row
+     * @param array<string, int>    $increment field => delta added on an existing row
+     *
+     * @throws LookAlikeIdentifierException
+     */
+    public static function upsert(EntityManagerInterface $em, string $class, array $keys, object $new, array $set, array $increment, string $lookAlikeMessage): void
+    {
+        $id = self::findExactId($em, $class, $keys);
+        for ($attempt = 1;; ++$attempt) {
+            // MySQL / MariaDB report 0 for a found row whose values do not change: confirmed with a locking read
+            if (null !== $id && (self::update($em, $class, $id, $set, $increment) > 0 || $id === self::findExactId($em, $class, $keys, true))) {
+                return;
+            }
+
+            try {
+                self::write($em, $new, false);
+
+                return;
+            } catch (UniqueConstraintViolationException $error) {
+                $id = self::findExactId($em, $class, $keys, true);
+                if (null === $id) {
+                    throw new LookAlikeIdentifierException($lookAlikeMessage, 0, $error);
+                }
+                if ($attempt >= self::UPSERT_ATTEMPTS) {
+                    throw $error;
+                }
+            }
+        }
+    }
+
+    /**
+     * Identifier of the row whose $keys fields equal the given values byte for byte (REQ-SEC-006: the SQL filter may fold
+     * on a MySQL / MariaDB collation, so every row it returns is re-checked with `===`, without a LIMIT before that).
+     * With $forUpdate the read is a locking read (`FOR UPDATE`; SQLite has none and locks the whole database on write): it sees the latest committed
+     * row, also inside a REPEATABLE READ snapshot, and waits for a concurrent writer of that row.
+     *
+     * @param class-string          $class
+     * @param array<string, string> $keys  field => exact value
+     */
+    public static function findExactId(EntityManagerInterface $em, string $class, array $keys, bool $forUpdate = false): int|string|null
+    {
+        $metadata = $em->getClassMetadata($class);
+        $connection = $em->getConnection();
+        $platform = $connection->getDatabasePlatform();
+        $quotes = $em->getConfiguration()->getQuoteStrategy();
+        $idField = $metadata->getSingleIdentifierFieldName();
+
+        $select = [$quotes->getColumnName($idField, $metadata, $platform).' AS di_id'];
+        $where = [];
+        $i = 0;
+        foreach (array_keys($keys) as $field) {
+            $column = $quotes->getColumnName($field, $metadata, $platform);
+            $select[] = $column.' AS di_k'.$i++;
+            $where[] = $column.' = ?';
+        }
+        $sql = 'SELECT '.implode(', ', $select).' FROM '.$quotes->getTableName($metadata, $platform)
+            .' WHERE '.implode(' AND ', $where)
+            .($forUpdate && !$platform instanceof SQLitePlatform ? ' FOR UPDATE' : '');
+        $expected = array_values($keys);
+        $integerId = \in_array($metadata->getTypeOfField($idField), ['integer', 'smallint', 'bigint'], true);
+
+        // A locking read can time out (a lock error aborts a PostgreSQL transaction): inside the host's, in a savepoint.
+        $rows = $forUpdate
+            ? self::inSavepoint($connection, static fn (): array => $connection->fetchAllAssociative($sql, $expected))
+            : $connection->fetchAllAssociative($sql, $expected);
+        foreach ($rows as $row) {
+            $row = array_change_key_case($row, \CASE_LOWER);
+            foreach ($expected as $k => $value) {
+                if ((string) $row['di_k'.$k] !== $value) {
+                    continue 2;
+                }
+            }
+            $id = $row['di_id'];
+
+            return $integerId ? (int) $id : (string) $id;
+        }
+
+        return null;
+    }
+
+    /**
+     * Runs $write inside a SAVEPOINT when a transaction is open on the connection (rolled back on failure, so a failure
+     * of the bundle never aborts the host's transaction, PostgreSQL included); the original error is rethrown even if
+     * rolling back the savepoint fails too.
+     *
+     * @template T
+     *
+     * Explicit savepoints (not a nested beginTransaction()): DBAL 3 without savepoints would only emulate the level, and a
+     * failure would mark the whole host transaction rollback-only.
+     *
+     * @param callable(): T $write
+     * @param string        $name  distinct per nesting level: MySQL replaces a savepoint of the same name
+     *
+     * @return T
+     */
+    public static function inSavepoint(Connection $connection, callable $write, string $name = self::SAVEPOINT): mixed
+    {
+        $savepoint = $connection->isTransactionActive();
+        if ($savepoint) {
+            $connection->createSavepoint($name);
+        }
+
+        try {
+            $result = $write();
         } catch (Throwable $error) {
             if ($savepoint) {
                 try {
-                    $connection->rollbackSavepoint(self::SAVEPOINT);
+                    $connection->rollbackSavepoint($name);
                 } catch (Throwable) {
                     // The original error is the one that matters.
                 }
@@ -88,8 +246,10 @@ final class DbalEntityWriter
         }
 
         if ($savepoint) {
-            $connection->releaseSavepoint(self::SAVEPOINT);
+            $connection->releaseSavepoint($name);
         }
+
+        return $result;
     }
 
     /**

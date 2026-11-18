@@ -36,6 +36,8 @@
         "php": ">=8.3 <8.6",
         "doctrine/doctrine-bundle": "^2.12 || ^3.0",
         "doctrine/orm": "^3.7",
+        "nowo-tech/transaction-contract": "^1.0",
+        "nowo-tech/transaction-doctrine": "^1.6",
         "psr/clock": "^1.0",
         "psr/log": "^1.0 || ^2 || ^3",
         "psr/simple-cache": "^1.0 || ^2.0 || ^3.0",

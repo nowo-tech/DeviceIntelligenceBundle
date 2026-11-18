@@ -101,6 +101,7 @@ return [
 - [Custom rules](docs/custom-rules.md)
 - [Custom collectors](docs/custom-collectors.md)
 - [Scaling](docs/scaling.md)
+- [Concurrency](docs/CONCURRENCY.md)
 - [PSR evaluation](docs/PSR.md)
 - [Coverage policy](docs/COVERAGE.md)
 - [Demo FrankenPHP](docs/DEMO-FRANKENPHP.md)

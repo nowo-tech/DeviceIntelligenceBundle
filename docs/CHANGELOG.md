@@ -8,94 +8,144 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+  - [Added](#added)
+  - [Changed](#changed)
+  - [Fixed](#fixed)
 - [[1.9.3] - 2026-11-16](#193---2026-11-16)
   - [Security](#security)
-  - [Changed](#changed)
+  - [Changed](#changed-1)
   - [Documentation](#documentation)
 - [[1.9.2] - 2026-11-13](#192---2026-11-13)
   - [Security](#security-1)
 - [[1.9.1] - 2026-11-13](#191---2026-11-13)
-  - [Fixed](#fixed)
-  - [Changed](#changed-1)
+  - [Fixed](#fixed-1)
+  - [Changed](#changed-2)
 - [[1.9.0] - 2026-11-11](#190---2026-11-11)
-  - [Added](#added)
+  - [Added](#added-1)
   - [Behaviour change](#behaviour-change)
 - [[1.8.0] - 2026-11-11](#180---2026-11-11)
-  - [Changed](#changed-2)
+  - [Changed](#changed-3)
   - [Tests](#tests)
   - [Documentation](#documentation-1)
 - [[1.7.0] - 2026-11-11](#170---2026-11-11)
   - [Security](#security-2)
-  - [Added](#added-1)
-  - [Changed](#changed-3)
+  - [Added](#added-2)
+  - [Changed](#changed-4)
   - [Deprecated](#deprecated)
 - [[1.6.0] - 2026-11-10](#160---2026-11-10)
-  - [Added](#added-2)
+  - [Added](#added-3)
   - [Documentation](#documentation-2)
 - [[1.5.2] - 2026-10-31](#152---2026-10-31)
-  - [Fixed](#fixed-1)
-  - [Changed](#changed-4)
+  - [Fixed](#fixed-2)
+  - [Changed](#changed-5)
   - [Tests](#tests-1)
 - [[1.5.1] - 2026-10-30](#151---2026-10-30)
   - [Security](#security-3)
 - [[1.5.0] - 2026-10-28](#150---2026-10-28)
-  - [Changed](#changed-5)
+  - [Changed](#changed-6)
   - [Documentation](#documentation-3)
 - [[1.4.1] - 2026-10-25](#141---2026-10-25)
-  - [Changed](#changed-6)
-- [[1.4.0] - 2026-10-21](#140---2026-10-21)
   - [Changed](#changed-7)
-- [[1.3.3] - 2026-10-21](#133---2026-10-21)
+- [[1.4.0] - 2026-10-21](#140---2026-10-21)
   - [Changed](#changed-8)
-- [[1.3.2] - 2026-10-15](#132---2026-10-15)
+- [[1.3.3] - 2026-10-21](#133---2026-10-21)
   - [Changed](#changed-9)
-- [[1.3.1] - 2026-10-13](#131---2026-10-13)
+- [[1.3.2] - 2026-10-15](#132---2026-10-15)
   - [Changed](#changed-10)
+- [[1.3.1] - 2026-10-13](#131---2026-10-13)
+  - [Changed](#changed-11)
 - [[1.3.0] - 2026-10-13](#130---2026-10-13)
   - [Security](#security-4)
-  - [Fixed](#fixed-2)
-  - [Changed](#changed-11)
+  - [Fixed](#fixed-3)
+  - [Changed](#changed-12)
 - [[1.2.2] - 2026-10-13](#122---2026-10-13)
   - [Dependencies](#dependencies)
-  - [Changed](#changed-12)
+  - [Changed](#changed-13)
 - [[1.2.1] - 2026-10-09](#121---2026-10-09)
-  - [Fixed](#fixed-3)
+  - [Fixed](#fixed-4)
   - [Dependencies](#dependencies-1)
 - [[1.2.0] - 2026-09-28](#120---2026-09-28)
   - [Security](#security-5)
-  - [Changed](#changed-13)
-- [[1.1.5] - 2026-09-27](#115---2026-09-27)
-  - [Added](#added-3)
   - [Changed](#changed-14)
+- [[1.1.5] - 2026-09-27](#115---2026-09-27)
+  - [Added](#added-4)
+  - [Changed](#changed-15)
 - [[1.1.4] - 2026-09-24](#114---2026-09-24)
-  - [Fixed](#fixed-4)
+  - [Fixed](#fixed-5)
   - [Documentation](#documentation-4)
 - [[1.1.3] - 2026-09-07](#113---2026-09-07)
-  - [Changed](#changed-15)
+  - [Changed](#changed-16)
   - [Notes](#notes)
 - [[1.1.2] - 2026-09-03](#112---2026-09-03)
-  - [Fixed](#fixed-5)
-  - [Changed](#changed-16)
-- [[1.1.1] - 2026-08-26](#111---2026-08-26)
+  - [Fixed](#fixed-6)
   - [Changed](#changed-17)
+- [[1.1.1] - 2026-08-26](#111---2026-08-26)
+  - [Changed](#changed-18)
   - [Notes](#notes-1)
 - [[1.1.0] - 2026-08-24](#110---2026-08-24)
-  - [Added](#added-4)
-  - [Changed](#changed-18)
-  - [Notes](#notes-2)
   - [Added](#added-5)
-  - [Documentation](#documentation-5)
-  - [Fixed](#fixed-6)
-- [[1.0.1] - 2026-08-23](#101---2026-08-23)
-  - [Added](#added-6)
   - [Changed](#changed-19)
+  - [Notes](#notes-2)
+  - [Added](#added-6)
+  - [Documentation](#documentation-5)
   - [Fixed](#fixed-7)
+- [[1.0.1] - 2026-08-23](#101---2026-08-23)
+  - [Added](#added-7)
+  - [Changed](#changed-20)
+  - [Fixed](#fixed-8)
   - [Documentation](#documentation-6)
 - [[1.0.0] - 2026-08-23](#100---2026-08-23)
-  - [Added](#added-7)
+  - [Added](#added-8)
   - [Documentation](#documentation-7)
 
 ## [Unreleased]
+
+### Added
+
+- **Conflict answer on the collect endpoint (REQ-RUNTIME-003).** A deadlock, lock-wait timeout or serialization
+  failure while the observation is stored now answers **409** with `X-Conflict-Code: CONFLICT_001` and `Retry-After`
+  (nothing committed, retrying is safe). When something was committed earlier in the same request (transaction-doctrine
+  1.6 request watermark) or the commit outcome is unknown, it answers `CONFLICT_002` with no `Retry-After`. The JSON
+  body keeps `error` (`"conflict"`) and adds `code`. Unique violations and lost connections are not mapped.
+- `conflict_response.status` (409 or 503) and `conflict_response.retry_after`. When unset they follow
+  transaction-doctrine's `conflict_response`, else 409 and 1 s.
+- `doctrine.lock_timeout_ms` (default 5000): the PostgreSQL `lock_timeout` of the analysis unit's own transaction.
+- Optional core ports `AtomicDeviceRepositoryInterface`, `AtomicDeviceUserRepositoryInterface` and
+  `AtomicTrustedDeviceRepositoryInterface`, implemented by the Doctrine repositories, for adapters that write without
+  a read-modify-write.
+- `docs/CONCURRENCY.md`: write paths, conflict codes, host options and residual risks.
+- CI: the "Databases" job runs the persistence tests and new two-connection race tests on MySQL 8.4, MariaDB 11.4 and
+  PostgreSQL 16, on DBAL 3 and DBAL 4. A "Dependency floor" job runs the suite with the lowest
+  `nowo-tech/transaction-*` versions and checks that the demo lock installs them.
+
+### Changed
+
+- Requires `nowo-tech/transaction-contract` ^1.0 and `nowo-tech/transaction-doctrine` ^1.6.
+- The analysis stores the device and its observation in one transaction (`DeviceIntelligenceTransactionRunner`: its own
+  transaction, or a savepoint inside the host's). The device is now written after the risk assessment, so no GeoIP,
+  reputation or rule call runs while its row is locked. `DeviceIntelligence` takes an optional
+  `TransactionRunnerInterface` as its last constructor argument.
+- A matched device is stored with `observation_count = observation_count + 1`. Its status, first-seen time and
+  metadata are not written. The stability recalculation writes the stability column alone.
+- A login increments `login_count` in SQL (`DoctrineDeviceUserRepository::recordLogin()`).
+- A trust revocation writes `revoked_at` alone. Revoking an expired or already revoked trust keeps its trusted-at time,
+  expiry and label (it used to reset them).
+- `DoctrineTrustedDeviceRepository::save()` and `DoctrineDeviceUserRepository::save()` upsert without a
+  read-modify-write: an `UPDATE` by id or an `INSERT`. A concurrent `INSERT` of the same device and user is updated
+  instead of failing with `UniqueConstraintViolationException`.
+
+### Fixed
+
+- **Lost updates under concurrent writes** (contention only):
+  - Two logins of the same user on the same device at once counted once, or failed with a unique violation.
+  - Two analyses of the same device counted one observation.
+  - A revocation that had read the trust before a concurrent change wrote the old expiry and label back.
+  - Two first trusts of the same device and user ended in a 500.
+- **A device status changed by the host could be reverted.** An analysis or stability recalculation running at the
+  same time wrote back the status it had read (for example `revoked` back to `active`). Trusted-device rows were not
+  affected.
+- A lock conflict on the collect endpoint ended in a 500.
+- The DBAL 3 test runs: SQLite's platform is resolved for both DBAL 3 (`SqlitePlatform`) and DBAL 4 (`SQLitePlatform`).
 
 ## [1.9.3] - 2026-11-16
 
