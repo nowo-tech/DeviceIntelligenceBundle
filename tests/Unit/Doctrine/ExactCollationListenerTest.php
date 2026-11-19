@@ -13,7 +13,6 @@ use Doctrine\DBAL\Platforms\MySQL80Platform;
 use Doctrine\DBAL\Platforms\MySQL84Platform;
 use Doctrine\DBAL\Platforms\MySQLPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
-use Doctrine\DBAL\Platforms\SQLitePlatform;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
@@ -56,7 +55,7 @@ final class ExactCollationListenerTest extends TestCase
         yield 'mysql 8.0' => [new MySQL80Platform(), 'utf8mb4_0900_bin'];
         yield 'mysql 5.7 or server_version without patch' => [new MySQLPlatform(), 'utf8mb4_bin'];
         yield 'postgresql' => [new PostgreSQLPlatform(), null];
-        yield 'sqlite' => [new SQLitePlatform(), null];
+        yield 'sqlite' => [self::sqlitePlatform(), null];
     }
 
     #[DataProvider('platforms')]
@@ -94,7 +93,7 @@ final class ExactCollationListenerTest extends TestCase
 
     public function testCollateInPlaceOnOlderDbal(): void
     {
-        $table = $this->generatedTables($this->registryOn(new SQLitePlatform()), null)['device_user'];
+        $table = $this->generatedTables($this->registryOn(self::sqlitePlatform()), null)['device_user'];
 
         $this->assertNull(ExactCollationListener::collate($table, 'user_identifier', 'utf8mb4_nopad_bin', false));
         $this->assertSame('utf8mb4_nopad_bin', self::collationOf($table, 'user_identifier'));
@@ -224,5 +223,13 @@ final class ExactCollationListenerTest extends TestCase
         }
 
         return new EntityManager(DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true], $configuration), $configuration, new EventManager());
+    }
+
+    /**
+     * SQLite's platform on DBAL 3 (SqlitePlatform) and DBAL 4 (SQLitePlatform).
+     */
+    private static function sqlitePlatform(): AbstractPlatform
+    {
+        return DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true])->getDatabasePlatform();
     }
 }

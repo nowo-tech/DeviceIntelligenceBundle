@@ -50,7 +50,9 @@ use Nowo\DeviceIntelligence\Velocity\InMemoryVelocityEngine;
 use Nowo\DeviceIntelligence\Velocity\VelocityEngineInterface;
 use Nowo\DeviceIntelligenceBundle\Attribute\AsDeviceRiskRule;
 use Nowo\DeviceIntelligenceBundle\Config\DeviceIntelligenceConfig;
+use Nowo\DeviceIntelligenceBundle\Controller\CollectController;
 use Nowo\DeviceIntelligenceBundle\DependencyInjection\Compiler\PersonalDataBridgePass;
+use Nowo\DeviceIntelligenceBundle\Doctrine\DeviceIntelligenceTransactionRunner;
 use Nowo\DeviceIntelligenceBundle\Doctrine\DoctrineDeviceRepository;
 use Nowo\DeviceIntelligenceBundle\Doctrine\DoctrineDeviceUserRepository;
 use Nowo\DeviceIntelligenceBundle\Doctrine\DoctrineObservationRepository;
@@ -70,6 +72,7 @@ use Nowo\DeviceIntelligenceBundle\PersonalData\UserKit\DeviceIntelligenceUserKit
 use Nowo\DeviceIntelligenceBundle\Profiler\DeviceIntelligenceDataCollector;
 use Nowo\DeviceIntelligenceBundle\Risk\RiskEngineFactory;
 use Nowo\DeviceIntelligenceBundle\User\SecurityUserIdentifierResolver;
+use Nowo\TransactionDoctrine\Symfony\Conflict\ConflictResponsePolicy;
 use Nowo\UserKitBundle\PersonalData\PersonalDataEraserInterface;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\Asset\Package;
@@ -196,6 +199,26 @@ final class NowoDeviceIntelligenceExtension extends Extension implements Prepend
         $this->registerRepositories($container, $config);
         $this->registerPersonalData($container, $config);
         $this->registerProfiler($container, $config);
+        $this->registerConflictResponse($container, $config);
+    }
+
+    /**
+     * 1.10 (REQ-RUNTIME-003 rule 6): the collect endpoint's answer to a lock conflict. With no option set it follows
+     * transaction-doctrine's ConflictResponsePolicy service when that bundle is registered, else 409 + Retry-After 1.
+     *
+     * @param array<string, mixed> $config
+     */
+    private function registerConflictResponse(ContainerBuilder $container, array $config): void
+    {
+        /** @var array{status: int|null, retry_after: int|null} $conflict */
+        $conflict = $config['conflict_response'];
+        $policy = null === $conflict['status'] && null === $conflict['retry_after']
+            ? new Reference(ConflictResponsePolicy::class, ContainerInterface::NULL_ON_INVALID_REFERENCE)
+            : new Definition(ConflictResponsePolicy::class, [
+                $conflict['status'] ?? ConflictResponsePolicy::STATUS_CONFLICT,
+                $conflict['retry_after'] ?? ConflictResponsePolicy::DEFAULT_RETRY_AFTER,
+            ]);
+        $container->getDefinition(CollectController::class)->setArgument('$conflictPolicy', $policy);
     }
 
     /**
@@ -353,6 +376,8 @@ final class NowoDeviceIntelligenceExtension extends Extension implements Prepend
                 new Reference(IndexKeyFactory::class),
                 new Reference(ConsentGateInterface::class),
                 new Reference(IpReputationProviderInterface::class),
+                // 1.10 (REQ-RUNTIME-003 rule 1): the device and observation rows in one transaction
+                $config['doctrine']['enabled'] ? new Reference(DeviceIntelligenceTransactionRunner::class) : null,
             ])
             ->setShared(false)
             ->setPublic(true);
@@ -446,6 +471,8 @@ final class NowoDeviceIntelligenceExtension extends Extension implements Prepend
     private function registerRepositories(ContainerBuilder $container, array $config): void
     {
         if ($config['doctrine']['enabled']) {
+            $container->register(DeviceIntelligenceTransactionRunner::class)
+                ->setArguments([new Reference('doctrine'), $config['doctrine']['lock_timeout_ms']]);
             $container->register(TablePrefixSubscriber::class)
                 ->setArguments([$config['doctrine']['table_prefix']])
                 ->addTag('doctrine.event_listener', ['event' => 'loadClassMetadata']);

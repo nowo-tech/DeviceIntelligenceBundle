@@ -18,6 +18,7 @@ use Nowo\DeviceIntelligence\Matching\IndexKeyFactory;
 use Nowo\DeviceIntelligence\Matching\WeightedDeviceMatcher;
 use Nowo\DeviceIntelligence\Observation\DeviceObservation;
 use Nowo\DeviceIntelligence\Observation\ObservationId;
+use Nowo\DeviceIntelligence\Port\AtomicDeviceRepositoryInterface;
 use Nowo\DeviceIntelligence\Port\DeviceRepositoryInterface;
 use Nowo\DeviceIntelligence\Port\DeviceUserRepositoryInterface;
 use Nowo\DeviceIntelligence\Port\GeoIpProviderInterface;
@@ -49,6 +50,7 @@ use Nowo\DeviceIntelligence\Signal\SignalName;
 use Nowo\DeviceIntelligence\Velocity\InMemoryVelocityEngine;
 use Nowo\DeviceIntelligence\Velocity\TimeWindow;
 use Nowo\DeviceIntelligence\Velocity\VelocityEngineInterface;
+use Nowo\TransactionContract\TransactionRunnerInterface;
 
 final class DeviceIntelligence implements DeviceIntelligenceInterface
 {
@@ -71,6 +73,7 @@ final class DeviceIntelligence implements DeviceIntelligenceInterface
         private IndexKeyFactory $indexKeys = new IndexKeyFactory(),
         private ConsentGateInterface $consent = new AllowAllConsentGate(),
         private IpReputationProviderInterface $ipReputation = new NullIpReputationProvider(),
+        private ?TransactionRunnerInterface $transactions = null,
     ) {
     }
 
@@ -197,7 +200,7 @@ final class DeviceIntelligence implements DeviceIntelligenceInterface
             $device = $existing->withObservation($input->now, new Confidence($match->confidence()), $stability, $key, $normalized, $label);
             $this->metrics->increment('device_intelligence.matches');
         }
-        $this->devices->save($device);
+        $isNewDevice = $match->isNewDevice() || null === $match->device();
 
         $observation = new DeviceObservation(
             $draft->id,
@@ -245,7 +248,22 @@ final class DeviceIntelligence implements DeviceIntelligenceInterface
         ));
         $tRisk = (hrtime(true) - $tRisk0) / 1e6;
         $observation = $observation->withRiskScore($assessment->score());
-        $this->observations->save($observation);
+        // 1.10 (REQ-RUNTIME-003 rules 1 and 4): the device and its observation are one write unit, written after the
+        // risk assessment (no provider call while a row is locked); an observed device's count is incremented in
+        // storage, not written back from the value read for the matching.
+        $write = function () use ($device, $observation, $isNewDevice): void {
+            if (!$isNewDevice && $this->devices instanceof AtomicDeviceRepositoryInterface) {
+                $this->devices->saveObserved($device);
+            } else {
+                $this->devices->save($device);
+            }
+            $this->observations->save($observation);
+        };
+        if (null === $this->transactions) {
+            $write();
+        } else {
+            $this->transactions->run($write);
+        }
         $this->metrics->increment('device_intelligence.observations');
         if ($assessment->isHigh()) {
             $this->metrics->increment('device_intelligence.high_risk');

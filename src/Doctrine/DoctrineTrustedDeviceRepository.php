@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace Nowo\DeviceIntelligenceBundle\Doctrine;
 
 use DateTimeImmutable;
-use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Nowo\DeviceIntelligence\Device\DeviceId;
 use Nowo\DeviceIntelligence\Exception\LookAlikeIdentifierException;
-use Nowo\DeviceIntelligence\Port\TrustedDeviceRepositoryInterface;
+use Nowo\DeviceIntelligence\Port\AtomicTrustedDeviceRepositoryInterface;
 use Nowo\DeviceIntelligence\Trust\TrustedDevice;
 use Nowo\DeviceIntelligence\User\UserIdentifier;
 use Nowo\DeviceIntelligenceBundle\Entity\DeviceTrustEntity;
@@ -26,9 +25,11 @@ use Nowo\DeviceIntelligenceBundle\Entity\DeviceTrustEntity;
  * @author Héctor Franco Aceituno <hectorfranco@nowo.tech>
  * @copyright 2026 Nowo.tech
  */
-final class DoctrineTrustedDeviceRepository implements TrustedDeviceRepositoryInterface
+final class DoctrineTrustedDeviceRepository implements AtomicTrustedDeviceRepositoryInterface
 {
     use ResolvesEntityManagerTrait;
+
+    private const LOOK_ALIKE_MESSAGE = 'A trusted-device row of a look-alike user identifier blocks this one (folding collation on the unique key): run the ALTER of UPGRADING 1.9.2.';
 
     /**
      * Creates the doctrine trusted device repository.
@@ -40,29 +41,39 @@ final class DoctrineTrustedDeviceRepository implements TrustedDeviceRepositoryIn
     }
 
     /**
-     * Persists the trusted-device record.
+     * Persists the trusted-device record: the whole record is written over the row of exactly this device and user, or
+     * inserted (1.10, REQ-RUNTIME-003 rule 4: one UPDATE by id or one INSERT, never a row read and written back; a
+     * concurrent save of the same device and user is not an error, the last one wins).
      */
     public function save(TrustedDevice $trust): void
     {
         $em = $this->entityManager(DeviceTrustEntity::class);
-        $existing = $this->findEntity($em, $trust->deviceId, $trust->userIdentifier);
-        $entity = $this->mapper->toTrustEntity($trust, $existing);
         // 1.7 (rule 6): only this row is written; the entity manager (maybe the host's) is never flushed.
-        $this->detachAll($em, [$entity]);
+        DbalEntityWriter::upsert($em, DeviceTrustEntity::class, $this->keys($trust->deviceId, $trust->userIdentifier), $this->mapper->toTrustEntity($trust), [
+            'trustedAt' => $trust->trustedAt,
+            'expiresAt' => $trust->expiresAt,
+            'revokedAt' => $trust->revokedAt,
+            'label' => $trust->label,
+            'grantedBy' => $trust->grantedBy,
+        ], [], self::LOOK_ALIKE_MESSAGE);
+    }
 
-        try {
-            DbalEntityWriter::write($em, $entity, null !== $existing);
-        } catch (UniqueConstraintViolationException $error) {
-            // a concurrent insert of exactly this device and user is a plain duplicate, not a look-alike (audit F-DI-2)
-            $concurrent = $this->findEntity($em, $trust->deviceId, $trust->userIdentifier);
-            if (null !== $concurrent) {
-                $this->detachAll($em, [$concurrent]);
-
-                throw $error;
-            }
-
-            throw new LookAlikeIdentifierException('A trusted-device row of a look-alike user identifier blocks this one (folding collation on the unique key): run the ALTER of UPGRADING 1.9.2.', 0, $error);
-        }
+    /**
+     * Sets the revocation time of the trust in one write (1.10, see
+     * {@see AtomicTrustedDeviceRepositoryInterface::revoke()}): the expiry, label and grant of the row are not written.
+     */
+    public function revoke(DeviceId $deviceId, UserIdentifier $user, DateTimeImmutable $at, string $label): void
+    {
+        $em = $this->entityManager(DeviceTrustEntity::class);
+        DbalEntityWriter::upsert(
+            $em,
+            DeviceTrustEntity::class,
+            $this->keys($deviceId, $user),
+            $this->mapper->toTrustEntity(new TrustedDevice($deviceId, $user, $at, null, $at, $label)),
+            ['revokedAt' => $at],
+            [],
+            self::LOOK_ALIKE_MESSAGE,
+        );
     }
 
     /**
@@ -122,6 +133,14 @@ final class DoctrineTrustedDeviceRepository implements TrustedDeviceRepositoryIn
             ->from(DeviceTrustEntity::class, 't')
             ->getQuery()
             ->getSingleScalarResult();
+    }
+
+    /**
+     * @return array{deviceId: string, userIdentifier: string}
+     */
+    private function keys(DeviceId $deviceId, UserIdentifier $user): array
+    {
+        return ['deviceId' => $deviceId->value, 'userIdentifier' => $user->value];
     }
 
     /**

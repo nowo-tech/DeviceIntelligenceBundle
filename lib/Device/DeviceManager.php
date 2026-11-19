@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Nowo\DeviceIntelligence\Device;
 
 use DateTimeImmutable;
+use Nowo\DeviceIntelligence\Port\AtomicDeviceUserRepositoryInterface;
+use Nowo\DeviceIntelligence\Port\AtomicTrustedDeviceRepositoryInterface;
 use Nowo\DeviceIntelligence\Port\DeviceRepositoryInterface;
 use Nowo\DeviceIntelligence\Port\DeviceUserRepositoryInterface;
 use Nowo\DeviceIntelligence\Port\TrustedDeviceRepositoryInterface;
@@ -56,6 +58,10 @@ final class DeviceManager implements DeviceManagerInterface, TrustedDeviceManage
     public function associate(Device $device, UserIdentifier $user): DeviceUserRelation
     {
         $now = $this->clock->now();
+        if ($this->users instanceof AtomicDeviceUserRepositoryInterface) {
+            // 1.10 (REQ-RUNTIME-003 rule 4): the login count is incremented in storage, never read and written back.
+            return $this->users->recordLogin($device->id, $user, $now);
+        }
         $existing = $this->users->find($device->id, $user);
         if (null === $existing) {
             $rel = new DeviceUserRelation($device->id, $user, $now, $now, 1);
@@ -84,6 +90,12 @@ final class DeviceManager implements DeviceManagerInterface, TrustedDeviceManage
     public function revoke(Device $device, UserIdentifier $user): void
     {
         $now = $this->clock->now();
+        if ($this->trusts instanceof AtomicTrustedDeviceRepositoryInterface) {
+            // 1.10 (REQ-RUNTIME-003 rule 4): one write of the revocation time, no read-modify-write of the trust.
+            $this->trusts->revoke($device->id, $user, $now, $device->label);
+
+            return;
+        }
         $existing = $this->trusts->findActive($device->id, $user, $now);
         if (null === $existing) {
             $existing = new TrustedDevice($device->id, $user, $now, null, $now, $device->label);

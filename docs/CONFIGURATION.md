@@ -84,6 +84,10 @@ nowo_device_intelligence:
         enabled: true                 # 1.7: false = the entities are mapped on no manager (bind the core repository ports)
         table_prefix: device_intelligence_
         entity_manager: null          # 1.7: e.g. device_intelligence (dedicated manager, mapped there only)
+        lock_timeout_ms: 5000         # 1.10: PostgreSQL lock_timeout of the analysis unit's own transaction; 0 = the server's
+    conflict_response:                # 1.10: collect endpoint answer to a lock conflict (docs/CONCURRENCY.md)
+        status: null                  # 409 (default) or 503; null = transaction-doctrine's, else 409
+        retry_after: null             # Retry-After seconds of CONFLICT_001; null = transaction-doctrine's, else 1
     cache:
         pool: cache.app
     messenger:
@@ -107,6 +111,10 @@ nowo_device_intelligence:
 - `endpoint.allowed_origins` lists extra hosts allowed to POST to the collect endpoint (e.g. when the page is served from `www.example.com` and the API from `api.example.com`). Entries may be full origins (`https://www.example.com`) or bare hosts (`www.example.com`); only the host part is compared (scheme and port are ignored). Default: `[]` (same host only).
 - `nonce` must match `^[A-Za-z0-9_-]{8,128}$` (the bundled browser client sends 32 hex chars). It is required when `replay_protection: true`.
 - When the `collect` rate-limit policy is exceeded the endpoint answers **429 Too Many Requests**.
+- 1.10: a lock conflict while storing the observation (deadlock, lock-wait timeout, serialization failure) answers
+  **409** (or `conflict_response.status: 503`) with `{"error": "conflict", "code": "CONFLICT_001"}`,
+  `X-Conflict-Code: CONFLICT_001` and `Retry-After`. When something was already committed earlier in the request, it
+  answers `CONFLICT_002` with no `Retry-After`. See [CONCURRENCY.md](CONCURRENCY.md).
 
 ## Validation
 
@@ -119,6 +127,8 @@ nowo_device_intelligence:
 
 - `doctrine.enabled: true` (default) wires Doctrine repositories that implement the core ports.
 - `doctrine.enabled: false` uses the core `InMemory*` repositories (request-scoped; for tests).
+- Concurrent writes (1.10): see [CONCURRENCY.md](CONCURRENCY.md) for the write paths, the conflict codes and
+  `doctrine.lock_timeout_ms`.
 
 ## Messenger
 
