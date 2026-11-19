@@ -295,8 +295,10 @@ final class DeviceIntelligence implements DeviceIntelligenceInterface
      * audit UE-DI-1): the device is read again inside the write unit, just before save(), and the observed device keeps
      * the stored status, first-seen time and metadata and adds one to the stored count. A status the host changed during
      * the risk assessment is therefore kept. The re-read and save() are still two calls, so only an adapter that
-     * implements the atomic port closes the gap completely. A device deleted meanwhile (erasure, cleanup) is stored again
-     * with the observation, as the atomic port does.
+     * implements the atomic port closes the gap completely. The re-read helps only if find() reads storage: a Doctrine ORM
+     * find() returns the object already in the identity map (and a caching repository its cached copy), so the host's
+     * revocation is still reverted; ORM-based adapters should implement the atomic port. A device deleted meanwhile
+     * (erasure, cleanup) is stored again with the observation, as the atomic port does.
      */
     private function observedOnStored(Device $device): Device
     {

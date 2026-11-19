@@ -352,10 +352,50 @@ final class DoctrineRepositoriesTest extends TestCase
         $device = Scenario::device();
         $exact = ['di_id' => 7, 'di_k0' => $device->id->value, 'di_k1' => 'alice'];
         $duplicate = new UniqueConstraintViolationException(new class('duplicate') extends AbstractException {}, null);
-        // read: none; then per round: insert fails, locked read finds it, update 0 rows, locked read: gone
-        $connection = $this->connectionMock([[], [$exact], [], [$exact], [], [$exact]]);
+        // read: none; then per round: insert fails, locked read finds it, update 0 rows, locked read: gone; the third
+        // locked read finds no row, so the upsert gives up
+        $connection = $this->connectionMock([[], [$exact], [], [$exact], [], []]);
         $connection->method('executeStatement')->willReturn(0);
         $connection->expects(self::exactly(3))->method('insert')->willThrowException($duplicate);
+
+        $this->expectExceptionObject($duplicate);
+        (new DoctrineTrustedDeviceRepository($this->em($this->queryMock(), $connection), new DeviceMapper()))
+            ->save(new TrustedDevice($device->id, new UserIdentifier('alice'), Scenario::now(), null, null, 'laptop'));
+    }
+
+    /**
+     * 1.10.2 (audit UE2-DI-3): when the third locking read after a unique violation does find the row, one more UPDATE
+     * pass is made instead of giving up, and it succeeds.
+     */
+    public function testUpsertDoesOneMoreUpdateWhenTheLastLockingReadFoundTheRow(): void
+    {
+        $device = Scenario::device();
+        $exact = ['di_id' => 7, 'di_k0' => $device->id->value, 'di_k1' => 'alice'];
+        $duplicate = new UniqueConstraintViolationException(new class('duplicate') extends AbstractException {}, null);
+        $connection = $this->connectionMock([[], [$exact], [], [$exact], [], [$exact]]);
+        $updates = 0;
+        $connection->method('executeStatement')->willReturnCallback(static function () use (&$updates): int {
+            return ++$updates < 3 ? 0 : 1;
+        });
+        $connection->expects(self::exactly(3))->method('insert')->willThrowException($duplicate);
+
+        (new DoctrineTrustedDeviceRepository($this->em($this->queryMock(), $connection), new DeviceMapper()))
+            ->save(new TrustedDevice($device->id, new UserIdentifier('alice'), Scenario::now(), null, null, 'laptop'));
+        self::assertSame(3, $updates);
+    }
+
+    /**
+     * 1.10.2 (audit UE2-DI-3): the extra UPDATE pass is the only one, so a row that keeps vanishing while it keeps
+     * being found still ends in the last unique violation after four INSERTs.
+     */
+    public function testUpsertStillEndsWhenTheRowIsFoundEveryTime(): void
+    {
+        $device = Scenario::device();
+        $exact = ['di_id' => 7, 'di_k0' => $device->id->value, 'di_k1' => 'alice'];
+        $duplicate = new UniqueConstraintViolationException(new class('duplicate') extends AbstractException {}, null);
+        $connection = $this->connectionMock([[], [$exact], [], [$exact], [], [$exact], [], [$exact]]);
+        $connection->method('executeStatement')->willReturn(0);
+        $connection->expects(self::exactly(4))->method('insert')->willThrowException($duplicate);
 
         $this->expectExceptionObject($duplicate);
         (new DoctrineTrustedDeviceRepository($this->em($this->queryMock(), $connection), new DeviceMapper()))

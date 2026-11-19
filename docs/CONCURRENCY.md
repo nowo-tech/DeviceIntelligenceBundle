@@ -127,8 +127,14 @@ Without them, the bundle falls back to `find()` + `save()`:
   analysis write unit, and after the history in the recalculation. The observed device keeps the stored status,
   first-seen time and metadata and adds one to the stored count; the recalculation changes only the stability, and does
   not store a device deleted meanwhile. A status change made during the risk assessment is therefore kept. The re-read
-  and `save()` are still two calls, though: a status change committed between them can still be reverted, unless
-  `find()` in your adapter takes a row lock inside the unit's transaction.
+  and `save()` are still two calls, though: a status change committed between them can still be reverted. In the
+  analysis this closes only if `find()` in your adapter takes a row lock inside the unit's transaction. The stability
+  recalculation has no surrounding transaction (it runs without the transaction runner), so a row lock cannot help
+  there: only the atomic port closes that window.
+- The re-read helps only if `find()` **reads storage**. If your adapter is built on the Doctrine ORM `find()`, or on a
+  cache, it returns the object it already holds (the identity map or the cache) and not the current row, so the host's
+  revocation is still reverted, with no protection from the re-read at all. For ORM-based adapters, implement the atomic
+  port.
 
 The in-memory adapters use that fallback, since they are request-scoped.
 

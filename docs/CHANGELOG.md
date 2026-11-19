@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+  - [Changed](#changed)
+  - [Fixed](#fixed)
 - [[1.10.1] - 2026-11-19](#1101---2026-11-19)
   - [Security](#security)
   - [Changed](#changed)
@@ -104,6 +106,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Documentation](#documentation-7)
 
 ## [Unreleased]
+
+### Changed
+
+- Documentation (audit UE2-DI-1, UE2-DI-2): for custom adapters without the atomic port, the `find()` re-read helps only
+  if `find()` reads storage and not the ORM identity map or a cache; ORM-based adapters should implement the atomic
+  port. A row lock in `find()` can close the window in the analysis only, since the stability recalculation runs
+  without a transaction runner. The three extra round trips of the MySQL / MariaDB lock-wait bound are documented
+  (audit UE2-DI-4).
+
+### Fixed
+
+- An upsert whose third locking read after a unique violation did find the byte-identical row now does one more
+  `UPDATE` pass instead of rethrowing the unique violation (audit UE2-DI-3).
 
 ## [1.10.1] - 2026-11-19
 
