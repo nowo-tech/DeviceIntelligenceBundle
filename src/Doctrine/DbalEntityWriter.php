@@ -128,7 +128,8 @@ final class DbalEntityWriter
      * - a row that only the SQL filter matches holds the key (a look-alike on a folding collation):
      *   LookAlikeIdentifierException, nothing written (fail closed, REQ-SEC-006);
      * - no row at all: the conflicting row was deleted meanwhile (erasure, cleanup), so the INSERT is tried again while
-     *   attempts remain (1.10.1, audit UE-DI-2), then the last unique violation is rethrown.
+     *   attempts remain (1.10.1, audit UE-DI-2), then the last unique violation is rethrown. When the locking read did
+     *   find the byte-identical row on the last attempt, one more UPDATE pass is made first (1.10.2, audit UE2-DI-3).
      *
      * @param class-string          $class
      * @param array<string, string> $keys      field => exact value of the unique business key
@@ -155,7 +156,9 @@ final class DbalEntityWriter
                 if (null === $id && $lookAlike) {
                     throw new LookAlikeIdentifierException($lookAlikeMessage, 0, $error);
                 }
-                if ($attempt >= self::UPSERT_ATTEMPTS) {
+                // Give up after UPSERT_ATTEMPTS inserts when no row holds the key; a row found by the locking read gets
+                // one more UPDATE pass (and, if that fails too, the loop ends after one further INSERT).
+                if (($attempt >= self::UPSERT_ATTEMPTS && null === $id) || $attempt > self::UPSERT_ATTEMPTS) {
                     throw $error;
                 }
             }

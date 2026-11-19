@@ -46,6 +46,21 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 
 ## Unreleased
 
+From **1.10.1** (patch 1.10.2): no schema change and no configuration change are needed.
+
+- **Custom adapters without the atomic port: `find()` must read storage.** The `find()` re-read of 1.10.1 protects a
+  host's status change only when your `find()` returns the current stored row. A Doctrine ORM `find()` returns the
+  object already in the identity map, and a caching repository returns its cached copy: then the re-read is stale and
+  the revocation is still reverted. Implement `AtomicDeviceRepositoryInterface` for ORM-based adapters (see
+  [CONCURRENCY.md](CONCURRENCY.md#custom-repository-adapters)). A row lock in `find()` can help the analysis only; the
+  stability recalculation has no surrounding transaction.
+- **Upsert retries.** A row found by the locking read on the third attempt now gets one more `UPDATE` pass instead of
+  an error.
+- **Cost on MySQL and MariaDB.** Each collect request outside a host transaction makes up to three extra round trips
+  (read the session value, lower it, set it back) when the session `innodb_lock_wait_timeout` is above the bound.
+  `SET STATEMENT … FOR` (MariaDB) covers one statement only, not the unit's transaction, so it is not used. Set
+  `doctrine.lock_timeout_ms: 0` to skip them.
+
 ## To 1.10.1
 
 From **1.10.0**:
