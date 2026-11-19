@@ -25,8 +25,10 @@ Applies from 1.10. Worker mode with `kernel.reset` off is covered in [FRANKENPHP
   - An upsert is an `UPDATE` by id, or an `INSERT`. When a concurrent `INSERT` of the same key wins (a unique
     violation), the row it stored is found again with a locking read (`SELECT … FOR UPDATE`) and updated.
 - **Exact keys.** Device and user identifiers are compared byte for byte after every SQL filter, so a folding
-  collation never makes `Bob` match `bob` (REQ-SEC-006). A unique violation with no byte-identical row behind it is
-  a look-alike: `LookAlikeIdentifierException`, and nothing is written (fail closed).
+  collation never makes `Bob` match `bob` (REQ-SEC-006). A unique violation whose key is held by a row that only the
+  folding filter matches is a look-alike: `LookAlikeIdentifierException`, and nothing is written (fail closed). A
+  unique violation whose row is gone by the locking read (deleted meanwhile by an erasure or a cleanup) is not a
+  look-alike: the `INSERT` is tried again, at most three times in all, then the unique violation is rethrown.
 - **One transaction per write unit.** The analysis writes the device and its observation in one transaction, after
   the risk assessment, so no GeoIP, reputation or risk-rule call runs while a row is locked.
 - **Savepoints inside the host's transaction.** Every bundle write inside an open host transaction runs in its own
@@ -85,11 +87,17 @@ nowo_device_intelligence:
         status: null        # 409 (default) or 503; null: transaction-doctrine's conflict_response when that bundle is registered, else 409
         retry_after: null   # seconds for CONFLICT_001; null: transaction-doctrine's, else 1
     doctrine:
-        lock_timeout_ms: 5000   # PostgreSQL lock_timeout of the analysis unit's own transaction; 0 = the server's
+        lock_timeout_ms: 5000   # lock-wait bound of the analysis unit's own transaction; 0 = the server's
 ```
 
-- MySQL and MariaDB use the server's `innodb_lock_wait_timeout` (50 s by default). Lower it per connection if the
-  collect endpoint must give up sooner.
+- `doctrine.lock_timeout_ms` bounds how long the analysis unit's own transaction waits for a row lock held elsewhere:
+  - PostgreSQL: `SET LOCAL lock_timeout`, which ends with the transaction.
+  - MySQL and MariaDB (from 1.10.1): the session `innodb_lock_wait_timeout` is lowered to the bound, in whole seconds
+    rounded up (at least 1 s), for that transaction only. The session's previous value is set back afterwards, also
+    when the unit fails, so the next request on the same connection (worker mode) keeps the host's value. A session
+    value already at or below the bound is left alone.
+  - Inside an open host transaction, the bundle changes neither setting: the host's apply.
+  - `0` keeps the server's value (MySQL and MariaDB: 50 s by default).
 - For CONFLICT_002 on host routes and the request watermark, register `nowo-tech/transaction-doctrine`'s Symfony
   bundle (`commit_detection: true`).
 
@@ -101,8 +109,28 @@ A host that binds its own core ports gets the atomic paths by implementing the o
 - `AtomicDeviceUserRepositoryInterface`: `recordLogin()`;
 - `AtomicTrustedDeviceRepositoryInterface`: `revoke()`.
 
-These are in `Nowo\DeviceIntelligence\Port`. Without them, `DeviceManager` and the analysis fall back to `find()` +
-`save()` (read-modify-write), as before 1.10. The in-memory adapters keep that fallback, since they are request-scoped.
+These are in `Nowo\DeviceIntelligence\Port`. **An adapter whose storage is shared between requests or workers must
+implement them** to be safe under concurrent writes. In particular, `AtomicDeviceRepositoryInterface` is what closes
+the device status overwrite (advisory GHSA-crq5-q557-89xf) for a custom adapter:
+
+- `saveObserved()` must add one to the **stored** observation count in storage (never write back a count read
+  earlier), write only the observation fields (last seen, confidence, stability, index key, label, last signals),
+  leave the status, first-seen time and metadata as they are, and insert a device that is not stored yet.
+- `saveStability()` must write only the stability of a stored device, and leave a deleted device deleted.
+- Each must be one atomic write in your storage (for example one `UPDATE … SET n = n + 1` statement, or a row lock
+  taken before the read).
+
+Without them, the bundle falls back to `find()` + `save()`:
+
+- `DeviceManager` (login link, revocation) keeps the read-modify-write of earlier releases.
+- The analysis and the stability recalculation (from 1.10.1) read the device again just before `save()`: inside the
+  analysis write unit, and after the history in the recalculation. The observed device keeps the stored status,
+  first-seen time and metadata and adds one to the stored count; the recalculation changes only the stability, and does
+  not store a device deleted meanwhile. A status change made during the risk assessment is therefore kept. The re-read
+  and `save()` are still two calls, though: a status change committed between them can still be reverted, unless
+  `find()` in your adapter takes a row lock inside the unit's transaction.
+
+The in-memory adapters use that fallback, since they are request-scoped.
 
 ## Tests
 
@@ -115,12 +143,18 @@ These are in `Nowo\DeviceIntelligence\Port`. Without them, `DeviceManager` and t
   - two observations of one device: both counted, and the host's status is kept;
   - a held row lock in the analysis unit: `TransientStorageFailure`, `CONFLICT_001` + `Retry-After`, nothing stored,
     and the connection is still usable; after an earlier commit in the same request, `CONFLICT_002` without
-    `Retry-After`; once the lock is released, the retry stores the unit exactly once.
+    `Retry-After`; once the lock is released, the retry stores the unit exactly once;
+  - the unit's own lock-wait bound: with a session that would wait 10 s, the unit gives up after about 1 s, and on
+    MySQL and MariaDB the session value is set back.
 - `tests/Unit/Controller/CollectControllerConflictTest.php` checks the 409 / 503 body and headers for deadlock,
   lock-wait, serialization failure and runner failures. It also checks that unique violations, lost connections and
   domain errors are not mapped.
-- `tests/Unit/Doctrine/DeviceIntelligenceTransactionRunnerTest.php` checks the own transaction, the host savepoint and
-  the PostgreSQL `lock_timeout`.
+- `tests/Unit/Doctrine/DeviceIntelligenceTransactionRunnerTest.php` checks the own transaction, the host savepoint,
+  the PostgreSQL `lock_timeout` and the MySQL / MariaDB `innodb_lock_wait_timeout` bound and its restore.
+- `tests/Unit/Doctrine/DoctrineRepositoriesTest.php` checks the upsert after a unique violation: the concurrent row is
+  updated, a look-alike fails closed, and a row deleted meanwhile is inserted again.
+- `tests/Core/Unit/AtomicWritesTest.php` and `tests/Unit/Messenger/HandlersTest.php` check the fallback for adapters
+  without the atomic port: a status changed during the risk assessment is kept.
 
 ## Residual risks
 
@@ -132,9 +166,11 @@ Accepted, contention-only (no data loss, leak or permission impact):
 - **Erasure racing an analysis.** An analysis that matched a device just before a GDPR erasure or cleanup deleted it
   stores the device again (as before 1.10), with the new observation.
 - **PostgreSQL REPEATABLE READ / SERIALIZABLE host transactions.** When a concurrent first write of the same device and
-  user commits after the host transaction's snapshot, the locking read cannot see it. The write then fails closed with
-  `LookAlikeIdentifierException` instead of updating that row. Under the default READ COMMITTED isolation this does not
-  happen.
+  user commits after the host transaction's snapshot, the locking read cannot see it. The write then tries the
+  `INSERT` again and ends in the `UniqueConstraintViolationException` (1.10.0: `LookAlikeIdentifierException`) instead
+  of updating that row. Under the default READ COMMITTED isolation this does not happen.
 - **Login after credentials are accepted.** A lock conflict on the login link write is rethrown (rule 8), so that
   login request ends in the host's error answer, and the client signs in again.
-- **Custom adapters** without the atomic ports keep read-modify-write (see above).
+- **Custom adapters** without the atomic ports keep a read-modify-write. For devices the window is only the re-read
+  just before `save()` (see above); implement the atomic ports to close it.
+- **Lock waits inside a host transaction** follow the host's settings (MySQL and MariaDB: 50 s by default).

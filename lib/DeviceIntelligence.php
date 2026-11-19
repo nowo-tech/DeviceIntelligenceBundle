@@ -252,10 +252,12 @@ final class DeviceIntelligence implements DeviceIntelligenceInterface
         // risk assessment (no provider call while a row is locked); an observed device's count is incremented in
         // storage, not written back from the value read for the matching.
         $write = function () use ($device, $observation, $isNewDevice): void {
-            if (!$isNewDevice && $this->devices instanceof AtomicDeviceRepositoryInterface) {
+            if ($isNewDevice) {
+                $this->devices->save($device);
+            } elseif ($this->devices instanceof AtomicDeviceRepositoryInterface) {
                 $this->devices->saveObserved($device);
             } else {
-                $this->devices->save($device);
+                $this->devices->save($this->observedOnStored($device));
             }
             $this->observations->save($observation);
         };
@@ -285,6 +287,36 @@ final class DeviceIntelligence implements DeviceIntelligenceInterface
                 'risk' => $tRisk,
                 'total' => $total,
             ],
+        );
+    }
+
+    /**
+     * Fallback for a {@see DeviceRepositoryInterface} adapter without {@see AtomicDeviceRepositoryInterface} (1.10.1,
+     * audit UE-DI-1): the device is read again inside the write unit, just before save(), and the observed device keeps
+     * the stored status, first-seen time and metadata and adds one to the stored count. A status the host changed during
+     * the risk assessment is therefore kept. The re-read and save() are still two calls, so only an adapter that
+     * implements the atomic port closes the gap completely. A device deleted meanwhile (erasure, cleanup) is stored again
+     * with the observation, as the atomic port does.
+     */
+    private function observedOnStored(Device $device): Device
+    {
+        $stored = $this->devices->find($device->id);
+        if (null === $stored) {
+            return $device;
+        }
+
+        return new Device(
+            $device->id,
+            $stored->firstSeenAt,
+            $device->lastSeenAt,
+            $stored->observationCount + 1,
+            $device->confidence,
+            $device->stability,
+            $stored->status,
+            $device->indexKey,
+            $device->label,
+            $stored->metadata,
+            $device->lastSignals,
         );
     }
 

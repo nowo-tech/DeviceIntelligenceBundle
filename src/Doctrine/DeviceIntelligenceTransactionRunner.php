@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\DeviceIntelligenceBundle\Doctrine;
 
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
@@ -25,8 +27,14 @@ use Throwable;
  * without nested savepoints), rolled back alone on failure. A deadlock, lock-wait timeout or serialization failure is
  * rethrown as the contract's {@see TransientStorageFailure} (nothing of the unit is committed); one attempt, no retry.
  *
- * On PostgreSQL its own transaction (not nested in the host's) sets `lock_timeout` ({@see self::LOCK_TIMEOUT_MS}) so a
- * row lock held elsewhere cannot hang the request; MySQL and MariaDB use the server's `innodb_lock_wait_timeout`.
+ * Its own transaction (not nested in the host's) bounds the wait for a row lock held elsewhere
+ * ({@see self::LOCK_TIMEOUT_MS}), so it cannot hang the request:
+ * - PostgreSQL: `SET LOCAL lock_timeout`, which ends with the transaction;
+ * - MySQL and MariaDB (1.10.1, audit UE-DI-3): the session `innodb_lock_wait_timeout` is lowered to the bound, in whole
+ *   seconds rounded up (at least 1), for the transaction only, and set back to the session's previous value afterwards,
+ *   also on failure (worker mode: the next request on the connection gets the host's value). A session value already
+ *   at or below the bound is left alone.
+ * Inside the host's transaction the host's settings apply.
  *
  * Stateless (FrankenPHP worker mode, kernel reset off).
  *
@@ -39,7 +47,7 @@ final class DeviceIntelligenceTransactionRunner implements TransactionRunnerInte
 {
     use ResolvesEntityManagerTrait;
 
-    /** PostgreSQL `lock_timeout` of the bundle's own transactions, in milliseconds. */
+    /** Lock-wait bound of the bundle's own transactions, in milliseconds (PostgreSQL `lock_timeout`, MySQL / MariaDB `innodb_lock_wait_timeout` rounded up to seconds). */
     public const LOCK_TIMEOUT_MS = 5000;
 
     /** Retry-After hint of the TransientStorageFailure the runner throws. */
@@ -50,7 +58,7 @@ final class DeviceIntelligenceTransactionRunner implements TransactionRunnerInte
     private TransientFailureClassifier $classifier;
 
     /**
-     * @param int $lockTimeoutMs PostgreSQL `lock_timeout` of the bundle's own transactions, in milliseconds (0 = the server's)
+     * @param int $lockTimeoutMs lock-wait bound of the bundle's own transactions, in milliseconds (0 = the server's)
      */
     public function __construct(
         private EntityManagerInterface|ManagerRegistry $em,
@@ -85,14 +93,42 @@ final class DeviceIntelligenceTransactionRunner implements TransactionRunnerInte
             }
         }
 
-        $timeout = $this->lockTimeoutMs > 0 && $connection->getDatabasePlatform() instanceof PostgreSQLPlatform;
+        $platform = $connection->getDatabasePlatform();
+        $timeout = $this->lockTimeoutMs > 0 && $platform instanceof PostgreSQLPlatform;
+        $restore = $this->lockTimeoutMs > 0 && $platform instanceof AbstractMySQLPlatform ? $this->lowerMySqlLockWait($connection) : null;
 
-        return DoctrineTransactionRunner::forConnection($connection, self::RETRY_AFTER_SECONDS)->run(function () use ($connection, $operation, $timeout): mixed {
-            if ($timeout) {
-                $connection->executeStatement(\sprintf("SET LOCAL lock_timeout = '%dms'", $this->lockTimeoutMs));
+        try {
+            return DoctrineTransactionRunner::forConnection($connection, self::RETRY_AFTER_SECONDS)->run(function () use ($connection, $operation, $timeout): mixed {
+                if ($timeout) {
+                    $connection->executeStatement(\sprintf("SET LOCAL lock_timeout = '%dms'", $this->lockTimeoutMs));
+                }
+
+                return $operation();
+            });
+        } finally {
+            if (null !== $restore) {
+                try {
+                    $connection->executeStatement(\sprintf('SET SESSION innodb_lock_wait_timeout = %d', $restore));
+                } catch (Throwable) {
+                    // A lost connection takes the session value with it; the unit's own outcome is the one that matters.
+                }
             }
+        }
+    }
 
-            return $operation();
-        });
+    /**
+     * Lowers the session `innodb_lock_wait_timeout` to the bound (whole seconds, rounded up) and returns the value to set
+     * back, or null when the session value is already at or below the bound.
+     */
+    private function lowerMySqlLockWait(Connection $connection): ?int
+    {
+        $bound = max(1, (int) ceil($this->lockTimeoutMs / 1000));
+        $current = (int) $connection->fetchOne('SELECT @@SESSION.innodb_lock_wait_timeout');
+        if ($current <= $bound) {
+            return null;
+        }
+        $connection->executeStatement(\sprintf('SET SESSION innodb_lock_wait_timeout = %d', $bound));
+
+        return $current;
     }
 }

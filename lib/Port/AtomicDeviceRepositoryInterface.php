@@ -11,7 +11,9 @@ use Nowo\DeviceIntelligence\Device\Stability;
 /**
  * Optional, for a {@see DeviceRepositoryInterface} adapter that can write a device without a read-modify-write of the
  * whole row (REQ-RUNTIME-003 rule 4, 1.10). When the adapter implements it, the analysis and the stability recalculation
- * use it; otherwise they fall back to save().
+ * use it. Otherwise they read the device again with find() just before save() and keep its stored status (1.10.1), which
+ * narrows but does not close the window in which a concurrent status change is reverted. An adapter whose storage is
+ * shared between requests or workers must implement this port, each method as one atomic write, to be fully protected.
  */
 interface AtomicDeviceRepositoryInterface extends DeviceRepositoryInterface
 {

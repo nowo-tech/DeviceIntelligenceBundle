@@ -6,16 +6,25 @@ namespace Nowo\DeviceIntelligence\Tests\Unit;
 
 use DateTimeImmutable;
 use Nowo\DeviceIntelligence\AnalysisInput;
+use Nowo\DeviceIntelligence\Device\Device;
 use Nowo\DeviceIntelligence\Device\DeviceManager;
+use Nowo\DeviceIntelligence\Device\DeviceStatus;
 use Nowo\DeviceIntelligence\DeviceIntelligence;
 use Nowo\DeviceIntelligence\Infrastructure\FrozenClock;
 use Nowo\DeviceIntelligence\Infrastructure\InMemoryDeviceRepository;
 use Nowo\DeviceIntelligence\Infrastructure\InMemoryDeviceUserRepository;
 use Nowo\DeviceIntelligence\Infrastructure\InMemoryObservationRepository;
 use Nowo\DeviceIntelligence\Infrastructure\InMemoryTrustedDeviceRepository;
+use Nowo\DeviceIntelligence\Matching\Candidate\RepositoryCandidateProvider;
 use Nowo\DeviceIntelligence\Port\AtomicDeviceRepositoryInterface;
 use Nowo\DeviceIntelligence\Port\AtomicDeviceUserRepositoryInterface;
 use Nowo\DeviceIntelligence\Port\AtomicTrustedDeviceRepositoryInterface;
+use Nowo\DeviceIntelligence\Port\DeviceRepositoryInterface;
+use Nowo\DeviceIntelligence\Risk\RiskAssessment;
+use Nowo\DeviceIntelligence\Risk\RiskContext;
+use Nowo\DeviceIntelligence\Risk\RiskEngine;
+use Nowo\DeviceIntelligence\Risk\RiskEngineInterface;
+use Nowo\DeviceIntelligence\Signal\Normalizer\SignalNormalizerRegistry;
 use Nowo\DeviceIntelligence\Signal\SignalBag;
 use Nowo\DeviceIntelligence\Signal\SignalFactory;
 use Nowo\DeviceIntelligence\User\DeviceUserRelation;
@@ -91,7 +100,100 @@ final class AtomicWritesTest extends TestCase
             $memory->save($device);
         });
         $engine = DeviceIntelligence::create($devices, new InMemoryObservationRepository(), new InMemoryDeviceUserRepository(), new InMemoryTrustedDeviceRepository());
-        $signals = SignalFactory::bagFromClient([
+        $signals = self::matchingSignals($now);
+
+        $first = $engine->analyze(new AnalysisInput($now, $signals, '10.0.0.1', 'Mozilla/5.0 Chrome/143.0.0.0'));
+        $second = $engine->analyze(new AnalysisInput($now->modify('+1 minute'), $signals, '10.0.0.1', 'Mozilla/5.0 Chrome/143.0.0.0'));
+
+        self::assertTrue($first->match()->isNewDevice());
+        self::assertFalse($second->match()->isNewDevice());
+        self::assertSame(['save', 'saveObserved'], $saved);
+    }
+
+    /**
+     * 1.10.1 (audit UE-DI-1): an adapter without the atomic port gets the device read again inside the write unit, so a
+     * status (and metadata) the host changed during the risk assessment is kept, and the count adds one to the stored
+     * count, not to the one read for the matching.
+     */
+    public function testWithoutTheAtomicPortTheHostsStatusChangeDuringTheAssessmentIsKept(): void
+    {
+        $now = new DateTimeImmutable('2026-11-19 10:00:00');
+        $devices = new InMemoryDeviceRepository();
+        $risk = new class(RiskEngine::defaults(), $devices) implements RiskEngineInterface {
+            public bool $revoke = false;
+
+            public function __construct(private RiskEngineInterface $inner, private InMemoryDeviceRepository $devices)
+            {
+            }
+
+            public function assess(RiskContext $context): RiskAssessment
+            {
+                $stored = $this->revoke ? $this->devices->find($context->device->id) : null;
+                if (null !== $stored) {
+                    // the host revokes the device (and another analysis counted once) while this one is assessed
+                    $this->devices->save(new Device($stored->id, $stored->firstSeenAt, $stored->lastSeenAt, $stored->observationCount + 1, $stored->confidence, $stored->stability, DeviceStatus::Revoked, $stored->indexKey, $stored->label, ['revoked_by' => 'host'], $stored->lastSignals));
+                }
+
+                return $this->inner->assess($context);
+            }
+        };
+        $runner = new class implements TransactionRunnerInterface {
+            public int $runs = 0;
+
+            public function run(callable $operation): mixed
+            {
+                ++$this->runs;
+
+                return $operation();
+            }
+        };
+        $engine = new DeviceIntelligence($devices, new InMemoryObservationRepository(), new InMemoryDeviceUserRepository(), new InMemoryTrustedDeviceRepository(), candidates: new RepositoryCandidateProvider($devices), normalizers: SignalNormalizerRegistry::defaults(), risk: $risk, transactions: $runner);
+        $signals = self::matchingSignals($now);
+
+        $first = $engine->analyze(new AnalysisInput($now, $signals, '10.0.0.1', 'Mozilla/5.0 Chrome/143.0.0.0'));
+        $risk->revoke = true;
+        $second = $engine->analyze(new AnalysisInput($now->modify('+1 minute'), $signals, '10.0.0.1', 'Mozilla/5.0 Chrome/143.0.0.0'));
+
+        self::assertFalse($second->match()->isNewDevice());
+        self::assertSame(2, $runner->runs);
+        $stored = $devices->find($first->device()->id);
+        self::assertNotNull($stored);
+        self::assertSame(DeviceStatus::Revoked, $stored->status);
+        self::assertSame(['revoked_by' => 'host'], $stored->metadata);
+        self::assertSame(3, $stored->observationCount, 'one by the first analysis, one meanwhile, one by this one');
+        self::assertEquals($now->modify('+1 minute'), $stored->lastSeenAt);
+    }
+
+    /**
+     * Without the atomic port, a matched device deleted before the write (erasure, cleanup) is stored again with the
+     * observation, as the atomic port does.
+     */
+    public function testWithoutTheAtomicPortADeviceDeletedMeanwhileIsStoredAgain(): void
+    {
+        $now = new DateTimeImmutable('2026-11-19 10:00:00');
+        $memory = new InMemoryDeviceRepository();
+        $devices = $this->createMock(DeviceRepositoryInterface::class);
+        $devices->method('findCandidates')->willReturnCallback($memory->findCandidates(...));
+        $devices->method('find')->willReturn(null);
+        $saved = [];
+        $devices->method('save')->willReturnCallback(static function (Device $device) use ($memory, &$saved): void {
+            $saved[] = $device;
+            $memory->save($device);
+        });
+        $engine = DeviceIntelligence::create($devices, new InMemoryObservationRepository(), new InMemoryDeviceUserRepository(), new InMemoryTrustedDeviceRepository());
+        $signals = self::matchingSignals($now);
+
+        $engine->analyze(new AnalysisInput($now, $signals, '10.0.0.1', 'Mozilla/5.0 Chrome/143.0.0.0'));
+        $second = $engine->analyze(new AnalysisInput($now->modify('+1 minute'), $signals, '10.0.0.1', 'Mozilla/5.0 Chrome/143.0.0.0'));
+
+        self::assertFalse($second->match()->isNewDevice());
+        self::assertCount(2, $saved);
+        self::assertSame($second->device(), $saved[1]);
+    }
+
+    private static function matchingSignals(DateTimeImmutable $now): SignalBag
+    {
+        return SignalFactory::bagFromClient([
             'platform' => ['value' => 'MacIntel', 'quality' => 1],
             'canvas' => ['value' => 'aabbccddeeff0011', 'quality' => 0.95],
             'webgl' => ['value' => ['vendor' => 'Apple', 'renderer' => 'Apple GPU'], 'quality' => 0.9],
@@ -101,12 +203,5 @@ final class AtomicWritesTest extends TestCase
             'hardware_concurrency' => ['value' => 8, 'quality' => 1],
             'audio' => ['value' => '1122334455667788', 'quality' => 0.9],
         ], $now);
-
-        $first = $engine->analyze(new AnalysisInput($now, $signals, '10.0.0.1', 'Mozilla/5.0 Chrome/143.0.0.0'));
-        $second = $engine->analyze(new AnalysisInput($now->modify('+1 minute'), $signals, '10.0.0.1', 'Mozilla/5.0 Chrome/143.0.0.0'));
-
-        self::assertTrue($first->match()->isNewDevice());
-        self::assertFalse($second->match()->isNewDevice());
-        self::assertSame(['save', 'saveObserved'], $saved);
     }
 }

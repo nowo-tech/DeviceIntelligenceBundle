@@ -72,18 +72,25 @@ final class RecalculateStabilityHandler
 
             return true;
         }
+        // 1.10.1 (audit UE-DI-1): an adapter without the atomic port gets the device read again just before save(), so
+        // only the stability changes and a status, count or last-seen time written meanwhile is kept; a device that is
+        // gone is left gone. The re-read and save() are still two calls: only the atomic port closes the gap completely.
+        $stored = $this->devices->find($device->id);
+        if (null === $stored) {
+            return false;
+        }
         $updated = new Device(
-            $device->id,
-            $device->firstSeenAt,
-            $device->lastSeenAt,
-            $device->observationCount,
-            $device->confidence,
+            $stored->id,
+            $stored->firstSeenAt,
+            $stored->lastSeenAt,
+            $stored->observationCount,
+            $stored->confidence,
             Stability::clamp($next),
-            $device->status,
-            $device->indexKey,
-            $device->label,
-            $device->metadata,
-            $device->lastSignals,
+            $stored->status,
+            $stored->indexKey,
+            $stored->label,
+            $stored->metadata,
+            $stored->lastSignals,
         );
         $this->devices->save($updated);
 

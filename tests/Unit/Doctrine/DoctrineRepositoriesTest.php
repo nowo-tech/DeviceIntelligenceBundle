@@ -246,7 +246,8 @@ final class DoctrineRepositoriesTest extends TestCase
 
     /**
      * Audit F-DI-2 / 1.10: after a unique violation, a row of exactly this device and user is a concurrent insert of the
-     * same pair (it is updated, no error); with none, a look-alike's row holds the folding key (fail closed).
+     * same pair (it is updated, no error); a row that only the folding SQL filter matches is a look-alike's (fail
+     * closed).
      */
     public function testUniqueViolationUpdatesTheConcurrentRowOrIsALookAlike(): void
     {
@@ -258,25 +259,66 @@ final class DoctrineRepositoriesTest extends TestCase
         $relation = new DeviceUserRelation($device->id, $user, $now, $now, 1);
         $duplicate = new UniqueConstraintViolationException(new class('duplicate') extends AbstractException {}, null);
         $exact = ['di_id' => 7, 'di_k0' => $device->id->value, 'di_k1' => 'alice'];
+        $lookAlike = ['di_id' => 8, 'di_k0' => $device->id->value, 'di_k1' => 'Alice'];
         $saves = [
             static fn (EntityManagerInterface $em) => (new DoctrineTrustedDeviceRepository($em, $mapper))->save($trust),
             static fn (EntityManagerInterface $em) => (new DoctrineDeviceUserRepository($em, $mapper))->save($relation),
         ];
 
         foreach ($saves as $save) {
-            foreach ([[], [$exact]] as $afterwards) {
+            foreach ([[$lookAlike], [$exact]] as $afterwards) {
                 $connection = $this->connectionMock([[], $afterwards]);
                 $connection->method('insert')->willThrowException($duplicate);
-                $connection->expects(self::exactly([] === $afterwards ? 0 : 1))->method('executeStatement')->willReturn(1);
+                $connection->expects(self::exactly([$lookAlike] === $afterwards ? 0 : 1))->method('executeStatement')->willReturn(1);
                 try {
                     $save($this->em($this->queryMock(), $connection));
-                    self::assertNotSame([], $afterwards, 'the concurrent row was updated');
+                    self::assertSame([$exact], $afterwards, 'the concurrent row was updated');
                 } catch (LookAlikeIdentifierException $error) {
-                    self::assertSame([], $afterwards);
+                    self::assertSame([$lookAlike], $afterwards);
                     self::assertSame($duplicate, $error->getPrevious());
                 }
             }
         }
+    }
+
+    /**
+     * 1.10.1 (audit UE-DI-2): a unique violation whose row is gone by the locking read (deleted by an erasure or a
+     * cleanup meanwhile) is not a look-alike: the INSERT is tried again.
+     */
+    public function testUniqueViolationOnARowDeletedMeanwhileInsertsAgain(): void
+    {
+        $device = Scenario::device();
+        $duplicate = new UniqueConstraintViolationException(new class('duplicate') extends AbstractException {}, null);
+        $inserts = 0;
+        $connection = $this->connectionMock([[], []]);
+        $connection->expects(self::exactly(2))->method('insert')->willReturnCallback(static function () use (&$inserts, $duplicate): int {
+            if (1 === ++$inserts) {
+                throw $duplicate;
+            }
+
+            return 1;
+        });
+        $connection->expects(self::never())->method('executeStatement');
+
+        (new DoctrineTrustedDeviceRepository($this->em($this->queryMock(), $connection), new DeviceMapper()))
+            ->save(new TrustedDevice($device->id, new UserIdentifier('alice'), Scenario::now(), null, null, 'laptop'));
+        self::assertSame(2, $inserts);
+    }
+
+    /**
+     * A row that keeps being deleted before every locking read ends in the last unique violation after three INSERTs,
+     * never in a look-alike error or an endless loop.
+     */
+    public function testUniqueViolationOnRowsThatKeepVanishingGivesUpAfterThreeInserts(): void
+    {
+        $device = Scenario::device();
+        $duplicate = new UniqueConstraintViolationException(new class('duplicate') extends AbstractException {}, null);
+        $connection = $this->connectionMock([]);
+        $connection->expects(self::exactly(3))->method('insert')->willThrowException($duplicate);
+
+        $this->expectExceptionObject($duplicate);
+        (new DoctrineTrustedDeviceRepository($this->em($this->queryMock(), $connection), new DeviceMapper()))
+            ->save(new TrustedDevice($device->id, new UserIdentifier('alice'), Scenario::now(), null, null, 'laptop'));
     }
 
     /**

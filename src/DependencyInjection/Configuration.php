@@ -387,7 +387,7 @@ final class Configuration implements ConfigurationInterface
                     ->end()
                 ->end()
                 ->integerNode('lock_timeout_ms')
-                    ->info('1.10 (REQ-RUNTIME-003): PostgreSQL lock_timeout of the bundle\'s own write transactions (the analysis unit), in milliseconds; 0 = the server\'s. MySQL / MariaDB use innodb_lock_wait_timeout.')
+                    ->info('1.10 (REQ-RUNTIME-003): lock-wait bound of the bundle\'s own write transactions (the analysis unit), in milliseconds; 0 = the server\'s. PostgreSQL: lock_timeout. MySQL / MariaDB (1.10.1): the session innodb_lock_wait_timeout, rounded up to whole seconds, lowered for the transaction only and set back afterwards.')
                     ->defaultValue(DeviceIntelligenceTransactionRunner::LOCK_TIMEOUT_MS)
                     ->min(0)
                 ->end()
