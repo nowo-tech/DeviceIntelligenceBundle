@@ -84,7 +84,7 @@ nowo_device_intelligence:
         enabled: true                 # 1.7: false = the entities are mapped on no manager (bind the core repository ports)
         table_prefix: device_intelligence_
         entity_manager: null          # 1.7: e.g. device_intelligence (dedicated manager, mapped there only)
-        lock_timeout_ms: 5000         # 1.10: PostgreSQL lock_timeout of the analysis unit's own transaction; 0 = the server's
+        lock_timeout_ms: 5000         # 1.10: lock-wait bound of the analysis unit's own transaction (PostgreSQL lock_timeout; MySQL / MariaDB innodb_lock_wait_timeout from 1.10.1); 0 = the server's
     conflict_response:                # 1.10: collect endpoint answer to a lock conflict (docs/CONCURRENCY.md)
         status: null                  # 409 (default) or 503; null = transaction-doctrine's, else 409
         retry_after: null             # Retry-After seconds of CONFLICT_001; null = transaction-doctrine's, else 1

@@ -16,6 +16,7 @@ use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\Tools\SchemaTool;
 use Nowo\DeviceIntelligence\Device\Device;
 use Nowo\DeviceIntelligence\Device\DeviceId;
+use Nowo\DeviceIntelligence\Device\DeviceStatus;
 use Nowo\DeviceIntelligence\Device\Stability;
 use Nowo\DeviceIntelligence\Trust\TrustedDevice;
 use Nowo\DeviceIntelligence\User\UserIdentifier;
@@ -38,7 +39,8 @@ use PHPUnit\Framework\TestCase;
 /**
  * REQ-RUNTIME-003 (1.10): two connections (two workers) on the same MySQL 8.4, MariaDB 11.4 and PostgreSQL 16 database
  * race on the bundle's hot write paths: the trusted-device upsert and revocation, the login link counter, the observed
- * device counter, and the analysis write unit under a held row lock (409 + CONFLICT_001 / CONFLICT_002).
+ * device counter, and the analysis write unit under a held row lock (409 + CONFLICT_001 / CONFLICT_002, and the
+ * unit's own lock-wait bound).
  *
  * Runs when DEVICE_INTELLIGENCE_TEST_MYSQL_URL / DEVICE_INTELLIGENCE_TEST_MARIADB_URL / DEVICE_INTELLIGENCE_TEST_PGSQL_URL
  * point at a throwaway database (the tables are dropped first); skipped otherwise. Both sessions get a 1 s lock wait
@@ -167,14 +169,17 @@ final class ConcurrentWritesDbTest extends TestCase
         $read = $devicesB->find($device->id);
         self::assertNotNull($read);
         $devicesA->saveObserved($this->observed($device));
-        $a->getConnection()->executeStatement("UPDATE device SET status = 'blocked'");
+        // the advisory scenario: the host revokes the device while the analysis that read it is still running
+        $a->getConnection()->executeStatement('UPDATE device SET status = ?', [DeviceStatus::Revoked->value]);
         $devicesB->saveObserved($this->observed($read));
         $b->getConnection()->commit();
 
         $row = $a->getConnection()->fetchAssociative('SELECT observation_count, status FROM device');
         self::assertIsArray($row);
         self::assertSame($device->observationCount + 2, (int) $row['observation_count']);
-        self::assertSame('blocked', $row['status']);
+        self::assertSame(DeviceStatus::Revoked->value, $row['status']);
+        $a->clear();
+        self::assertSame(DeviceStatus::Revoked, $devicesA->find($device->id)?->status, 'the row reads back through the mapper');
     }
 
     /**
@@ -229,6 +234,48 @@ final class ConcurrentWritesDbTest extends TestCase
         // the lock released, the retry stores the unit once
         $runner->run($unit);
         self::assertSame(1, (int) $b->getConnection()->fetchOne('SELECT COUNT(*) FROM observation'));
+        self::assertSame($device->observationCount + 1, (int) $b->getConnection()->fetchOne('SELECT observation_count FROM device'));
+    }
+
+    /**
+     * 1.10.1 (audit UE-DI-3): the analysis unit's own transaction bounds the lock wait itself, whatever the session
+     * allows (MySQL / MariaDB innodb_lock_wait_timeout, PostgreSQL lock_timeout), and on MySQL / MariaDB sets the
+     * session value back afterwards. The session allows 10 s here (PostgreSQL: no lock_timeout, a 10 s statement_timeout
+     * as a safety net), the bundle bound is 1 s.
+     */
+    #[DataProvider('databases')]
+    public function testTheAnalysisUnitBoundsTheLockWaitOnItsOwn(string $env): void
+    {
+        [$a, $b] = $this->sessions($env);
+        $mysql = $b->getConnection()->getDatabasePlatform() instanceof AbstractMySQLPlatform;
+        if ($mysql) {
+            $b->getConnection()->executeStatement('SET SESSION innodb_lock_wait_timeout = 10');
+        } else {
+            $b->getConnection()->executeStatement("SET lock_timeout = '0'");
+            $b->getConnection()->executeStatement("SET statement_timeout = '10s'");
+        }
+        $device = Scenario::device();
+        (new DoctrineDeviceRepository($a, new DeviceMapper()))->save($device);
+        $devicesB = new DoctrineDeviceRepository($b, new DeviceMapper());
+        $runner = new DeviceIntelligenceTransactionRunner($b, 1000);
+
+        $a->getConnection()->beginTransaction();
+        $a->getConnection()->executeStatement('UPDATE device SET label = ? WHERE id = ?', ['held', $device->id->value]);
+        $started = microtime(true);
+        try {
+            $runner->run(static fn () => $devicesB->saveObserved($device));
+            self::fail('The held row lock must end in a conflict.');
+        } catch (TransientStorageFailure) {
+            self::assertLessThan(5.0, microtime(true) - $started, 'the bundle bound (1 s), not the session value (10 s)');
+        } finally {
+            $a->getConnection()->rollBack();
+        }
+
+        self::assertSame(0, $b->getConnection()->getTransactionNestingLevel());
+        if ($mysql) {
+            self::assertSame(10, (int) $b->getConnection()->fetchOne('SELECT @@SESSION.innodb_lock_wait_timeout'), 'the session value is set back');
+        }
+        $runner->run(static fn () => $devicesB->saveObserved($device));
         self::assertSame($device->observationCount + 1, (int) $b->getConnection()->fetchOne('SELECT observation_count FROM device'));
     }
 

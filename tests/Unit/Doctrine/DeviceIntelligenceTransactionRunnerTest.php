@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Driver\AbstractException;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Exception\DeadlockException;
+use Doctrine\DBAL\Platforms\MySQLPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
@@ -23,7 +24,7 @@ use Throwable;
 /**
  * 1.10 (REQ-RUNTIME-003 rules 1, 3 and 9): the analysis write unit in one transaction on the bundle manager's
  * connection, a nested level inside the host's, transient failures as the contract's TransientStorageFailure, and a
- * PostgreSQL lock_timeout on its own transactions only.
+ * lock-wait bound (PostgreSQL lock_timeout, MySQL / MariaDB innodb_lock_wait_timeout) on its own transactions only.
  *
  * @author Héctor Franco Aceituno <hectorfranco@nowo.tech>
  * @copyright 2026 Nowo.tech
@@ -111,6 +112,57 @@ final class DeviceIntelligenceTransactionRunnerTest extends TestCase
         self::assertSame([], $statements, '0 keeps the server setting');
     }
 
+    /**
+     * 1.10.1 (audit UE-DI-3): MySQL / MariaDB own transactions lower the session innodb_lock_wait_timeout to the bound
+     * (seconds, rounded up) and set the previous value back afterwards, also when the unit fails; a lower session value,
+     * 0 and the host's transaction leave the session alone.
+     */
+    public function testMySqlOwnTransactionsBoundTheLockWaitAndRestoreIt(): void
+    {
+        $statements = [];
+        $runner = new DeviceIntelligenceTransactionRunner($this->em($this->mysql(false, 50, $statements)), 2500);
+        self::assertSame(1, $runner->run(static fn (): int => 1));
+        self::assertSame(['SET SESSION innodb_lock_wait_timeout = 3', 'SET SESSION innodb_lock_wait_timeout = 50'], $statements);
+
+        $statements = [];
+        $refused = new RuntimeException('refused');
+        $runner = new DeviceIntelligenceTransactionRunner($this->em($this->mysql(false, 50, $statements)), 200);
+        self::assertSame($refused, self::caught(static fn () => $runner->run(static fn () => throw $refused)));
+        self::assertSame(['SET SESSION innodb_lock_wait_timeout = 1', 'SET SESSION innodb_lock_wait_timeout = 50'], $statements, 'restored on failure');
+
+        $statements = [];
+        (new DeviceIntelligenceTransactionRunner($this->em($this->mysql(false, 5, $statements))))->run(static fn (): int => 1);
+        self::assertSame([], $statements, 'a session value at or below the bound is kept');
+
+        $statements = [];
+        (new DeviceIntelligenceTransactionRunner($this->em($this->mysql(true, 50, $statements))))->run(static fn (): int => 1);
+        self::assertSame([], $statements, 'never inside the host transaction');
+
+        $statements = [];
+        (new DeviceIntelligenceTransactionRunner($this->em($this->mysql(false, 50, $statements)), 0))->run(static fn (): int => 1);
+        self::assertSame([], $statements, '0 keeps the server setting');
+    }
+
+    public function testAFailedMySqlRestoreDoesNotHideTheResult(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->method('getDatabasePlatform')->willReturn(new MySQLPlatform());
+        $connection->method('isTransactionActive')->willReturn(false);
+        $connection->method('getTransactionNestingLevel')->willReturn(0);
+        $connection->method('fetchOne')->willReturn('50');
+        $calls = 0;
+        $connection->method('executeStatement')->willReturnCallback(static function () use (&$calls): int {
+            if (2 === ++$calls) {
+                throw new RuntimeException('gone away');
+            }
+
+            return 0;
+        });
+
+        self::assertSame(1, (new DeviceIntelligenceTransactionRunner($this->em($connection)))->run(static fn (): int => 1));
+        self::assertSame(2, $calls);
+    }
+
     private static function caught(callable $call): ?Throwable
     {
         try {
@@ -131,6 +183,25 @@ final class DeviceIntelligenceTransactionRunnerTest extends TestCase
         $connection->method('getDatabasePlatform')->willReturn(new PostgreSQLPlatform());
         $connection->method('isTransactionActive')->willReturn($hostTransaction);
         $connection->method('getTransactionNestingLevel')->willReturn($hostTransaction ? 1 : 0);
+        $connection->method('executeStatement')->willReturnCallback(static function (string $sql) use (&$statements): int {
+            $statements[] = $sql;
+
+            return 0;
+        });
+
+        return $connection;
+    }
+
+    /**
+     * @param list<string> $statements
+     */
+    private function mysql(bool $hostTransaction, int $sessionLockWait, array &$statements): Connection
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->method('getDatabasePlatform')->willReturn(new MySQLPlatform());
+        $connection->method('isTransactionActive')->willReturn($hostTransaction);
+        $connection->method('getTransactionNestingLevel')->willReturn($hostTransaction ? 1 : 0);
+        $connection->method('fetchOne')->with('SELECT @@SESSION.innodb_lock_wait_timeout')->willReturn((string) $sessionLockWait);
         $connection->method('executeStatement')->willReturnCallback(static function (string $sql) use (&$statements): int {
             $statements[] = $sql;
 

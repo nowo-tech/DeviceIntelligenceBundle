@@ -45,6 +45,26 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 
 ## Unreleased
 
+No schema change and no configuration change are needed.
+
+- **MySQL and MariaDB: the analysis unit bounds its lock wait.** `doctrine.lock_timeout_ms` (default 5000) now also
+  applies on MySQL and MariaDB: the analysis unit's own transaction lowers the session `innodb_lock_wait_timeout` to
+  the bound, in whole seconds rounded up, and sets the previous value back afterwards. A collect request that waits
+  for a row lock held elsewhere now answers 409 `CONFLICT_001` after about 5 s instead of the server's 50 s. Set
+  `doctrine.lock_timeout_ms: 0` to keep the server's value. A session value already at or below the bound, and units
+  inside a host transaction, are left alone.
+- **Custom `DeviceRepositoryInterface` adapters without `AtomicDeviceRepositoryInterface`.** The analysis and the
+  stability recalculation now call `find()` again right before `save()`, and keep the stored status, first-seen time
+  and metadata (and, in the recalculation, everything but the stability). The analysis adds one to the stored count.
+  This keeps a status change made by the host while the analysis was assessing the risk, which 1.10.0 could revert
+  for these adapters. It is not complete protection: implement `AtomicDeviceRepositoryInterface` (see
+  [CONCURRENCY.md](CONCURRENCY.md#custom-repository-adapters)) to fully fix the status overwrite of advisory
+  GHSA-crq5-q557-89xf. Your `find()` is called once more per matched analysis and per recalculated device, and the
+  recalculation no longer stores a device deleted while it ran.
+- **Upsert after a unique violation.** When the conflicting row is deleted before the bundle reads it again (an erasure
+  or cleanup at the same moment), the bundle now tries the `INSERT` again instead of throwing
+  `LookAlikeIdentifierException`. A real look-alike still fails closed.
+
 ## To 1.10.0
 
 From **1.9.3**:

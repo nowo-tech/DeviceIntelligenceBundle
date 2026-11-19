@@ -17,6 +17,7 @@ use Nowo\DeviceIntelligence\Matching\Confidence;
 use Nowo\DeviceIntelligence\Observation\DeviceObservation;
 use Nowo\DeviceIntelligence\Observation\ObservationId;
 use Nowo\DeviceIntelligence\Port\AtomicDeviceRepositoryInterface;
+use Nowo\DeviceIntelligence\Port\DeviceRepositoryInterface;
 use Nowo\DeviceIntelligence\Signal\SignalBag;
 use Nowo\DeviceIntelligenceBundle\Messenger\CleanupHandler;
 use Nowo\DeviceIntelligenceBundle\Messenger\CleanupMessage;
@@ -161,6 +162,43 @@ final class HandlersTest extends TestCase
         $devices->expects(self::once())->method('saveStability')->with($id, self::callback(static fn (Stability $s): bool => 0.5 !== $s->value));
 
         self::assertSame(1, (new RecalculateStabilityHandler($devices, $observations))(new RecalculateStabilityMessage($id->value)));
+    }
+
+    /**
+     * 1.10.1 (audit UE-DI-1): without the atomic port the device is read again just before save(), so a status, count
+     * or last-seen time written after the first read is kept and only the stability changes; a device deleted meanwhile
+     * is not stored again.
+     */
+    public function testRecalculateWithoutTheAtomicPortKeepsWhatChangedAfterTheRead(): void
+    {
+        $now = new DateTimeImmutable('2026-08-23T12:00:00Z');
+        $id = DeviceId::generate($now);
+        $key = new CandidateIndexKey('linux', 'chrome', 'other', 'desktop', 'UTC', 'abcd');
+        $read = new Device($id, $now, $now, 2, new Confidence(0.8), new Stability(0.5), DeviceStatus::Active, $key, 'Chrome on Linux', [], SignalBag::empty());
+        $changed = new Device($id, $now, $now->modify('+1 minute'), 3, new Confidence(0.9), new Stability(0.5), DeviceStatus::Revoked, $key, 'Chrome on Linux', ['by' => 'host'], SignalBag::empty());
+        $observations = new InMemoryObservationRepository();
+        foreach ([$now->modify('-1 hour'), $now] as $at) {
+            $observations->save(new DeviceObservation(ObservationId::generate($at), $id, $at, 1, '1.0.0', null, null, null, null, null, null, SignalBag::empty(), 10, false, 1));
+        }
+
+        $devices = $this->createMock(DeviceRepositoryInterface::class);
+        $devices->method('find')->willReturnOnConsecutiveCalls($read, $changed);
+        $saved = null;
+        $devices->expects(self::once())->method('save')->willReturnCallback(static function (Device $device) use (&$saved): void {
+            $saved = $device;
+        });
+        self::assertSame(1, (new RecalculateStabilityHandler($devices, $observations))(new RecalculateStabilityMessage($id->value)));
+        self::assertInstanceOf(Device::class, $saved);
+        self::assertSame(DeviceStatus::Revoked, $saved->status);
+        self::assertSame(3, $saved->observationCount);
+        self::assertSame(['by' => 'host'], $saved->metadata);
+        self::assertEquals($now->modify('+1 minute'), $saved->lastSeenAt);
+        self::assertNotSame(0.5, $saved->stability());
+
+        $gone = $this->createMock(DeviceRepositoryInterface::class);
+        $gone->method('find')->willReturnOnConsecutiveCalls($read, null);
+        $gone->expects(self::never())->method('save');
+        self::assertSame(0, (new RecalculateStabilityHandler($gone, $observations))(new RecalculateStabilityMessage($id->value)));
     }
 
     public function testRecalculateNoopsWithoutHistory(): void

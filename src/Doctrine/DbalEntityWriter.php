@@ -124,8 +124,11 @@ final class DbalEntityWriter
      * Writes the row of business key $keys without a read-modify-write (REQ-RUNTIME-003 rule 4, 1.10): when the row
      * exists, an {@see self::update()} by its id with $set and $increment; otherwise an INSERT of $new. A concurrent
      * INSERT of the same key (unique violation) is not an error: the row it stored is found with a locking read and
-     * updated. When no byte-identical row holds the key after a unique violation, a look-alike's row does (folding
-     * collation): LookAlikeIdentifierException, nothing written (fail closed, REQ-SEC-006).
+     * updated. When the locking read finds no byte-identical row after a unique violation:
+     * - a row that only the SQL filter matches holds the key (a look-alike on a folding collation):
+     *   LookAlikeIdentifierException, nothing written (fail closed, REQ-SEC-006);
+     * - no row at all: the conflicting row was deleted meanwhile (erasure, cleanup), so the INSERT is tried again while
+     *   attempts remain (1.10.1, audit UE-DI-2), then the last unique violation is rethrown.
      *
      * @param class-string          $class
      * @param array<string, string> $keys      field => exact value of the unique business key
@@ -148,8 +151,8 @@ final class DbalEntityWriter
 
                 return;
             } catch (UniqueConstraintViolationException $error) {
-                $id = self::findExactId($em, $class, $keys, true);
-                if (null === $id) {
+                [$id, $lookAlike] = self::keyRows($em, $class, $keys, true);
+                if (null === $id && $lookAlike) {
                     throw new LookAlikeIdentifierException($lookAlikeMessage, 0, $error);
                 }
                 if ($attempt >= self::UPSERT_ATTEMPTS) {
@@ -169,6 +172,20 @@ final class DbalEntityWriter
      * @param array<string, string> $keys  field => exact value
      */
     public static function findExactId(EntityManagerInterface $em, string $class, array $keys, bool $forUpdate = false): int|string|null
+    {
+        return self::keyRows($em, $class, $keys, $forUpdate)[0];
+    }
+
+    /**
+     * One read of the rows the SQL filter matches for $keys: the identifier of the byte-identical one (or null), and
+     * whether any other row matched (a look-alike on a folding collation).
+     *
+     * @param class-string          $class
+     * @param array<string, string> $keys  field => exact value
+     *
+     * @return array{int|string|null, bool}
+     */
+    private static function keyRows(EntityManagerInterface $em, string $class, array $keys, bool $forUpdate): array
     {
         $metadata = $em->getClassMetadata($class);
         $connection = $em->getConnection();
@@ -203,10 +220,10 @@ final class DbalEntityWriter
             }
             $id = $row['di_id'];
 
-            return $integerId ? (int) $id : (string) $id;
+            return [$integerId ? (int) $id : (string) $id, false];
         }
 
-        return null;
+        return [null, [] !== $rows];
     }
 
     /**

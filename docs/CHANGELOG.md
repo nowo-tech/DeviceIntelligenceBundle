@@ -8,98 +8,130 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
-- [[1.10.0] - 2026-11-19](#1100---2026-11-19)
-  - [Added](#added)
+  - [Security](#security)
   - [Changed](#changed)
   - [Fixed](#fixed)
-- [[1.9.3] - 2026-11-16](#193---2026-11-16)
-  - [Security](#security)
+- [[1.10.0] - 2026-11-19](#1100---2026-11-19)
+  - [Added](#added)
   - [Changed](#changed-1)
+  - [Fixed](#fixed-1)
+- [[1.9.3] - 2026-11-16](#193---2026-11-16)
+  - [Security](#security-1)
+  - [Changed](#changed-2)
   - [Documentation](#documentation)
 - [[1.9.2] - 2026-11-13](#192---2026-11-13)
-  - [Security](#security-1)
+  - [Security](#security-2)
 - [[1.9.1] - 2026-11-13](#191---2026-11-13)
-  - [Fixed](#fixed-1)
-  - [Changed](#changed-2)
+  - [Fixed](#fixed-2)
+  - [Changed](#changed-3)
 - [[1.9.0] - 2026-11-11](#190---2026-11-11)
   - [Added](#added-1)
   - [Behaviour change](#behaviour-change)
 - [[1.8.0] - 2026-11-11](#180---2026-11-11)
-  - [Changed](#changed-3)
+  - [Changed](#changed-4)
   - [Tests](#tests)
   - [Documentation](#documentation-1)
 - [[1.7.0] - 2026-11-11](#170---2026-11-11)
-  - [Security](#security-2)
+  - [Security](#security-3)
   - [Added](#added-2)
-  - [Changed](#changed-4)
+  - [Changed](#changed-5)
   - [Deprecated](#deprecated)
 - [[1.6.0] - 2026-11-10](#160---2026-11-10)
   - [Added](#added-3)
   - [Documentation](#documentation-2)
 - [[1.5.2] - 2026-10-31](#152---2026-10-31)
-  - [Fixed](#fixed-2)
-  - [Changed](#changed-5)
+  - [Fixed](#fixed-3)
+  - [Changed](#changed-6)
   - [Tests](#tests-1)
 - [[1.5.1] - 2026-10-30](#151---2026-10-30)
-  - [Security](#security-3)
+  - [Security](#security-4)
 - [[1.5.0] - 2026-10-28](#150---2026-10-28)
-  - [Changed](#changed-6)
+  - [Changed](#changed-7)
   - [Documentation](#documentation-3)
 - [[1.4.1] - 2026-10-25](#141---2026-10-25)
-  - [Changed](#changed-7)
-- [[1.4.0] - 2026-10-21](#140---2026-10-21)
   - [Changed](#changed-8)
-- [[1.3.3] - 2026-10-21](#133---2026-10-21)
+- [[1.4.0] - 2026-10-21](#140---2026-10-21)
   - [Changed](#changed-9)
-- [[1.3.2] - 2026-10-15](#132---2026-10-15)
+- [[1.3.3] - 2026-10-21](#133---2026-10-21)
   - [Changed](#changed-10)
-- [[1.3.1] - 2026-10-13](#131---2026-10-13)
+- [[1.3.2] - 2026-10-15](#132---2026-10-15)
   - [Changed](#changed-11)
-- [[1.3.0] - 2026-10-13](#130---2026-10-13)
-  - [Security](#security-4)
-  - [Fixed](#fixed-3)
+- [[1.3.1] - 2026-10-13](#131---2026-10-13)
   - [Changed](#changed-12)
+- [[1.3.0] - 2026-10-13](#130---2026-10-13)
+  - [Security](#security-5)
+  - [Fixed](#fixed-4)
+  - [Changed](#changed-13)
 - [[1.2.2] - 2026-10-13](#122---2026-10-13)
   - [Dependencies](#dependencies)
-  - [Changed](#changed-13)
+  - [Changed](#changed-14)
 - [[1.2.1] - 2026-10-09](#121---2026-10-09)
-  - [Fixed](#fixed-4)
+  - [Fixed](#fixed-5)
   - [Dependencies](#dependencies-1)
 - [[1.2.0] - 2026-09-28](#120---2026-09-28)
-  - [Security](#security-5)
-  - [Changed](#changed-14)
+  - [Security](#security-6)
+  - [Changed](#changed-15)
 - [[1.1.5] - 2026-09-27](#115---2026-09-27)
   - [Added](#added-4)
-  - [Changed](#changed-15)
+  - [Changed](#changed-16)
 - [[1.1.4] - 2026-09-24](#114---2026-09-24)
-  - [Fixed](#fixed-5)
+  - [Fixed](#fixed-6)
   - [Documentation](#documentation-4)
 - [[1.1.3] - 2026-09-07](#113---2026-09-07)
-  - [Changed](#changed-16)
+  - [Changed](#changed-17)
   - [Notes](#notes)
 - [[1.1.2] - 2026-09-03](#112---2026-09-03)
-  - [Fixed](#fixed-6)
-  - [Changed](#changed-17)
-- [[1.1.1] - 2026-08-26](#111---2026-08-26)
+  - [Fixed](#fixed-7)
   - [Changed](#changed-18)
+- [[1.1.1] - 2026-08-26](#111---2026-08-26)
+  - [Changed](#changed-19)
   - [Notes](#notes-1)
 - [[1.1.0] - 2026-08-24](#110---2026-08-24)
   - [Added](#added-5)
-  - [Changed](#changed-19)
+  - [Changed](#changed-20)
   - [Notes](#notes-2)
   - [Added](#added-6)
   - [Documentation](#documentation-5)
-  - [Fixed](#fixed-7)
+  - [Fixed](#fixed-8)
 - [[1.0.1] - 2026-08-23](#101---2026-08-23)
   - [Added](#added-7)
-  - [Changed](#changed-20)
-  - [Fixed](#fixed-8)
+  - [Changed](#changed-21)
+  - [Fixed](#fixed-9)
   - [Documentation](#documentation-6)
 - [[1.0.0] - 2026-08-23](#100---2026-08-23)
   - [Added](#added-8)
   - [Documentation](#documentation-7)
 
 ## [Unreleased]
+
+### Security
+
+- 1.10.0 fixed advisory [GHSA-crq5-q557-89xf](https://github.com/nowo-tech/DeviceIntelligenceBundle/security/advisories/GHSA-crq5-q557-89xf)
+  (Low, `>= 1.1.4, < 1.10.0`): a concurrent device analysis or stability recalculation could revert a device status
+  the host had changed, for example `revoked` back to `active`. 1.10.1 narrows the remaining window for custom
+  `DeviceRepositoryInterface` adapters that do not implement `AtomicDeviceRepositoryInterface` (audit UE-DI-1): the
+  analysis and the recalculation read the device again just before `save()` and keep its stored status, first-seen
+  time and metadata. Such adapters must implement `AtomicDeviceRepositoryInterface` to be fully fixed. See UPGRADING
+  and CONCURRENCY.md.
+
+### Changed
+
+- MySQL and MariaDB: `doctrine.lock_timeout_ms` (default 5000 ms) now bounds the analysis unit's own transaction there
+  too. The session `innodb_lock_wait_timeout` is lowered to the bound (whole seconds, rounded up) for that transaction
+  only, and the previous value is set back afterwards, also on failure (audit UE-DI-3). PostgreSQL keeps
+  `SET LOCAL lock_timeout`. Inside a host transaction nothing changes.
+- Custom device repositories without the atomic port: the analysis and the stability recalculation call `find()` once
+  more, just before `save()`.
+
+### Fixed
+
+- An upsert (trust grant, device-user link) whose conflicting row was deleted between the unique violation and the
+  locking re-read, for example by a GDPR erasure or a cleanup, threw `LookAlikeIdentifierException` with a misleading
+  message. It now tries the `INSERT` again, at most three times in all. Only a row that the folding SQL filter matches
+  without a byte-identical key is a look-alike (audit UE-DI-2).
+- The stability recalculation, for adapters without the atomic port, no longer stores a device deleted while it ran.
+- Tests: the two-connection status test uses `revoked`, a real `DeviceStatus` value, and reads the row back through the
+  mapper (audit UE-DI-4).
 
 ## [1.10.0] - 2026-11-19
 
