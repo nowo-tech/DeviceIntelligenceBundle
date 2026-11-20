@@ -10,31 +10,22 @@
 {% endblock %}
 
 {% block body %}
-    <p class="nowo-ui-muted">{{ 'demo.body'|trans }}</p>
+    {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'demo.panel.heading'|trans, intro: 'demo.body'|trans, kind: 'detail', state: device ? null : 'empty', state_message: 'demo.panel.missing'|trans, device: device} %}
+        {% block section_body %}
+            {{ include('demo/_device.html.twig') }}
+        {% endblock %}
+    {% endembed %}
 
-    <nav class="nowo-ui-tabs nowo-ui-tabs--pill" aria-label="{{ 'demo.heading'|trans }}">
-        {% for item in cases %}
-            <a class="nowo-ui-tabs__item{{ case == item.id ? ' nowo-ui-tabs__item--active' : '' }}" href="{{ item.url }}"{% if case == item.id %} aria-current="page"{% endif %}>
-                {{ ('demo.case.' ~ item.id ~ '.nav')|trans }}
-            </a>
-        {% endfor %}
-    </nav>
-
-    {{ include('demo/_device.html.twig') }}
-
-    <section class="nowo-ui-card">
-        <div class="nowo-ui-card__body">
-            <h2 class="nowo-ui-card__title">{{ ('demo.case.' ~ case ~ '.title')|trans }}</h2>
-            <p>{{ ('demo.case.' ~ case ~ '.body')|trans }}</p>
+    {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: ('demo.case.' ~ case ~ '.title')|trans, intro: ('demo.case.' ~ case ~ '.body')|trans, kind: 'content', case: case, state: (case == 'alerts' and not suspicious) ? 'empty' : null, state_message: 'demo.case.alerts.empty'|trans} %}
+        {% block section_body %}
             {{ include('demo/cases/_' ~ case ~ '.html.twig') }}
-        </div>
-    </section>
+        {% endblock %}
+    {% endembed %}
 
-    <section class="nowo-ui-card">
-        <div class="nowo-ui-card__body">
-            <h2 class="nowo-ui-card__title">{{ 'demo.collect_heading'|trans }}</h2>
+    {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'demo.collect_heading'|trans, kind: 'detail'} %}
+        {% block section_body %}
             <pre id="collect-result" class="nowo-ui-code-block nowo-ui-code-block--wrap">{{ 'demo.waiting'|trans }}</pre>
-        </div>
-    </section>
-    <p class="nowo-ui-muted">{{ 'demo.docs_hint'|trans }}</p>
+        {% endblock %}
+        {% block section_footer %}<span class="nowo-ui-muted">{{ 'demo.docs_hint'|trans }}</span>{% endblock %}
+    {% endembed %}
 {% endblock %}

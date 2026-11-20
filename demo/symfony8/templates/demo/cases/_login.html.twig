@@ -3,8 +3,5 @@
     <a class="nowo-ui-btn nowo-ui-btn--outline" href="{{ path('demo_logout') }}">{{ 'demo.logout'|trans }}</a>
 {% else %}
     <p class="nowo-ui-muted">{{ 'demo.login.hint'|trans }}</p>
-    {% if login_error is defined and login_error %}
-        <div class="nowo-ui-flash nowo-ui-flash--error" role="alert">{{ login_error.messageKey|trans(login_error.messageData, 'security') }}</div>
-    {% endif %}
     {{ include('demo/_form.html.twig', { form: login_form }) }}
 {% endif %}

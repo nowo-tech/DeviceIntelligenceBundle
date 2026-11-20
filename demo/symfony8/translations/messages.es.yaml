@@ -1,9 +1,10 @@
 demo:
+  nav_examples: 'Ejemplos'
   title: 'Bundle de inteligencia de dispositivo'
   brand: 'Inteligencia de dispositivo'
   heading: 'Bundle de inteligencia de dispositivo'
   lead: 'Demo de emparejamiento probabilístico de dispositivos. Un Device ID no es una credencial.'
-  body: 'collect() hace POST a /_device/collect. Esta página recarga una vez para que la petición HTML lleve la cookie de observación. Cada ejemplo tiene su propia URL: usa las pastillas o abre /es/checkout, /es/login, /es/trust, …'
+  body: 'collect() hace POST a /_device/collect. Esta página recarga una vez para que la petición HTML lleve la cookie de observación. Cada ejemplo tiene su propia URL: usa el menú o abre /es/checkout, /es/login, /es/trust, …'
   waiting: 'Esperando collect()…'
   language: Idioma
   close: Cerrar
@@ -20,6 +21,7 @@ demo:
     submit: Entrar
     signed_in: 'Sesión iniciada como %user%.'
   panel:
+    heading: 'Este navegador'
     device_id: 'ID de dispositivo'
     risk: Riesgo
     confidence: Confianza
