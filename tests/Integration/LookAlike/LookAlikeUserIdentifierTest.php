@@ -246,7 +246,7 @@ final class LookAlikeUserIdentifierTest extends TestCase
         }
         $em = new EntityManager($connection, $configuration, new EventManager());
         if ($exactCollation) {
-            $em->getEventManager()->addEventListener([ToolEvents::postGenerateSchemaTable], new ExactCollationListener($this->registry($em)));
+            $em->getEventManager()->addEventListener([ToolEvents::postGenerateSchema], new ExactCollationListener());
         }
         (new SchemaTool($em))->createSchema([
             $em->getClassMetadata(DeviceTrustEntity::class),
