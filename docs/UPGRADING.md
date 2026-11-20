@@ -5,6 +5,7 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.10.3](#to-1103)
 - [To 1.10.2](#to-1102)
 - [To 1.10.1](#to-1101)
 - [To 1.10.0](#to-1100)
@@ -46,6 +47,14 @@ This guide provides step-by-step instructions for upgrading Device Intelligence 
 - [Getting help](#getting-help)
 
 ## Unreleased
+
+## To 1.10.3
+
+From **1.10.2**:
+
+```bash
+composer update nowo-tech/device-intelligence-bundle
+```
 
 ## To 1.10.2
 
