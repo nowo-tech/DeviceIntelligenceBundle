@@ -479,7 +479,7 @@ final class NowoDeviceIntelligenceExtension extends Extension implements Prepend
             // REQ-SEC-006 (1.9.2): byte-exact NO PAD collation on device_id / user_identifier (MySQL / MariaDB).
             $container->register(ExactCollationListener::class)
                 ->setArguments([new Reference('doctrine'), new Reference('logger', ContainerInterface::IGNORE_ON_INVALID_REFERENCE)])
-                ->addTag('doctrine.event_listener', ['event' => 'postGenerateSchemaTable']);
+                ->addTag('doctrine.event_listener', ['event' => 'postGenerateSchema']);
 
             $container->setAlias(DeviceRepositoryInterface::class, DoctrineDeviceRepository::class)
                 ->setPublic(true);

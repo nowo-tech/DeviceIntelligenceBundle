@@ -13,13 +13,18 @@ use Doctrine\DBAL\Platforms\MySQL80Platform;
 use Doctrine\DBAL\Platforms\MySQL84Platform;
 use Doctrine\DBAL\Platforms\MySQLPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\DBAL\Schema\Index;
+use Doctrine\DBAL\Schema\Schema;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\Mapping\ClassMetadataFactory;
 use Doctrine\ORM\ORMSetup;
+use Doctrine\ORM\Tools\Event\GenerateSchemaEventArgs;
+use Doctrine\ORM\Tools\Event\GenerateSchemaTableEventArgs;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\ORM\Tools\ToolEvents;
-use Doctrine\Persistence\ManagerRegistry;
 use LogicException;
 use Nowo\DeviceIntelligenceBundle\Doctrine\ExactCollationListener;
 use Nowo\DeviceIntelligenceBundle\Entity\DeviceEntity;
@@ -64,13 +69,29 @@ final class ExactCollationListenerTest extends TestCase
         $this->assertSame($expected, ExactCollationListener::collationFor($platform));
     }
 
-    #[DataProvider('platforms')]
-    public function testTheGeneratedSchemaCarriesTheCollation(AbstractPlatform $platform, ?string $expected): void
+    /**
+     * Lazy connections (nothing connects): the platform comes from `serverVersion`.
+     *
+     * @return iterable<string, array{array<string, mixed>, string|null}>
+     */
+    public static function connections(): iterable
+    {
+        yield 'mariadb' => [['driver' => 'pdo_mysql', 'serverVersion' => '11.4.0-MariaDB'], 'utf8mb4_nopad_bin'];
+        yield 'mysql 8.4' => [['driver' => 'pdo_mysql', 'serverVersion' => '8.4.3'], 'utf8mb4_0900_bin'];
+        yield 'mysql 5.7 or server_version without patch' => [['driver' => 'pdo_mysql', 'serverVersion' => '5.7.44'], 'utf8mb4_bin'];
+        yield 'sqlite' => [['driver' => 'pdo_sqlite', 'memory' => true], null];
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     */
+    #[DataProvider('connections')]
+    public function testTheGeneratedSchemaCarriesTheCollation(array $params, ?string $expected): void
     {
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects('utf8mb4_bin' === $expected ? $this->exactly(3) : $this->never())->method('warning');
 
-        $tables = $this->generatedTables($this->registryOn($platform), $logger);
+        $tables = $this->generatedTables($params, new ExactCollationListener(null, $logger));
 
         foreach (['device_trust', 'device_user', 'observation'] as $name) {
             foreach (['device_id', 'user_identifier'] as $column) {
@@ -81,19 +102,84 @@ final class ExactCollationListenerTest extends TestCase
         $this->assertNull(self::collationOf($tables['device'], 'id'), 'other entities are left alone');
     }
 
-    public function testWithoutAnOrmManagerNothingChanges(): void
+    /**
+     * Audit XI: the generated schema keeps every foreign key and index of every table, as without the listener (the real
+     * schema tool flow, with a to-one association on `device_trust`: built by hand, the entity has no such property).
+     *
+     * @param array<string, mixed> $params
+     */
+    #[DataProvider('connections')]
+    public function testEveryForeignKeyAndIndexIsKept(array $params, ?string $expected): void
     {
-        $registry = $this->createMock(ManagerRegistry::class);
-        $registry->method('getManagerForClass')->willReturn(null);
+        $with = $this->generatedSchema($params, new ExactCollationListener(), true);
+        $without = $this->generatedSchema($params, null, true);
 
-        $tables = $this->generatedTables($registry, null);
+        $this->assertContains('parent_id->device_trust(id) CASCADE', self::shape($without)['device_trust']['fks']);
+        $this->assertSame(self::shape($without), self::shape($with));
+        $this->assertSame($expected, self::collationOf($with->getTable('device_trust'), 'user_identifier'));
+    }
 
-        $this->assertNull(self::collationOf($tables['device_trust'], 'user_identifier'));
+    /**
+     * A table that has foreign keys keeps them, and the tables that point to it too.
+     */
+    public function testForeignKeysOfTheEditedTablesSurviveTheSwap(): void
+    {
+        $schema = new Schema();
+        $owner = $schema->createTable('host_owner');
+        $owner->addColumn('id', 'integer');
+        $owner->setPrimaryKey(['id']);
+        $trust = $schema->createTable('device_trust');
+        $trust->addColumn('id', 'integer');
+        $trust->addColumn('device_id', 'string', ['length' => 26]);
+        $trust->addColumn('user_identifier', 'string', ['length' => 191]);
+        $trust->addColumn('owner_id', 'integer', ['notnull' => false]);
+        $trust->setPrimaryKey(['id']);
+        $trust->addIndex(['owner_id'], 'idx_trust_owner');
+        $trust->addForeignKeyConstraint('host_owner', ['owner_id'], ['id'], ['onDelete' => 'SET NULL']);
+        $pointer = $schema->createTable('host_pointer');
+        $pointer->addColumn('trust_id', 'integer');
+        $pointer->addForeignKeyConstraint('device_trust', ['trust_id'], ['id']);
+        $before = self::shape($schema);
+
+        $args = new GenerateSchemaEventArgs($this->entityManager(['driver' => 'pdo_mysql', 'serverVersion' => '8.4.3']), $schema);
+        (new ExactCollationListener())->postGenerateSchema($args);
+
+        $this->assertSame($before, self::shape($args->getSchema()));
+        $this->assertSame('utf8mb4_0900_bin', self::collationOf($args->getSchema()->getTable('device_trust'), 'user_identifier'));
+        $this->assertSame('utf8mb4_0900_bin', self::collationOf($args->getSchema()->getTable('device_trust'), 'device_id'));
+    }
+
+    public function testAManagerWithoutTheBundleEntitiesIsLeftAlone(): void
+    {
+        $factory = $this->createStub(ClassMetadataFactory::class);
+        $factory->method('isTransient')->willReturn(true);
+        $manager = $this->createStub(EntityManagerInterface::class);
+        $manager->method('getMetadataFactory')->willReturn($factory);
+        $schema = new Schema();
+        $schema->createTable('device_trust')->addColumn('user_identifier', 'string', ['length' => 191]);
+
+        $args = new GenerateSchemaEventArgs($manager, $schema);
+        (new ExactCollationListener())->postGenerateSchema($args);
+
+        $this->assertSame($schema, $args->getSchema());
+        $this->assertNull(self::collationOf($schema->getTable('device_trust'), 'user_identifier'));
+    }
+
+    public function testTheFormerTableEventDoesNothing(): void
+    {
+        $table = new Table('device_trust');
+        $table->addColumn('user_identifier', 'string', ['length' => 191]);
+        $args = new GenerateSchemaTableEventArgs(new ClassMetadata(DeviceTrustEntity::class), new Schema(), $table);
+
+        (new ExactCollationListener())->postGenerateSchemaTable($args);
+
+        $this->assertSame($table, $args->getClassTable());
+        $this->assertNull(self::collationOf($table, 'user_identifier'));
     }
 
     public function testCollateInPlaceOnOlderDbal(): void
     {
-        $table = $this->generatedTables($this->registryOn(self::sqlitePlatform()), null)['device_user'];
+        $table = $this->generatedTables(['driver' => 'pdo_sqlite', 'memory' => true], null)['device_user'];
 
         $this->assertNull(ExactCollationListener::collate($table, 'user_identifier', 'utf8mb4_nopad_bin', false));
         $this->assertSame('utf8mb4_nopad_bin', self::collationOf($table, 'user_identifier'));
@@ -101,24 +187,70 @@ final class ExactCollationListenerTest extends TestCase
     }
 
     /**
+     * @param array<string, mixed> $params
+     *
      * @return array<string, Table>
      */
-    private function generatedTables(ManagerRegistry $registry, ?LoggerInterface $logger): array
+    private function generatedTables(array $params, ?ExactCollationListener $listener): array
     {
-        $entityManager = $this->entityManager();
-        $entityManager->getEventManager()->addEventListener([ToolEvents::postGenerateSchemaTable], new ExactCollationListener($registry, $logger));
-
-        $schema = (new SchemaTool($entityManager))->getSchemaFromMetadata(array_map(
-            $entityManager->getClassMetadata(...),
-            [DeviceEntity::class, DeviceTrustEntity::class, DeviceUserEntity::class, DeviceObservationEntity::class],
-        ));
-
         $tables = [];
-        foreach ($schema->getTables() as $table) {
+        foreach ($this->generatedSchema($params, $listener)->getTables() as $table) {
             $tables[$table->getName()] = $table;
         }
 
         return $tables;
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     */
+    private function generatedSchema(array $params, ?ExactCollationListener $listener, bool $association = false): Schema
+    {
+        $entityManager = $this->entityManager($params);
+        if (null !== $listener) {
+            $entityManager->getEventManager()->addEventListener([ToolEvents::postGenerateSchema], $listener);
+        }
+
+        $classes = array_map(
+            $entityManager->getClassMetadata(...),
+            [DeviceEntity::class, DeviceTrustEntity::class, DeviceUserEntity::class, DeviceObservationEntity::class],
+        );
+        if ($association) {
+            $classes = array_map(static function (ClassMetadata $metadata): ClassMetadata {
+                if (DeviceTrustEntity::class !== $metadata->getName()) {
+                    return $metadata;
+                }
+                $metadata = clone $metadata;
+                $metadata->mapManyToOne(['fieldName' => 'parent', 'targetEntity' => DeviceTrustEntity::class, 'joinColumns' => [['name' => 'parent_id', 'referencedColumnName' => 'id', 'onDelete' => 'CASCADE']]]);
+
+                return $metadata;
+            }, $classes);
+        }
+
+        return (new SchemaTool($entityManager))->getSchemaFromMetadata($classes);
+    }
+
+    /**
+     * Foreign keys (local columns, foreign table and columns, ON DELETE) and index names per table.
+     *
+     * @return array<string, array{fks: list<string>, indexes: list<string>}>
+     */
+    private static function shape(Schema $schema): array
+    {
+        $shape = [];
+        foreach ($schema->getTables() as $table) {
+            $fks = [];
+            foreach ($table->getForeignKeys() as $fk) {
+                $fks[] = implode(',', $fk->getLocalColumns()).'->'.$fk->getForeignTableName().'('.implode(',', $fk->getForeignColumns()).') '.($fk->getOption('onDelete') ?? '-');
+            }
+            $indexes = array_map(static fn (Index $index): string => $index->getName(), array_values($table->getIndexes()));
+            sort($fks);
+            sort($indexes);
+            $shape[$table->getName()] = ['fks' => $fks, 'indexes' => $indexes];
+        }
+        ksort($shape);
+
+        return $shape;
     }
 
     /**
@@ -203,26 +335,17 @@ final class ExactCollationListenerTest extends TestCase
         return isset($options['charset']) && \is_string($options['charset']) ? $options['charset'] : null;
     }
 
-    private function registryOn(AbstractPlatform $platform): ManagerRegistry
-    {
-        $connection = $this->createMock(Connection::class);
-        $connection->method('getDatabasePlatform')->willReturn($platform);
-        $manager = $this->createMock(EntityManagerInterface::class);
-        $manager->method('getConnection')->willReturn($connection);
-        $registry = $this->createMock(ManagerRegistry::class);
-        $registry->method('getManagerForClass')->willReturn($manager);
-
-        return $registry;
-    }
-
-    private function entityManager(): EntityManager
+    /**
+     * @param array<string, mixed> $params
+     */
+    private function entityManager(array $params): EntityManager
     {
         $configuration = ORMSetup::createAttributeMetadataConfiguration([\dirname(__DIR__, 3).'/src/Entity'], true);
         if (\PHP_VERSION_ID >= 80400) {
             $configuration->enableNativeLazyObjects(true);
         }
 
-        return new EntityManager(DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true], $configuration), $configuration, new EventManager());
+        return new EntityManager(DriverManager::getConnection($params, $configuration), $configuration, new EventManager());
     }
 
     /**
