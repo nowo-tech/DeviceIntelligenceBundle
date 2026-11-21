@@ -1,9 +1,10 @@
 demo:
+  nav_examples: 'Examples'
   title: 'Device Intelligence Bundle'
   brand: 'Device Intelligence'
   heading: 'Device Intelligence Bundle'
   lead: 'Probabilistic device matching demo. A Device ID is not a credential.'
-  body: 'collect() POSTs to /_device/collect. This page reloads once so the HTML request carries the observation cookie. Each example has its own URL — use the pills or open /en/checkout, /en/login, /en/trust, …'
+  body: 'collect() POSTs to /_device/collect. This page reloads once so the HTML request carries the observation cookie. Each example has its own URL — use the menu or open /en/checkout, /en/login, /en/trust, …'
   waiting: 'Waiting for collect()…'
   language: Language
   close: Close
@@ -20,6 +21,7 @@ demo:
     submit: 'Sign in'
     signed_in: 'Signed in as %user%.'
   panel:
+    heading: 'This browser'
     device_id: 'Device ID'
     risk: Risk
     confidence: Confidence

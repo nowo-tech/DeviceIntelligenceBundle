@@ -1,42 +1,45 @@
-{#- REQ-DEMO-014: the demo shell is UiKit's admin layout with UiKit's default theme (nowo-ui.css from the bundle's own
-    asset package, no CSS framework, no CDN). The Vite entry only carries the bundle's own Device Intelligence client. -#}
-{% extends '@NowoUiKit/layout/admin.html.twig' %}
-
+{#- REQ-DEMO-014: the demo runs inside UiKit's shared demo platform shell (@NowoUiKit/demo_platform/layout.html.twig).
+    This file only declares the demo (nowo_ui_demo_platform): one aside item per example of the demo. The Vite entry
+    only carries the bundle's own Device Intelligence client (no stylesheet). -#}
+{% extends '@NowoUiKit/demo_platform/layout.html.twig' %}
+{% set _locale = app.request.locale %}
+{% set nowo_ui_demo_platform = {
+    bundle: 'Device Intelligence',
+    home_route: 'homepage',
+    home_params: {_locale: _locale},
+    repository: 'https://github.com/nowo-tech/DeviceIntelligenceBundle',
+    translation_domain: 'messages',
+    locales: ['en', 'es'],
+    auth: {login_route: 'demo_login', logout_route: 'demo_logout'},
+    nav: [
+        {label: 'demo.case.overview.nav', route: 'homepage', params: {_locale: _locale}, section: 'demo.nav_examples'},
+        {label: 'demo.case.checkout.nav', route: 'demo_case', params: {_locale: _locale, case: 'checkout'}, section: 'demo.nav_examples', testid: 'demo-nav-checkout'},
+        {label: 'demo.case.login.nav', route: 'demo_login', params: {_locale: _locale}, section: 'demo.nav_examples'},
+        {label: 'demo.case.trust.nav', route: 'demo_case', params: {_locale: _locale, case: 'trust'}, section: 'demo.nav_examples', testid: 'demo-nav-trust'},
+        {label: 'demo.case.privileged.nav', route: 'demo_case', params: {_locale: _locale, case: 'privileged'}, section: 'demo.nav_examples', testid: 'demo-nav-privileged'},
+        {label: 'demo.case.coupon.nav', route: 'demo_case', params: {_locale: _locale, case: 'coupon'}, section: 'demo.nav_examples', testid: 'demo-nav-coupon'},
+        {label: 'demo.case.export.nav', route: 'demo_case', params: {_locale: _locale, case: 'export'}, section: 'demo.nav_examples', testid: 'demo-nav-export'},
+        {label: 'demo.case.alerts.nav', route: 'demo_case', params: {_locale: _locale, case: 'alerts'}, section: 'demo.nav_examples', testid: 'demo-nav-alerts'},
+    ],
+} %}
 {% block nowo_ui_document_title %}{% block title %}{{ 'demo.title'|trans }}{% endblock %}{% endblock %}
 
-{% block nowo_ui_styles %}
-    {{ parent() }}
+{% block nowo_ui_head %}
     {{ vite_entry_link_tags('app') }}
-    <style>.nowo-ui-kpi__value code { display: block; font-size: 1rem; overflow-wrap: anywhere; word-break: break-all; }</style>
     {% block stylesheets %}{% endblock %}
 {% endblock %}
 
-{% block nowo_ui_navigation %}
-    {% set locale_route = app.request.attributes.get('_route') %}
-    {% set locale_params = app.request.attributes.get('_route_params')|default({}) %}
-    <header class="nowo-ui-header" data-testid="demo-masthead">
-        <a class="nowo-ui-brand" href="{{ path('homepage', { _locale: app.request.locale }) }}">{{ 'demo.brand'|trans }}</a>
-        <nav class="nowo-ui-header__nav" aria-label="{{ 'demo.language'|trans }}">
-            {% if app.user %}
-                <span class="nowo-ui-muted">{{ app.user.userIdentifier }}</span>
-                <a class="nowo-ui-link" href="{{ path('demo_logout') }}">{{ 'demo.logout'|trans }}</a>
-            {% else %}
-                <a class="nowo-ui-link" href="{{ path('demo_login', { _locale: app.request.locale }) }}">{{ 'demo.login.nav'|trans }}</a>
-            {% endif %}
-            <a class="nowo-ui-link" href="{{ path(locale_route, locale_params|merge({ _locale: 'en' })) }}"{% if app.request.locale == 'en' %} aria-current="true"{% endif %}>English</a>
-            <a class="nowo-ui-link" href="{{ path(locale_route, locale_params|merge({ _locale: 'es' })) }}"{% if app.request.locale == 'es' %} aria-current="true"{% endif %}>Español</a>
-        </nav>
-        <div class="nowo-ui-header__end">
-            {{ include('@NowoUiKitBundle/partials/_theme_toggle.html.twig', { compact: true }, false) }}
-        </div>
-    </header>
-{% endblock %}
-
+{#- The flashes carry translation keys; the sign-in error of the login example joins them. -#}
 {% block nowo_ui_flashes %}
-    {{ include(nowo_ui_partial('flashes'), { trans_domain: 'messages' }) }}
+    {% set _messages = {} %}
+    {% for _type, _list in app.flashes %}
+        {% set _messages = _messages|merge({(_type): _list|map(m => m|trans)}) %}
+    {% endfor %}
+    {% if (login_error ?? null) %}
+        {% set _messages = _messages|merge({error: (_messages.error ?? [])|merge([login_error.messageKey|trans(login_error.messageData, 'security')])}) %}
+    {% endif %}
+    {{ include('@NowoUiKit/demo_platform/_flashes.html.twig', {flash_messages: _messages}) }}
 {% endblock %}
-
-{% block nowo_ui_content %}{% block body %}{% endblock %}{% endblock %}
 
 {% block nowo_ui_scripts %}
     {{ parent() }}
