@@ -22,17 +22,26 @@ final readonly class DeviceIntelligenceUserKitExportProvider implements Personal
 
     public const PRIORITY = 35;
 
+    /**
+     * Creates the DeviceIntelligenceUserKitExportProvider with its collaborators.
+     */
     public function __construct(
         private DeviceIntelligencePersonalDataExporterInterface $exporter,
         private DeviceIntelligencePersonalDataSubjectResolverInterface $subjects,
     ) {
     }
 
+    /**
+     * Returns the key of the export section.
+     */
     public function getSectionKey(): string
     {
         return self::SECTION;
     }
 
+    /**
+     * Tells whether this provider handles the given user.
+     */
     public function supports(object $user): bool
     {
         return true;

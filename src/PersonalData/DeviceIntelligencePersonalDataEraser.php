@@ -43,6 +43,9 @@ final readonly class DeviceIntelligencePersonalDataEraser implements DeviceIntel
     ) {
     }
 
+    /**
+     * Erases the personal data of the given request or subject.
+     */
     public function erase(DeviceIntelligencePersonalDataSubject $subject): DeviceIntelligenceErasureResult
     {
         $em = $this->entityManager(DeviceEntity::class);

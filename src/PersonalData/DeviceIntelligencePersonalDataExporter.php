@@ -35,6 +35,11 @@ final readonly class DeviceIntelligencePersonalDataExporter implements DeviceInt
     ) {
     }
 
+    /**
+     * Exports the personal data of the given user or subject.
+     *
+     * @return list<array{first_seen_at: string|null, last_seen_at: string|null, sign_ins: int, os_family: string|null, browser_family: string|null, trusted: bool, trusted_at: string|null, trust_expires_at: string|null}>
+     */
     public function export(DeviceIntelligencePersonalDataSubject $subject): array
     {
         $em = $this->entityManager(DeviceEntity::class);

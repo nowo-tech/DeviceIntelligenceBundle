@@ -14,6 +14,9 @@ final class TwigPathsPass implements CompilerPassInterface
 {
     private const TWIG_NAMESPACE = 'NowoDeviceIntelligenceBundle';
 
+    /**
+     * Adjusts the container definitions of this bundle during compilation.
+     */
     public function process(ContainerBuilder $container): void
     {
         $loaderId = $this->getNativeLoaderServiceId($container);
