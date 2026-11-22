@@ -1,8 +1,8 @@
 # Device Intelligence Bundle — baseline code inventory
 
 **Package**: `nowo-tech/device-intelligence-bundle`  
-**Last audited**: 2026-11-16 (1.7 private EM, 1.9 GDPR ports, 1.9.2 exact ids)  
-**Production units**: **227/227**  
+**Last audited**: 2026-11-22 (1.7 private EM, 1.9 GDPR ports, 1.9.2 exact ids, 1.10 transaction runner)  
+**Production units**: **228/228**  
 **Audit command**: count `lib/**/*.php` + `src/**/*.php` + `src/**/*.twig` + `src/**/*.svg` + `src/Resources/translations/*.yaml` + `src/Resources/assets/src/**/*.ts` (exclude `src/Resources/assets/tests/**`).
 
 ## Scope notes
@@ -27,14 +27,14 @@
 | CLI | 6 |
 | Bundle & DI | 9 |
 | HTTP collect | 8 |
-| Doctrine | 14 |
+| Doctrine | 15 |
 | Events | 18 |
 | Request context | 6 |
 | Messenger | 4 |
 | Profiler | 3 |
 | i18n | 7 |
 | Browser SDK | 20 |
-| **Total** | **227** |
+| **Total** | **228** |
 
 ## Matching & risk
 
@@ -254,6 +254,7 @@
 | `src/Doctrine/DbalEntityWriter.php` | Doctrine | FR-ORM-002, FR-WORKER-001 |
 | `src/Doctrine/ExcludedEntityNamespaceDriver.php` | Doctrine | FR-ORM-002 |
 | `src/Doctrine/ExactCollationListener.php` | Doctrine | FR-ORM-003 |
+| `src/Doctrine/DeviceIntelligenceTransactionRunner.php` | Doctrine | FR-ORM-004, FR-WORKER-001 |
 
 ## Events
 

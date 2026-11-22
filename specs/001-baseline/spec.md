@@ -70,6 +70,7 @@ Probabilistic **device intelligence** for Symfony: weighted matching (not a mono
 - **FR-ORM-001**: Device, observation, device-user, trust entities.
 - **FR-ORM-002**: (1.7) Bundle entities live on `doctrine.entity_manager` only: `DeviceIntelligenceEntityManagerPass` registers `ExcludedEntityNamespaceDriver` (maps nothing) for the bundle namespace on every other manager, and `DbalEntityWriter` writes one entity with a DBAL INSERT / UPDATE from its metadata, so request listeners and login never flush the host's entity manager.
 - **FR-ORM-003**: (1.9.2, REQ-SEC-006) `ExactCollationListener` gives `user_identifier` / `device_id` of `device_trust`, `device_user` and `observation` a byte-exact collation on MySQL / MariaDB; `PersonalDataRows` re-checks every row with `===` after the SQL pre-filter.
+- **FR-ORM-004**: (1.10, REQ-RUNTIME-003 rules 1, 3 and 9) `DeviceIntelligenceTransactionRunner` runs the analysis write unit (device and observation rows) in one DBAL-only transaction on the connection of the manager that maps the bundle entities (resolved per call, no flush or reset of any entity manager); inside a host transaction it uses an explicit SAVEPOINT, a bounded lock wait keeps it from hanging the request, and a deadlock, lock-wait timeout or serialization failure is rethrown as the contract's `TransientStorageFailure` (nothing committed, one attempt, no retry).
 - **FR-TRUST-001**: (1.7) `DeviceTrustServiceInterface` is the trust API port (trust, revoke, is-trusted); implementations dispatch the trust events.
 - **FR-MSG-001**: `CleanupHandler` / `RecalculateStabilityHandler` with `#[AsMessageHandler]`; retry and `failure_transport` are host-owned (`framework.messenger`).
 
@@ -115,7 +116,7 @@ Probabilistic **device intelligence** for Symfony: weighted matching (not a mono
 
 ## Success Criteria
 
-- **SC-001**: Production inventory **227/227** (`specs/001-baseline/code-inventory.md`).
+- **SC-001**: Production inventory **228/228** (`specs/001-baseline/code-inventory.md`).
 - **SC-002**: Config keys match `docs/CONFIGURATION.md`.
 - **SC-003**: `make qa` / PHPUnit / PHPStan / Vitest pass in CI.
 
