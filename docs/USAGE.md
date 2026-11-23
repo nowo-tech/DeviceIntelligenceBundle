@@ -23,6 +23,7 @@ Copy-paste scenarios (checkout step-up, new-device login, trusted devices, coupo
   - [Pentatrion Vite (recommended in Symfony apps)](#pentatrion-vite-recommended-in-symfony-apps)
 - [Profiler](#profiler)
 - [Translations](#translations)
+- [Browser console](#browser-console)
 
 ## Collect endpoint
 
@@ -409,3 +410,7 @@ Override keys in `translations/NowoDeviceIntelligenceBundle.<locale>.yaml` in th
 profiler:
     title: 'Inteligencia de dispositivo'
 ```
+
+## Browser console
+
+The bundle's script logs one line when it loads (`📦 [device-intelligence] script loaded, build: 2026-11-23 14:05 UTC`) so a developer can tell which build a page runs. To silence it, set `<html data-nowo-console="quiet">` or `globalThis.NOWO_CONSOLE = 'quiet'` before the script loads; nothing is printed then. The default is unchanged.
