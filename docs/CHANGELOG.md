@@ -111,6 +111,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `make validate-phpdoc` passes again: the 14 public methods that had no docblock (the excluded-namespace Doctrine driver, `TwigPathsPass`, the personal-data eraser/exporter/subject resolver, the UserKit adapters, `DeviceTrustServiceInterface::isTrusted()`) now carry one, with the `@return` shape on the array-returning ones. Documentation only, no code change.
+
+### Changed
+
+- CI: new `release-gates` job in `.github/workflows/ci.yml` runs the `make release-check` gates (`rector-dry`, `validate-phpdoc`, `validate-translations`, `check-twig-extra`) on every full-mode push and PR, so they no longer fail only at release time. CI only, no bundle change.
+- `rector.php` skips `EventSubscriberToAttributeRector` for the five `src/EventSubscriber/*` classes, with the reason written in the file: the rule would remove the public `getSubscribedEvents()` and the `EventSubscriberInterface` (a BC break), which does not ship in a minor. Revisit at the next major.
+
 ## [1.10.3] - 2026-11-21
 
 ### Changed

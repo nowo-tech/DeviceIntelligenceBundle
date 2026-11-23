@@ -17,6 +17,11 @@ use Symfony\Component\Security\Core\User\UserInterface;
  */
 final readonly class UserIdentifierSubjectResolver implements DeviceIntelligencePersonalDataSubjectResolverInterface
 {
+    /**
+     * Resolves the personal-data subjects of the given user.
+     *
+     * @return list<DeviceIntelligencePersonalDataSubject>
+     */
     public function subjectsFor(object $user, ?string $originalIdentifier): array
     {
         $values = [$originalIdentifier];

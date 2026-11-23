@@ -26,6 +26,9 @@ use Nowo\DeviceIntelligenceBundle\DependencyInjection\Compiler\DeviceIntelligenc
  */
 final class ExcludedEntityNamespaceDriver implements MappingDriver
 {
+    /**
+     * Loads the metadata of the given class through the inner driver.
+     */
     public function loadMetadataForClass(string $className, ClassMetadata $metadata): void
     {
         throw new MappingException(\sprintf('Class "%s" is not mapped on this entity manager (nowo_device_intelligence.doctrine.entity_manager maps it on another one, or nowo_device_intelligence.doctrine.enabled is false).', $className));
@@ -39,6 +42,9 @@ final class ExcludedEntityNamespaceDriver implements MappingDriver
         return [];
     }
 
+    /**
+     * Tells whether the class is transient, treating the excluded namespaces as such.
+     */
     public function isTransient(string $className): bool
     {
         return true;

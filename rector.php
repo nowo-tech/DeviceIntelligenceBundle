@@ -9,6 +9,7 @@ use Rector\Config\RectorConfig;
 use Rector\DeadCode\Rector\Cast\RecastingRemovalRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveEmptyClassMethodRector;
 use Rector\DeadCode\Rector\Concat\RemoveConcatAutocastRector;
+use Rector\Symfony\CodeQuality\Rector\Class_\EventSubscriberToAttributeRector;
 use Rector\Symfony\Symfony61\Rector\Class_\CommandConfigureToAttributeRector;
 use Rector\Symfony\Symfony72\Rector\StmtsAwareInterface\PushRequestToRequestStackConstructorRector;
 use Rector\TypeDeclaration\Rector\ClassMethod\NarrowObjectReturnTypeRector;
@@ -42,4 +43,14 @@ return RectorConfig::configure()
         CommandConfigureToAttributeRector::class,
         RemoveEmptyClassMethodRector::class,
         PushRequestToRequestStackConstructorRector::class,
+        // Public API: these classes implement EventSubscriberInterface and expose a public static getSubscribedEvents();
+        // converting them to #[AsEventListener] would remove that public method and interface (a BC break for hosts
+        // that call or decorate them), which must not ship in a minor. Revisit at the next major.
+        EventSubscriberToAttributeRector::class => [
+            __DIR__ . '/src/EventSubscriber/AnalyzeSubscriber.php',
+            __DIR__ . '/src/EventSubscriber/ControllerAttributeSubscriber.php',
+            __DIR__ . '/src/EventSubscriber/RequestStateResetSubscriber.php',
+            __DIR__ . '/src/EventSubscriber/DeviceRequestSubscriber.php',
+            __DIR__ . '/src/EventSubscriber/ProfilerAjaxBridgeSubscriber.php',
+        ],
     ]);

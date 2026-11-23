@@ -38,5 +38,8 @@ interface DeviceTrustServiceInterface
      */
     public function revoke(Device $device, UserIdentifier $user): void;
 
+    /**
+     * Tells whether the device is trusted for the given user.
+     */
     public function isTrusted(Device $device, UserIdentifier $user): bool;
 }

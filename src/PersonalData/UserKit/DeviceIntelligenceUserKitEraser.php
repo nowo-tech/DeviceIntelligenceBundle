@@ -28,22 +28,34 @@ final readonly class DeviceIntelligenceUserKitEraser implements PersonalDataEras
 
     public const PRIORITY = 150;
 
+    /**
+     * Creates the DeviceIntelligenceUserKitEraser with its collaborators.
+     */
     public function __construct(
         private DeviceIntelligencePersonalDataEraserInterface $eraser,
         private DeviceIntelligencePersonalDataSubjectResolverInterface $subjects,
     ) {
     }
 
+    /**
+     * Returns the key of this eraser.
+     */
     public function getKey(): string
     {
         return self::KEY;
     }
 
+    /**
+     * Tells whether this provider handles the given user.
+     */
     public function supports(object $user): bool
     {
         return true;
     }
 
+    /**
+     * Erases the personal data of the given request or subject.
+     */
     public function erase(ErasureRequest $request): void
     {
         // UserKit >= 1.12 captures the identifier before any eraser ran; older versions have no such property.
