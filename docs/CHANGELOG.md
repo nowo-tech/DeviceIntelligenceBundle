@@ -120,6 +120,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Igor 0.11: the PSR-16 `cache` of `SymfonyDeviceRateLimiter` is marked `#[WorkerSafe]` with the reason (a documented false positive: the pool is the limiter's shared counter store by design; only the in-memory fallback is per request and `reset()` clears it). No behaviour change.
 - CI: new `release-gates` job in `.github/workflows/ci.yml` runs the `make release-check` gates (`rector-dry`, `validate-phpdoc`, `validate-translations`, `check-twig-extra`) on every full-mode push and PR, so they no longer fail only at release time. CI only, no bundle change.
 - `rector.php` skips `EventSubscriberToAttributeRector` for the five `src/EventSubscriber/*` classes, with the reason written in the file: the rule would remove the public `getSubscribedEvents()` and the `EventSubscriberInterface` (a BC break), which does not ship in a minor. Revisit at the next major.
 - **Console**: the script-loaded line of `device-intelligence.js` now reads `📦 [device-intelligence] script loaded, build: 2026-11-23 14:05 UTC`: a readable UTC build time instead of the opaque source hash. The time comes from the committed `build-info.json` (`{sourceHash, builtAt}`): the source hash stays the change detector, `builtAt` is reused while the sources are unchanged and renewed only when they change, so rebuilding unchanged sources never rewrites the committed assets (no wall-clock stamp, no git date).

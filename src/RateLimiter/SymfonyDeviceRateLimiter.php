@@ -6,6 +6,7 @@ namespace Nowo\DeviceIntelligenceBundle\RateLimiter;
 
 use DateInterval;
 use DateTimeImmutable;
+use IgorPhp\IgorBundle\Attribute\WorkerSafe;
 use InvalidArgumentException;
 use Nowo\DeviceIntelligenceBundle\Config\DeviceIntelligenceConfig;
 use Psr\SimpleCache\CacheInterface;
@@ -31,6 +32,8 @@ final class SymfonyDeviceRateLimiter implements DeviceRateLimiterInterface, Rese
      */
     public function __construct(
         private DeviceIntelligenceConfig $config,
+        // @igor-ignore - The PSR-16 pool is the limiter's shared counter store by design (not service state); only the in-memory fallback is per-request and reset() clears it.
+        #[WorkerSafe]
         private CacheInterface $cache,
         private array $factories = [],
     ) {
