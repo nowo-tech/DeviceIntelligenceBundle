@@ -1,7 +1,7 @@
 # Device Intelligence Bundle — baseline code inventory
 
 **Package**: `nowo-tech/device-intelligence-bundle`  
-**Last audited**: 2026-11-22 (1.7 private EM, 1.9 GDPR ports, 1.9.2 exact ids, 1.10 transaction runner)  
+**Last audited**: 2026-11-27 (1.7 private EM, 1.9 GDPR ports, 1.9.2 exact ids, 1.10 transaction runner)  
 **Production units**: **228/228**  
 **Audit command**: count `lib/**/*.php` + `src/**/*.php` + `src/**/*.twig` + `src/**/*.svg` + `src/Resources/translations/*.yaml` + `src/Resources/assets/src/**/*.ts` (exclude `src/Resources/assets/tests/**`).
 
@@ -10,7 +10,7 @@
 - Vitest files under `src/Resources/assets/tests/` are **excluded** (`FR-TEST-TS-001` in spec.md; not inventory rows).
 - Vite IIFE `src/Resources/public/js/device-intelligence.min.js` (+ `.map`) is a **build output** of `src/Resources/assets/src/**` (`FR-BUILD-001`), not a separate production unit.
 - `src/Resources/assets/LICENSE` and `src/Resources/assets/README.md` are documentation shipped next to the SDK, not runtime units.
-- Unlisted tracked files under `src/` are exactly these exclusions: the 8 Vitest files in `src/Resources/assets/tests/`, `src/Resources/assets/LICENSE`, `src/Resources/assets/README.md`, and the build output `device-intelligence.min.js` + `device-intelligence.min.js.map` (2026-10-20 audit: 208 rows = 115 `lib` PHP + 64 `src` PHP + 1 Twig + 1 SVG + 7 translations + 20 TS sources).
+- Unlisted tracked files under `src/` are exactly these exclusions: the 9 Vitest files in `src/Resources/assets/tests/`, `src/Resources/assets/LICENSE`, `src/Resources/assets/README.md`, and the build output `device-intelligence.min.js` + `device-intelligence.min.js.map` (2026-10-20 audit: 208 rows = 115 `lib` PHP + 64 `src` PHP + 1 Twig + 1 SVG + 7 translations + 20 TS sources).
 - `demo/` is out of inventory scope.
 - This package co-locates the matcher engine in `lib/` (PSR-4 `Nowo\DeviceIntelligence\`) and the Symfony adapter in `src/`; both are production scope.
 
@@ -18,9 +18,9 @@
 
 | Category | Mapped |
 | --- | ---: |
-| Matching & risk | 67 |
+| Matching & risk | 68 |
 | Core domain | 17 |
-| Ports & infra | 24 |
+| Ports & infra | 28 |
 | Privacy | 9 |
 | Personal data (GDPR) | 11 |
 | Guards | 4 |
@@ -34,7 +34,7 @@
 | Profiler | 3 |
 | i18n | 7 |
 | Browser SDK | 20 |
-| **Total** | **228** |
+| **Total** | **233** |
 
 ## Matching & risk
 
@@ -77,6 +77,7 @@
 | `lib/Risk/Rule/FingerprintMutationRule.php` | Matching & risk | FR-RISK-001 |
 | `lib/Risk/Rule/ImpossibleTravelRule.php` | Matching & risk | FR-RISK-001 |
 | `lib/Risk/Rule/IpChangeRule.php` | Matching & risk | FR-RISK-001 |
+| `lib/Risk/Rule/IpReputationRule.php` | Matching & risk: scores the client IP reputation (Tor 30, proxy 20, VPN 10, hosting 10, or the provider risk / 3, capped at 40; 0 without a provider) | FR-RISK-001, FR-RISK-002 |
 | `lib/Risk/Rule/MultipleAccountsRule.php` | Matching & risk | FR-RISK-001 |
 | `lib/Risk/Rule/NewDeviceRule.php` | Matching & risk | FR-RISK-001 |
 | `lib/Risk/Rule/RapidAccountCreationRule.php` | Matching & risk | FR-RISK-001 |
@@ -136,6 +137,7 @@
 | --- | --- | --- |
 | `lib/Exception/DeviceIntelligenceException.php` | Ports & infra | FR-CORE-001 |
 | `lib/Exception/InvalidValueException.php` | Ports & infra | FR-CORE-001 |
+| `lib/Exception/LookAlikeIdentifierException.php` | Ports & infra: a write refused because a look-alike identifier's row blocks it on a folding unique key (REQ-SEC-006, 1.9.2); fails closed | FR-CORE-003 |
 | `lib/Infrastructure/FrozenClock.php` | Ports & infra | FR-CORE-001 |
 | `lib/Infrastructure/InMemoryDeviceRepository.php` | Ports & infra | FR-CORE-001 |
 | `lib/Infrastructure/InMemoryDeviceUserRepository.php` | Ports & infra | FR-CORE-001 |
@@ -144,6 +146,9 @@
 | `src/Trust/DeviceTrustServiceInterface.php` | Ports & infra | FR-TRUST-001 |
 | `lib/Port/DeviceRepositoryInterface.php` | Ports & infra | FR-CORE-001 |
 | `lib/Port/DeviceUserRepositoryInterface.php` | Ports & infra | FR-CORE-001 |
+| `lib/Port/AtomicDeviceRepositoryInterface.php` | Ports & infra: optional atomic writes for a device repository adapter (`saveObserved()` increments the count in storage, `saveStability()` writes only the stability; never reverts a concurrent status change; 1.10) | FR-CORE-002 |
+| `lib/Port/AtomicDeviceUserRepositoryInterface.php` | Ports & infra: optional atomic `recordLogin()` for the device-user link (two simultaneous logins both count; 1.10) | FR-CORE-002, FR-CORE-003 |
+| `lib/Port/AtomicTrustedDeviceRepositoryInterface.php` | Ports & infra: optional one-write `revoke()` of a trust (only the revocation time is written; 1.10) | FR-CORE-002, FR-CORE-003 |
 | `lib/Port/GeoIpProviderInterface.php` | Ports & infra | FR-CORE-001 |
 | `lib/Port/GeoIpResult.php` | Ports & infra | FR-CORE-001 |
 | `lib/Port/IpReputation.php` | Ports & infra | FR-CORE-001 |
@@ -338,7 +343,7 @@
 | `src/Resources/assets/src/collectors/webgl.ts` | Browser SDK | FR-TS-001 |
 | `src/Resources/assets/src/crypto/digest.ts` | Browser SDK | FR-TS-001 |
 | `src/Resources/assets/src/index.ts` | Browser SDK | FR-TS-001, FR-BUILD-001 |
-| `src/Resources/assets/src/logger.ts` | Browser SDK | FR-TS-001, FR-BUILD-001 |
+| `src/Resources/assets/src/logger.ts` | Browser SDK: bundle logger, `scriptLoaded()` banner with build label and quiet switch | FR-TS-001, FR-TS-002, FR-BUILD-001 |
 | `src/Resources/assets/src/normalization/normalize.ts` | Browser SDK | FR-TS-001 |
 | `src/Resources/assets/src/transport/fetch-transport.ts` | Browser SDK | FR-TS-001 |
 | `src/Resources/assets/src/types/index.ts` | Browser SDK | FR-TS-001, FR-BUILD-001 |
