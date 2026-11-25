@@ -57,8 +57,11 @@ Probabilistic **device intelligence** for Symfony: weighted matching (not a mono
 ### Matching & risk (core `lib/`)
 
 - **FR-CORE-001**: Device/observation/trust/user value objects, ports, and in-memory adapters.
+- **FR-CORE-002**: Optional atomic repository ports (1.10, REQ-RUNTIME-003 rule 4): `AtomicDeviceRepositoryInterface` (`saveObserved()` increments the observation count in storage and never reverts a concurrent status change; `saveStability()`), `AtomicDeviceUserRepositoryInterface::recordLogin()` and `AtomicTrustedDeviceRepositoryInterface::revoke()`. When an adapter implements one, the analysis, `DeviceManager::associate()` and `revoke()` use it; otherwise they fall back to read-then-save (keeping the stored status since 1.10.1), which narrows but does not close the race.
+- **FR-CORE-003**: `LookAlikeIdentifierException` (REQ-SEC-006, 1.9.2): a write blocked by the row of a look-alike identifier on a folding unique key fails closed (never updates the look-alike's row); the atomic user ports declare it.
 - **FR-MATCH-001**: Weighted matcher; no `sha256(all_signals)` identity.
 - **FR-RISK-001**: Built-in rules + `#[AsDeviceRiskRule]` tagged custom rules.
+- **FR-RISK-002**: `IpReputationRule` (`ip_reputation`, 1.7) scores the `IpReputation` of the client IP from `IpReputationProviderInterface`: Tor 30, proxy 20, VPN 10, hosting 10 points or the provider risk (0..100) divided by 3, whichever is larger, capped at 40 (severity High from 30, else Medium); 0 without a provider (the default `NullIpReputationProvider`).
 
 ### HTTP
 
@@ -109,14 +112,15 @@ Probabilistic **device intelligence** for Symfony: weighted matching (not a mono
 ### Frontend (TypeScript)
 
 - **FR-TS-001**: Browser SDK collectors + fetch transport; `collect()` never throws (`ok: false`, `degraded: true`).
+- **FR-TS-002**: `index.ts` creates the logger (`createBundleLogger('device-intelligence', { buildTime })`) and prints one `📦 [device-intelligence] script loaded, build: <date> UTC` console line (readable build label, REQ-ASSETS-005); `<html data-nowo-console="quiet">` or `globalThis.NOWO_CONSOLE = 'quiet'` silences it.
 - **FR-BUILD-001**: Vite IIFE `src/Resources/public/js/device-intelligence.min.js`.
-- **FR-TEST-TS-001**: Vitest under `src/Resources/assets/tests/` with ≥90% line coverage (excluded from inventory count).
+- **FR-TEST-TS-001**: Vitest under `src/Resources/assets/tests/` with ≥90% line coverage (excluded from inventory count; 9 files).
 
 ---
 
 ## Success Criteria
 
-- **SC-001**: Production inventory **228/228** (`specs/001-baseline/code-inventory.md`).
+- **SC-001**: Production inventory **233/233** (`specs/001-baseline/code-inventory.md`).
 - **SC-002**: Config keys match `docs/CONFIGURATION.md`.
 - **SC-003**: `make qa` / PHPUnit / PHPStan / Vitest pass in CI.
 
