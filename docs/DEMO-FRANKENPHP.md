@@ -96,7 +96,7 @@ make -C demo up
 
 ## PHP version policy (Symfony 8 demo)
 
-REQ-DEMO-010 / REQ-DEMO-012. `demo/symfony8` runs Symfony **8.1** (Flex pin `8.1.*`), which needs PHP **8.4.1+**: the demo `composer.json` requires `php >=8.4.1,<8.6` and the image is `dunglas/frankenphp:1-php8.5-alpine`, the newest PHP allowed by Symfony 8 and the bundle (`php >=8.3 <8.6`). The bundle itself keeps supporting PHP **8.3** with Symfony 7.4; only the demo uses the newer runtime. When a new PHP minor is supported by both, bump the image tag and the demo `require.php` together.
+REQ-DEMO-010 / REQ-DEMO-012. `demo/symfony8` runs Symfony **8.1** (Flex pin `8.1.*`), which needs PHP **8.4.1+**: the demo `composer.json` requires `php >=8.4.1,<8.7` and the image is `dunglas/frankenphp:1-php8.5-alpine`, the newest PHP allowed by Symfony 8 and the bundle (`php >=8.3 <8.7`). The bundle itself keeps supporting PHP **8.3** with Symfony 7.4; only the demo uses the newer runtime. When a new PHP minor is supported by both, bump the image tag and the demo `require.php` together.
 
 ## Smoke check
 
