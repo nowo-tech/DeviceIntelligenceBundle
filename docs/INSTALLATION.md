@@ -15,7 +15,7 @@
 
 ## Requirements
 
-- PHP `>=8.3 <8.6`
+- PHP `>=8.3 <8.7`
 - Symfony `^7.4` or `^8.0` (covers 8.1+)
 - Twig Extra: `twig/extra-bundle` and `twig/string-extra` (required by the bundle and installed with it, REQ-TWIG-004).
   Without Flex, register `Twig\Extra\TwigExtraBundle\TwigExtraBundle` in `config/bundles.php`

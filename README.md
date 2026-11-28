@@ -63,7 +63,7 @@ return [
 
 ## Requirements
 
-- PHP `>=8.3 <8.6`
+- PHP `>=8.3 <8.7`
 - Symfony 7.4, 8.0, and 8.1+
 - Optional: Doctrine ORM (default persistence), Messenger, Twig / Web Profiler
 - Twig Extra (`twig/extra-bundle`, `twig/string-extra`; installed with the bundle, register `TwigExtraBundle` without Flex)
